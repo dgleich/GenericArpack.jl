@@ -1,0 +1,4 @@
+name = "ArpackInJulia"
+uuid = "408c25d7-97fa-4992-8bd9-ce15f1a09fe9"
+authors = ["David Gleich <dgleich@purdue.edu>"]
+version = "0.1.0"
