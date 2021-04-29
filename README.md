@@ -1,7 +1,7 @@
 ArpackInJulia
 =============
 
-This is a "me-project" to work on to I can learn something and see how various ideas work. 
+This is a "me-project" to work on to I can learn something and see how various ideas work.
 
 The goal of this exercise is to port the double-precision ARPACK
 for symmetric matrices in Julia. Including all ARPACK stuff. So this should
@@ -20,7 +20,7 @@ for different compilers compiling the same code.)
   FORTRAN.
 - Why? Why not implement my own ImplicitRestart/Eigensolver/Etc.? Simple: I trust
   ARPACK. Also, I want to understand exactly what the symmetric ARPACK solver is doing.
-- Why not use a Fortran->Julia compiler? Well, I could. But I could also do 
+- Why not use a Fortran->Julia compiler? Well, I could. But I could also do
   this and learn intimate details of how it works to help out in teaching :)
 - I want to document some of the cool stuff in ARPACK!
 
@@ -28,5 +28,6 @@ Directories
 -----------
 - `notes` my notes as I'm going along / draft blog posts
 - `dev` codes I hack together along the way. Usually my workflow is ... `dev -> src` where
-  `src` is the final stuff that might be usable by others.
+  `src` is the final stuff that might be usable by others. (Currently, this is
+    in a separate place, so there is nothing here in the repo)
 - `test` unit tests of the stuff in src
