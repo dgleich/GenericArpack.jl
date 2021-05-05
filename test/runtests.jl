@@ -32,6 +32,6 @@ end
     @test ArpackInJulia.dsconv(10, ones(10), zeros(10), 1e-8; stats)==10
     @test stats.tconv > t1  # we did record some more time
 
-    # TODO, add more relevant tests here. 
+    # TODO, add more relevant tests here.
   end
 end
