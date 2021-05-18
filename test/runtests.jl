@@ -45,7 +45,6 @@ if "arpackjll" in ARGS
 
       soln = arpack_dsconv(10, zeros(10), ones(10), 1e-8)
       @test ArpackInJulia.dsconv(10, zeros(10), ones(10), 1e-8)==soln
-
     end
   end
 end
