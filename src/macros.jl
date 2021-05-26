@@ -91,3 +91,16 @@ Base.@kwdef mutable struct ArpackStats
   titref::ArpackTime = 0.0
   trvec::ArpackTime = 0.0
 end
+
+macro jl_arpack_check_length(var,len)
+  varstr = string(var)
+  lenstr = string(len)
+  errstr1 = "range 1:$lenstr="
+  errstr2 = " out of bounds for $varstr of length "
+
+  return esc( quote
+    if $len > length($var)
+      throw(ArgumentError(string($errstr1, $len, $errstr2, length($var))))
+    end
+  end)
+end
