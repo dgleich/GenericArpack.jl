@@ -228,20 +228,20 @@ an intrinsic type (i.e. int, float, etc.) with a Ref if you tell
 it the ref type. But this doesn't refer to the original value, it
 makes a new copy of it and refers to that.  So here's working code.
 
-import Arpack_jll, LinearAlgebra
+    import Arpack_jll, LinearAlgebra
 
-function arpack_dsconv(n::Int, ritz::Vector{Float64}, bounds::Vector{Float64},
-                      tol::Float64)
-  nconv = Ref{LinearAlgebra.BlasInt}(-1)
-  ccall((:dsconv_, Arpack_jll.libarpack), Cvoid,
-    (Ref{LinearAlgebra.BlasInt},
-     Ptr{Float64},
-     Ptr{Float64},
-     Ref{Float64},
-     Ref{LinearAlgebra.BlasInt}),
-    n, ritz, bounds, tol, nconv)
-  return nconv[]
-end
+    function arpack_dsconv(n::Int, ritz::Vector{Float64}, bounds::Vector{Float64},
+                          tol::Float64)
+      nconv = Ref{LinearAlgebra.BlasInt}(-1)
+      ccall((:dsconv_, Arpack_jll.libarpack), Cvoid,
+        (Ref{LinearAlgebra.BlasInt},
+         Ptr{Float64},
+         Ptr{Float64},
+         Ref{Float64},
+         Ref{LinearAlgebra.BlasInt}),
+        n, ritz, bounds, tol, nconv)
+      return nconv[]
+    end
 
 The error in my mental model
 ----------------------------
