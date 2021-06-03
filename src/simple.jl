@@ -66,7 +66,7 @@ c     | Executable Statements |
     throw(ArgumentError("range 1:n=$n out of bounds for bounds, of length $(length(bounds))"))
   end
 
-  eps23::Float64 = eps(1.0)^(2.0/3.0)
+  eps23::Float64 = (eps(1.0)/2)^(2.0/3.0) # dlamch("E")**(2.0D+0 / 3.0D+0)
   nconv::Int = 0
   @inbounds for i=1:n
     #=
