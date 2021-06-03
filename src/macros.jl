@@ -1,3 +1,20 @@
+""" Print out the fields for a specific type in Markdown format.
+
+This is similar to what is in the Base.Docs module to automatically
+summarize a type without any documentation, but allows me to use it
+and lightly customize it. Also works to document parametric types.
+
+See <https://github.com/JuliaLang/julia/blob/6f71de4193717f9267e98b4188aa6e4547146375/stdlib/REPL/src/docview.jl>
+(Line 282)
+"""
+function _output_fields_in_markdown(T::Type)
+  pad = maximum(length(string(f)) for f in fieldnames(T))
+  return string("# Fields\n",
+  "```\n",
+    map( (Z) -> string(rpad(Z[1], pad), " :: ", Z[2], "\n"), zip(fieldnames(T), T.types) )...,
+  "```\n")
+end
+
 #=
 This file has simple macros to replicate the stats and timing functionality
 from the ARPACK macros debug.h and stats.h. These define _common_ variables
@@ -46,6 +63,42 @@ c
 
 =#
 
+""" A debugging structure for Arpack computations.
+
+Usage:
+=====
+- `debug=ArpackDebug()` creates a structure to print output to stdout, but does not enable
+  any printing.
+- `debug=ArpackDebug(); debug.maupd = 1` prints minimal information for the aupd routine.
+- `debug=ArpackDebug(); debug.mapps = 4` prints maximal information for the deflation routine.
+
+$(_output_fields_in_markdown(ArpackDebug{IO}))
+
+There is help on each field with `? ArpackDebug.maupd` for example.
+"""
+Base.@kwdef mutable struct ArpackDebug{IOT <: IO}
+  #= original FORTRAN
+  integer  logfil, ndigit, mgetv0,
+ &         msaupd, msaup2, msaitr, mseigt, msapps, msgets, mseupd,
+ &         mnaupd, mnaup2, mnaitr, mneigh, mnapps, mngets, mneupd,
+ &         mcaupd, mcaup2, mcaitr, mceigh, mcapps, mcgets, mceupd
+ =#
+  """ The output logfile, defaults to stdout and must be created at start. """
+  logfile::IOT = Base.stdout
+  """ if ndigit < 0, then we assume 80-cols, otherwise 132-cols """
+  ndigit::Int = (Base.displaysize(Base.stdout)[2] > 80 ? 1 : -1)
+
+  """ TODO """
+  maupd::Int = 0
+  maup2::Int = 0
+  maitr::Int = 0
+  meigt::Int = 0
+  mapps::Int = 0
+  mgets::Int = 0
+  meupd::Int = 0
+end
+
+#ArpackDebug(;) = ArpackDebug(;logfile=stdout,ndigit=(displaysize(stdout)[2] > 80) ? 1 : -1)
 
 ArpackTime = Float64
 
@@ -62,9 +115,13 @@ macro jl_update_time(field, t0 )
 end
 
 macro jl_arpack_debug(field,default)
-  return esc(:( debug == nothing ? default : debug.$field ))
+  return esc(:( debug == nothing ? $default : debug.$field ))
 end
 
+""" A timing structure for Arpack computations
+
+$(_output_fields_in_markdown(ArpackStats))
+"""
 Base.@kwdef mutable struct ArpackStats
   #= Here are the original fortran
   integer    nopx, nbx, nrorth, nitref, nrstrt
