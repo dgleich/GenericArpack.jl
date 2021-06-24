@@ -143,7 +143,9 @@ end
 
 end
 
-
+@testset "dstqrb" begin
+include("dstqrb.jl")
+end
 
 ##
 # To run, use
@@ -246,6 +248,9 @@ if "arpackjll" in ARGS
         @test bounds == abounds
         @test shifts == ashifts == orig_shifts # should be unchanged for ishift=0
       end
+    end
+    @testset "dstqrb" begin
+      include("dstqrb-compare.jl")
     end
   end
 end

@@ -67,7 +67,7 @@ function arpack_dsgets(
    ishift, string(which), kev, np, ritz, bounds, shifts)
 end
 
-function arpack_dstqrb(n::Int, d::Vector{Float64}, e::Vector{Float64},
+function arpack_dstqrb!(n::Int, d::Vector{Float64}, e::Vector{Float64},
                       z::Vector{Float64}, work::Vector{Float64})
   info = Ref{LinearAlgebra.BlasInt}(-1)
   ccall((:dstqrb_, Arpack_jll.libarpack), Cvoid,

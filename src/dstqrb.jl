@@ -595,6 +595,7 @@ c
       end
 =#
 
+using LinearAlgebra: SymTridiagonal, norm
 
 """
   Computes all eigenvalues and the last component of the eigenvectors
@@ -615,165 +616,68 @@ function dstqrb(
   @jl_arpack_check_length(z,n)
   @jl_arpack_check_length(work, max(2*n-2,1))
 
-  maxit = 30
-  info = 0
+  conceptual_dstqrb(SymTridiagonal(@view(d[1:n]), @view(e[1:n-1]));
+    z, work)
+end
 
-  icompz = 2
+function opnorm1(A::SymTridiagonal{T}) where T
+  m, n = size(A)
+  d, e = A.dv, A.ev
+  Tnorm = typeof(float(real(zero(T))))
+  Tsum = promote_type(Float64, Tnorm)
+  nrm::Tsum = n >= 1 ?
+                max(norm(d[1]) + norm(e[1]),
+                  norm(d[end]) + norm(e[end])) :
+              0
 
-  if (n == 0)
-    return info
-  else if (n==1)
-    if (icompz == 2)
-      z[1] == 1.0
+  @inbounds begin
+    for j = 2:n-1
+      nrmj::Tsum = norm(d[j]) + norm(e[j]) + norm(e[j-1])
+      nrm = max(nrm,nrmj)
     end
-    return info
   end
+  return convert(Tnorm, nrm)
+end
 
-  T = Float64
+_dstqrb_maxit(::Type{Float64}) = 30
+_dstqrb_maxit(::Type{Float32}) = 30
+_dstqrb_maxit(::Type{T}) where T = max(30, 30*ceil(Int, sqrt(log(eps(T))/log(2^-52))))
 
-  eps = eps(T)/2 # dlamch("E") is eps/2
-  eps2 = eps^2
-  safmin = 2^-1022 # dlamch("S")
-  safmax = 1/safmin
-  ssfmax = sqrt(safmax)/3
-  ssfmin = sqrt(safmin)/eps2
+function conceptual_dstqrb!(A::SymTridiagonal{T};
+    z=Vector{T}(undef,size(A,1)),
+    work=Vector{T}(undef,max(1,2*size(A,1)-2))) where T
+  d = A.dv # same variables at dstqrb
+  e = A.ev
 
-  if icompz == 2
-    fill!(@view z[1:n-1], zero(T))
-    z[n] = one(T)
-  end
+  n = size(A,1)
+  #println()
+  #println("Starting dstqrb")
+  #display(A)
+  fill!(z, zero(T))
+  z[n] = one(T)
 
-  #=
-  c     determine where the matrix splits and choose ql or qr iteration
-  c     for each block, according to whether top or bottom diagonal
-  c     element is smaller.
-  =#
-  nmaxit = n*maxit
   jtot = 0
+  nmaxit = _dstqrb_maxit(T)*n
   l1 = 1
-  nm1 = n-1
-  while l1 <= n # while we haven't finished searching for blocks
-    # ideally...
-    # l, lend = _find_next_block!(l1, nm1, d, e)
-    # _process_block!(l, lend, d, e, work)
-    #
-    l = l1 # by default we'd process the rest of the matrix
-    lend = n
-    if l1 > 1 # then we already processed one block
-      e[l1-1] = zero(T) # make sure we reset the block indictor
+  while l1 <= n
+    if l1 > 1
+      e[l1-1]=zero(T) # zero out last component
     end
-    if l1 < nm1 # if block isn't tiny
-      # search for the end
-      for m=l1:nm1
-        tst = e[m]
-        if tst == 0.0 # found block...
-          lend = m
-          break
-        elseif tst <= sqrt(abs(d[m]))*sqrt(abs(d[m+1]))*eps
-          e[m] = 0 # found effective block because it's much smaller
-          lend = m
-          break
-        end
-      end
+    l, lend = _find_next_block!(l1, d, e)
+    if lend > l # so there is actually work to do!
+      #println("Working on block $(l:lend)")
+      #display(A)
+      info, niter = _process_block(@view(d[l:lend]), @view(e[l:lend-1]),
+          @view(z[l:lend]), work, nmaxit - jtot)
+
+      jtot += niter
+      # note, we are going to throw an error in the inner-most function
     else
-      lend = n # this is redundant but otherwise we process the rest
     end
-    # setup the start of the next block
     l1 = lend + 1
-    # keep a copy of the values
-    lsv = l
-    lendsv = lend
-
-    #
-    # process block l, lend
-    # compute the infinity norm of the matrix (max abs row sum)
-    #
-    anorm = dlanst("I", lend-l+1,
-      _pointer_to_array_offset(d, l),
-      _pointer_to_array_offset(e, l))
-    if iszero(anorm)
-      # nothing to do for this block
-      continue
-    end
-    iscale = 0 # save the type of scaling
-
-    # Handle scaling of the block for too big/small entries
-    scaleto = anorm
-    if anorm > ssfmax # entries too big, scale down
-      iscale = 1 # save large scaling
-      scaleto = ssfmax
-    elseif anorm < ssfmin # entries too small, scale up
-      iscale = 2 # save small scaling
-      scaleto = ssfmin
-    end
-    if scaleto != anorm
-      # scale d, e in the block by ssfmax/anorm controlling for overflow
-      dlascl("G", 0, 0, anorm, scaleto, lend-l+1, 1,
-        _pointer_to_array_offset(d, l), n, info)
-      dlascl("G", 0, 0, anorm, scaleto, lend-l, 1,
-        _pointer_to_array_offset(e, l), n, info)
-    end
-
-    #=
-    Start Process Scaled Block with QL/QR iterations
-    =#
-    # choose between ql and qr iteration based on big element
-    if abs(d[lend]) < abs(d[l])
-      lend = lsv
-      l = lendsv
-    end
-    if lend > l
-      # QL iteration
-      # 40    continue
-      if l != lend
-        # look for small sub-diagonal
-        lendm1 = lend-1
-        lastm = lend
-        for m=l:lendm1
-          tst = abs(e[m])^2
-          if tst <= (eps2*abs(d[m])))*abs(d[m+1])+safmin
-            lastm = m
-            break # out of search loop
-          end
-        end
-      else
-        lastm = lend
-      end
-    else
-      # QR iteration
-      # 90 continue from Fortran code
-    end
-
-    #=
-    End Process Scaled Block with QL/QR iterations
-    =#
-    # 140 continue
-    # Undo scaling using the saved values for l, lend
-    if iscale > 0
-      @assert scaleto != anorm
-      dlascl("G", 0, 0, scaleto, anorm, lendsv-lsv+1, 1,
-        _pointer_to_array_offset(d, lsv), n, info)
-      dlascl("G", 0, 0, scaleto, anorm, lendsv-lsv, 1,
-        _pointer_to_array_offset(e, lsv), n, info)
-    end
-    #=
-    c     check for no convergence to an eigenvalue after a total
-    c     of n*maxit iterations.
-    =#
-    if jtot >= nmaxit # we fail at this point
-      for i=1:n-1
-        if !iszero(e[i])
-          info += 1
-        end
-      end
-      return info
-    end
   end
 
-  #=
-  c     order eigenvalues and eigenvectors.
-  =#
-  # c        use selection sort to minimize swaps of eigenvectors
+  # sort eigenvectors with selection sort
   for ii=2:n
     i = ii-1
     k = i
@@ -792,5 +696,279 @@ function dstqrb(
       z[i] = p
     end
   end
-  return info
+  return A,z
+end
+
+function _find_next_block!(l::Integer, d, e)
+  eps = Base.eps(eltype(d))/2
+  for m=l:length(e)
+    tst = abs(e[m])
+    if iszero(tst)
+      return l, m
+    elseif tst <= sqrt(abs(d[m]))*sqrt(abs(d[m+1]))*eps
+      e[m] = 0
+      return l, m
+    end
+  end
+  return l, length(d) # total length of block
+end
+
+function _process_block(d, e, z, work, maxit)
+  T = Float64
+  eps = Base.eps(T)/2 # dlamch("E") is eps/2
+  eps2 = eps^2
+  safmin = floatmin(T) # dlamch("S")
+  safmax = 1/safmin
+  ssfmax = sqrt(safmax)/3
+  ssfmin = sqrt(safmin)/eps2
+
+  A = SymTridiagonal(d,e)
+  anorm = opnorm1(A)
+
+  scaleto = anorm > ssfmax ? ssfmax : anorm < ssfmin ? ssfmin : anorm
+  _scale_from_to(anorm, scaleto, d)
+  _scale_from_to(anorm, scaleto, e)
+
+  ## TODO, handle iterations...
+  if abs(d[end]) < abs(d[1])
+    #println("qr")
+    info, niter = _qr_iteration(d, e, z, work; maxit)
+  else
+    #println("ql")
+    info, niter = _ql_iteration(d, e, z, work; maxit)
+  end
+
+  # reverse scaling
+  _scale_from_to(scaleto, anorm, d)
+  _scale_from_to(scaleto, anorm, e)
+
+  return info, niter
+end
+
+function _ql_iteration(d::AbstractVecOrMat{T},
+  e::AbstractVecOrMat{T}, z::AbstractVecOrMat{T}, work::AbstractVecOrMat{T};
+  maxit::Int = length(d)*30) where T
+  eps = Base.eps(T)/2 # dlamch("E") is eps/2
+  eps2 = eps^2
+  safmin = floatmin(T) # dlamch("S")
+  safmax = 1/safmin
+  ssfmax = sqrt(safmax)/3
+  ssfmin = sqrt(safmin)/eps2
+  two = 2*one(T)
+
+  n = length(d)
+  iend = length(d)
+  is = 1
+  jtot = 0
+
+  while is < iend # l != lend
+    #println("At itereration $(jtot) is=$is iend=$iend")
+    #display(SymTridiagonal(d, e))
+    # look for a small subdiagonal element to see if we can split it
+    lastm = iend
+    for m=is:iend-1
+      tst = abs(e[m])^2
+      if tst <= (eps2*abs(d[m]))*abs(d[m+1])+safmin
+        lastm = m
+        break
+      end
+    end
+    if lastm < iend # found a splitting element
+      e[lastm] = zero(T)
+    end
+
+    if lastm == is
+      # we have an isolated eigenvalue
+      is += 1
+    elseif lastm == is+1
+      # we have a little 2x2 pair
+      rt1,rt2,c,s = _dlaev2(d[is], e[is], d[is+1])
+      #rt1,rt2,c,s = _dlaev2_blas(d[is], e[is], d[is+1])
+      #rt1,rt2,c,s = _checked_dlaev2(d[is], e[is], d[is+1])
+      work[is] = c
+      work[is+n-1] = s
+      tst = z[is+1]
+      # apply transformation to eigenvector
+      z[is+1] = c*tst - s*z[is]
+      z[is] = s*tst + c*z[is]
+      # save eigenvalue info
+      d[is] = rt1
+      d[is+1] = rt2
+      e[is] = zero(T) # note that e[is+1=lastm] was already set to zero
+      is += 2
+    else
+      if jtot == maxit
+        # failure case handled in jtot == maxit below...
+        break
+      end
+      jtot += 1
+
+      # form shift.
+      p = d[is] # save the pivot element
+      g = (d[is+1]-p) / (2*e[is])
+      r = _dlapy2_julia(g, one(T))
+      g = d[lastm] - p + (e[is] / (g+copysign(r, g)))
+      s = one(T)
+      c = one(T)
+      p = zero(T)
+
+      # inner-loop
+      for i=reverse(is:lastm-1)
+        f = s*e[i]
+        b = c*e[i]
+        c, s, r = plane_rotation(g, f)
+        #c, s, r = _dlartg(g, f)
+        if i != lastm-1
+          e[i+1] = r
+        end
+        g = d[i+1] - p
+        r = (d[i]-g)*s + two*c*b
+        p = s*r
+        d[i+1] = g+p
+        g = c*r-b
+        # save stuff for eigenvecs
+        work[i] = c
+        work[n-1+i] = -s
+      end
+      #=_dlasr_right_side_variable_pivot_backward!(
+        1, length(is:lastm),
+        @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]),
+        @view(z[is:lastm])') # note don't need "1" here...=#
+      #_dlasr_rvb_blas!(1, length(is:lastm),
+      #  @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]),
+      #  @view(z[is:lastm]), 1)
+      #_checked_dlasr_right_side_variable_pivot_backward!(
+      #  1, length(is:lastm),
+      #  @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]),
+      #  @view(z[is:lastm])') # note don't need "1" here...
+       #  @view(z[is:lastm]), 1)
+      _apply_plane_rotations_right!(@view(z[is:lastm])',
+         @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]); rev=true)
+        # backwards in ql
+      d[is] -= p
+      e[is] = g
+    end
+  end
+  info = 0
+  if jtot == maxit # early termination, count non-converged vectors
+    for v in e
+      if !iszero(v)
+        info += 1
+      end
+    end
+    error(string("failed to converge eigenvalues\n",
+      "$maxit iterations for $n-length tridiagonal problem;",
+      "$info not converged"))
+  end
+  return info, jtot
+end
+
+function _qr_iteration(d::AbstractVecOrMat{T},
+    e::AbstractVecOrMat{T}, z::AbstractVecOrMat{T}, work::AbstractVecOrMat{T};
+    maxit::Int = length(d)*30) where T
+  eps = Base.eps(T)/2 # dlamch("E") is eps/2
+  eps2 = eps^2
+  safmin = floatmin(T) # dlamch("S")
+  safmax = 1/safmin
+  ssfmax = sqrt(safmax)/3
+  ssfmin = sqrt(safmin)/eps2
+  two = 2*one(T)
+
+  n = length(d)
+  is = length(d) # we work backwards here... so many loops are reversed...
+  iend = 1
+  jtot = 0
+
+  while iend < is # l != lend
+    #println("At itereration $(jtot) is=$is iend=$iend")
+    #display(SymTridiagonal(d, e))
+    # look for a small superdiagonal element to see if we can split it
+    lastm = iend
+    for m=reverse(iend+1:is)
+      tst = abs(e[m-1])^2
+      if tst <= (eps2*abs(d[m]))*abs(d[m-1])+safmin
+        lastm = m
+        break
+      end
+    end
+    if lastm > iend # found a splitting element
+      e[lastm-1] = zero(T)
+    end
+
+    if lastm == is
+      # we have an isolated eigenvalue
+      is -= 1
+    elseif lastm == is-1
+      # we have a little 2x2 pair
+      rt1,rt2,c,s = _dlaev2(d[is-1], e[is-1], d[is])
+      #rt1,rt2,c,s = _dlaev2_blas(d[is-1], e[is-1], d[is])
+      #rt1,rt2,c,s = _checked_dlaev2(d[is-1], e[is-1], d[is])
+      # no need to save work info as this is now irrelevant...
+      tst = z[is]
+      # apply transformation to eigenvector
+      z[is] = c*tst - s*z[is-1]
+      z[is-1] = s*tst + c*z[is-1]
+      # save eigenvalue info
+      d[is-1] = rt1
+      d[is] = rt2
+      e[is-1] = zero(T) # note that e[is+1=lastm] was already set to zero
+      is -= 2
+    else
+      if jtot == maxit
+        # failure case handled in jtot == maxit below...
+        break
+      end
+      jtot += 1
+
+      # form shift.
+      p = d[is] # save the pivot element
+      g = (d[is-1]-p) / (2*e[is-1])
+      r = _dlapy2_julia(g, one(T))
+      g = d[lastm] - p + (e[is-1] / (g+copysign(r, g)))
+      s = one(T)
+      c = one(T)
+      p = zero(T)
+
+      # inner-loop
+      for i=lastm:is-1
+        f = s*e[i]
+        b = c*e[i]
+        c, s, r = plane_rotation(g, f)
+        #c, s, r = _dlartg(g, f)
+        if i != lastm
+          e[i-1] = r
+        end
+        g = d[i] - p
+        r = (d[i+1]-g)*s + two*c*b
+        p = s*r
+        d[i] = g+p
+        g = c*r-b
+        # save stuff for eigenvecs
+        work[i] = c
+        work[n-1+i] = s
+      end
+      #@show z
+      #_dlasr_rvf_blas!(1, length(lastm:is),
+      #  @view(work[lastm:is-1]), @view(work[(n-1).+(lastm:is-1)]),
+      #  @view(z[lastm:is]), 1)
+      #@show z
+      _apply_plane_rotations_right!(@view(z[lastm:is])',
+        @view(work[lastm:is-1]),
+        @view(work[(n-1).+(lastm:is-1)]);rev=false) # forwards in qr
+      d[is] -= p
+      e[is-1] = g
+    end
+  end
+  info = 0
+  if jtot == maxit # early termination, count non-converged vectors
+    for v in e
+      if !iszero(v)
+        info += 1
+      end
+    end
+    error(string("failed to converge eigenvalues\n",
+      "$maxit iterations for $n-length tridiagonal problem;",
+      "$info not converged"))
+  end
+  return info, jtot
 end
