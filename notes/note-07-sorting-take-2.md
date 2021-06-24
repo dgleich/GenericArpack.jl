@@ -1,9 +1,9 @@
-A small project to do a pure port of ARPACK Symmetric solver to Julia - Part 7 - Sorting Take 2
+ARPACK Sorting Take 2 (Part ... blah in the ongoing series...)
 
-Last post was a disaster. I tried to do something quick and simple in Julia
+Last post on sorting was a disaster. I tried to do something quick and simple in Julia
 and ran into all sorts of issues with things I didn't quite understand and
 breaks in my mental model about how Julia works. This was just to try and
-write the `real` julia code for the following task: sort an array and take
+write the _real_ julia code for the following task: sort an array and take
 another along for the ride as is done in the following code.
 
 This post is straightforward. We are simply going to port this code.
@@ -298,8 +298,6 @@ Now, we assemble these into a simple function. Other changes made are:
 * Add a new macro to handle checking the length of input vectors.
 
 
-
-
       """
       Sort the array X1 in the order specified by WHICH and optionally
       applies the permutation to the array X2.
@@ -401,46 +399,79 @@ To get the "string" command, I had to look at
     mytest(x) = "My string $x"
     @code_lowered mytest(x)
 
-To find how the string interpolation actually gets map to the string command.    
+To find how the string interpolation actually gets lowered to the string command.    
+
+Next up was testing. I wanted to run some tests on all permutation vectors.
+
+While I could add a dependency on Combinatorics.jl to the testing repository,
+I wanted to keep this simple. We don't need it to be terribly efficient. Here
+is what I came up with.
+
+      function all_permutations(v::Vector{Float64};
+          all::Vector{Vector{Float64}}=Vector{Vector{Float64}}(),
+          prefix::Vector{Float64}=zeros(0))
+
+        if length(v) == 0
+          push!(all, prefix)
+        end
+
+        for i in eachindex(v)
+          all_permutations(deleteat!(copy(v), i); prefix=push!(copy(prefix), v[i]), all)
+        end
+        return all
+      end
+
+Then our testing code runs everything in that set to test and make sure we
+get the correct sort.
+
+A question
+==========
+
+What is this sorting algorithm doing? I just ported the code. It seems to be
+sorting elements divided by a gap. (igap)
+Then it merges these sorted lists into longer sorted lists.
 
 Some history
 ============
 
 There is a comment in the code that references LANSO. Here is the original
 routine from LANSO (found in `svdpack` by Mike Berry).
+So we might have to chat with
+[Beresford Parlett](https://en.wikipedia.org/wiki/Beresford_Parlett) for more information on
+this algorithm.
 
-C
-C @(#)DSORT2.F	3.2 (BNP) 12/9/88
-C
-      SUBROUTINE DSORT2(N,ARRAY1,ARRAY2)
-      INTEGER N
-      REAL*8 ARRAY1(0:N-1),ARRAY2(0:N-1)
-C
-C.... SORT ARRAY1 AND ARRAY2 INTO INCREASING ORDER FOR ARRAY1
-C
-      INTEGER IGAP,I,J
-      REAL*8 TEMP
-C
-      IGAP = N/2
- 10   IF (IGAP.GT.0) THEN
-        DO 200 I = IGAP,N-1
-          J = I-IGAP
- 50       IF (J.GE.0.AND.ARRAY1(J).GT.ARRAY1(J+IGAP)) THEN
-              TEMP = ARRAY1(J)
-              ARRAY1(J) = ARRAY1(J+IGAP)
-              ARRAY1(J+IGAP) = TEMP
-              TEMP = ARRAY2(J)
-              ARRAY2(J) = ARRAY2(J+IGAP)
-              ARRAY2(J+IGAP) = TEMP
-          ELSE
-            GO TO 200
-          ENDIF
-          J = J-IGAP
-          GO TO 50
- 200    CONTINUE
-      ELSE
-        RETURN
-      ENDIF
-      IGAP = IGAP/2
-      GO TO 10
-      END
+      C
+      C @(#)DSORT2.F	3.2 (BNP) 12/9/88
+      C
+            SUBROUTINE DSORT2(N,ARRAY1,ARRAY2)
+            INTEGER N
+            REAL*8 ARRAY1(0:N-1),ARRAY2(0:N-1)
+      C
+      C.... SORT ARRAY1 AND ARRAY2 INTO INCREASING ORDER FOR ARRAY1
+      C
+            INTEGER IGAP,I,J
+            REAL*8 TEMP
+      C
+            IGAP = N/2
+       10   IF (IGAP.GT.0) THEN
+              DO 200 I = IGAP,N-1
+                J = I-IGAP
+       50       IF (J.GE.0.AND.ARRAY1(J).GT.ARRAY1(J+IGAP)) THEN
+                    TEMP = ARRAY1(J)
+                    ARRAY1(J) = ARRAY1(J+IGAP)
+                    ARRAY1(J+IGAP) = TEMP
+                    TEMP = ARRAY2(J)
+                    ARRAY2(J) = ARRAY2(J+IGAP)
+                    ARRAY2(J+IGAP) = TEMP
+                ELSE
+                  GO TO 200
+                ENDIF
+                J = J-IGAP
+                GO TO 50
+       200    CONTINUE
+            ELSE
+              RETURN
+            ENDIF
+            IGAP = IGAP/2
+            GO TO 10
+            END
