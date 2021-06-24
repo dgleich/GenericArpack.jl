@@ -1,5 +1,22 @@
 import Arpack_jll, LinearAlgebra
 
+function arpack_set_debug_high()
+  # [Documentation and structure of debug block here.](https://github.com/opencollab/arpack-ng/blob/master/SRC/debug.h)
+  arpack_debug = cglobal((:debug_, Arpack_jll.libarpack), Int64)
+  unsafe_store!(debug, 6, 1) # logfile set logfil to 6, the default stdout
+  unsafe_store!(debug, -14, 2) # ndigit - use 14 digits of precision (ndigit)
+  unsafe_store!.(debug, 3, 3:24) # turn on most debugging
+end
+
+function arpack_set_debug_low()
+  # [Documentation and structure of debug block here.](https://github.com/opencollab/arpack-ng/blob/master/SRC/debug.h)
+  arpack_debug = cglobal((:debug_, Arpack_jll.libarpack), Int64)
+  unsafe_store!(debug, 6, 1) # logfile set logfil to 6, the default stdout
+  unsafe_store!(debug, -6, 2) # ndigit - use 14 digits of precision (ndigit)
+  unsafe_store!.(debug, 1, 3:24) # turn on most debugging
+end
+
+
 function arpack_dsconv(n::Int, ritz::Vector{Float64}, bounds::Vector{Float64},
                       tol::Float64)
   nconv = Ref{LinearAlgebra.BlasInt}(-1)
@@ -20,11 +37,7 @@ function arpack_dsortr(
   x1::Vector{Float64}, # Input/Output
   x2::Vector{Float64}, # Input/Output
   )
-  if which==:LM; whichstr="LM"
-  elseif which==:SM; whichstr="SM"
-  elseif which==:LA; whichstr="LA"
-  elseif which==:SA; whichstr="SA"
-  end
+  whichstr = string(which)
   ccall((:dsortr_, Arpack_jll.libarpack), Cvoid,
     (Ptr{UInt8},
      Ref{LinearAlgebra.BlasInt}, # bool
@@ -32,4 +45,38 @@ function arpack_dsortr(
      Ptr{Float64},
      Ref{Float64}),
     whichstr, apply, n, x1, x2)
+end
+
+function arpack_dsgets(
+  ishift::Int, # Input
+  which::Symbol, # Input
+  kev::Int, # Input
+  np::Int, # Input
+  ritz::Vector{Float64}, # Input/Output
+  bounds::Vector{Float64}, # Input/Output
+  shifts::Vector{Float64} # Input/Output
+  )
+  ccall((:dsgets_, Arpack_jll.libarpack), Cvoid,
+    (Ref{LinearAlgebra.BlasInt},
+     Ptr{UInt8},
+     Ref{LinearAlgebra.BlasInt},
+     Ref{LinearAlgebra.BlasInt},
+     Ptr{Float64},
+     Ptr{Float64},
+     Ptr{Float64}),
+   ishift, string(which), kev, np, ritz, bounds, shifts)
+end
+
+function arpack_dstqrb(n::Int, d::Vector{Float64}, e::Vector{Float64},
+                      z::Vector{Float64}, work::Vector{Float64})
+  info = Ref{LinearAlgebra.BlasInt}(-1)
+  ccall((:dstqrb_, Arpack_jll.libarpack), Cvoid,
+    (Ref{LinearAlgebra.BlasInt},
+     Ptr{Float64},
+     Ptr{Float64},
+     Ptr{Float64},
+     Ptr{Float64},
+     Ref{LinearAlgebra.BlasInt}),
+    n, d, e, z, work, info)
+  return info[]
 end

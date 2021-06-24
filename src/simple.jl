@@ -529,14 +529,18 @@ c
 
 function _swap_within_array(n::Int, v::Vector{T}, offset::Int) where T
   offset -= 1 # adjust offset for offset + i
-  for i=1:n
+  @jl_arpack_check_length(v, n)
+  @jl_arpack_check_length(v, n+offset-1)
+  for i=1:n #
     tmp=v[i]
     v[offset+i]=v[i]
     v[i] = tmp
   end
 end
 function _copyn!(n::Int, dst::Vector{T}, src::Vector{T}) where T
-  @assert n <= length(dst) && n <= length(src)
+  #@assert n <= length(dst) && n <= length(src)
+  @jl_arpack_check_length(dst, n)
+  @jl_arpack_check_length(src, n)
   @inbounds @simd for i=1:n
     dst[i] = src[i]
   end
