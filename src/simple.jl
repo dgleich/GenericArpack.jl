@@ -528,12 +528,11 @@ c
 =#
 
 function _swap_within_array(n::Int, v::Vector{T}, offset::Int) where T
-  offset -= 1 # adjust offset for offset + i
   @jl_arpack_check_length(v, n)
   @jl_arpack_check_length(v, n+offset-1)
   for i=1:n #
-    tmp=v[i]
-    v[offset+i]=v[i]
+    tmp=v[offset-1+i]
+    v[offset-1+i]=v[i]
     v[i] = tmp
   end
 end
@@ -604,9 +603,13 @@ function dsgets(
     ritz::Vector{Float64},
     bounds::Vector{Float64},
     shifts::Vector{Float64};
-    timing::Union{ArpackStats,Nothing}=nothing,
+    stats::Union{ArpackStats,Nothing}=nothing,
     debug::Union{ArpackDebug,Nothing}=nothing
     )
+
+  @jl_arpack_check_length(ritz, kev+np)
+  @jl_arpack_check_length(bounds, kev+np)
+  @jl_arpack_check_length(shifts, np)
 
   #=
     c     | Initialize timing statistics  |
@@ -666,7 +669,7 @@ function dsgets(
     c        | are applied in subroutine dsapps.                     |
     =#
     dsortr(:SM, true, np, bounds, ritz )
-    _copyn!(n::Int, shifts, ritz)
+    _copyn!(np, shifts, ritz)
   end
 
   @jl_update_time(tsgets, t0)

@@ -3,17 +3,17 @@ import Arpack_jll, LinearAlgebra
 function arpack_set_debug_high()
   # [Documentation and structure of debug block here.](https://github.com/opencollab/arpack-ng/blob/master/SRC/debug.h)
   arpack_debug = cglobal((:debug_, Arpack_jll.libarpack), Int64)
-  unsafe_store!(debug, 6, 1) # logfile set logfil to 6, the default stdout
-  unsafe_store!(debug, -14, 2) # ndigit - use 14 digits of precision (ndigit)
-  unsafe_store!.(debug, 3, 3:24) # turn on most debugging
+  unsafe_store!(arpack_debug, 6, 1) # logfile set logfil to 6, the default stdout
+  unsafe_store!(arpack_debug, -14, 2) # ndigit - use 14 digits of precision (ndigit)
+  unsafe_store!.(arpack_debug, 3, 3:24) # turn on most debugging
 end
 
 function arpack_set_debug_low()
   # [Documentation and structure of debug block here.](https://github.com/opencollab/arpack-ng/blob/master/SRC/debug.h)
   arpack_debug = cglobal((:debug_, Arpack_jll.libarpack), Int64)
-  unsafe_store!(debug, 6, 1) # logfile set logfil to 6, the default stdout
-  unsafe_store!(debug, -6, 2) # ndigit - use 14 digits of precision (ndigit)
-  unsafe_store!.(debug, 1, 3:24) # turn on most debugging
+  unsafe_store!(arpack_debug, 6, 1) # logfile set logfil to 6, the default stdout
+  unsafe_store!(arpack_debug, -6, 2) # ndigit - use 14 digits of precision (ndigit)
+  unsafe_store!.(arpack_debug, 1, 3:24) # turn on most debugging
 end
 
 
