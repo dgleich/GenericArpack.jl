@@ -199,7 +199,7 @@ function _attach_state(statevar,vars...)
   return block
 end
 
-
+##
 Base.@kwdef struct AitrState{T}
   orth1::Bool = false
   orth2::Bool = false
@@ -222,7 +222,7 @@ end
 const _aitr_state_vars = (
         :orth1, :orth2, :rstart, :step3, :step4,   # logical vars
         :ierr, :ipj, :irj, :ivj, :iter, :itry, :j, # integer vars
-        :rnorm1, :wnorm # double vars
+        :rnorm1, :wnorm, # double vars
         :t0, :t2
         )
 

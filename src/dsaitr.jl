@@ -1040,15 +1040,15 @@ function dsaitr(
     if back_from_reverse_communication
       back_from_reverse_communication = false # reset the flag
       if step3
-        Base.@goto _aitr_step3 # label 50 in dsaitr.f
+        #Base.@goto _aitr_step3 # label 50 in dsaitr.f
       elseif step4
-        Base.@goto _aitr_step4 # label 60 in dsaitr.f
+        #Base.@goto _aitr_step4 # label 60 in dsaitr.f
       elseif orth1
-        Base.@goto _aitr_orth1 # label 70 in dsaitr.f
+        #Base.@goto _aitr_orth1 # label 70 in dsaitr.f
       elseif orth2
-        Base.@goto _aitr_orth2 # label 90 in dsaitr.f
+        #Base.@goto _aitr_orth2 # label 90 in dsaitr.f
       elseif rstart
-        Base.@gogo _aitr_rstart # label 30 in dsaitr.f
+        Base.@goto _aitr_rstart # label 30 in dsaitr.f
       else
         error("impossible situtation")
       end
@@ -1068,7 +1068,7 @@ function dsaitr(
       itry = 1
       rstart = true
       ido[] = 0 # NOTE, dgetv0 will set ido[] != 0
-      Base.@label _aitr_rstart
+      #Base.@label _aitr_rstart
       dgetv0(ido, bmat, itry, false, n, j, V, ldv, resid, rnorm, ipntr, workd, ierr)
     else
     end
@@ -1076,7 +1076,7 @@ function dsaitr(
     if rnorm >= 0
       # skip the stuff below and
     else
-      Base.@lable _aitr_rstart # LABEL 30
+      Base.@label _aitr_rstart # LABEL 30
       # restart process because we
       # repeatedly call dgetv0
       # until ierr >= 0
@@ -1087,7 +1087,7 @@ function dsaitr(
     copyto!(@view(v[1:n,j]), @view(resid[1:n]))
     if rnorm[] >= safmin
       temp1 = one/rnorm
-      _dscal(temp1, @view(v[1:n,j])
+      _dscal(temp1, @view(v[1:n,j]))
       _dscal(temp1, @view(workd[ipj:ipj+n-1]))
     else
       _scale_from_to!(rnorm[], one(T), @view(v[1:n,j]))
@@ -1153,6 +1153,6 @@ function dsaitr(
 
   end
 
-  state.aitr = AitrState{T}(;@aitr_state_vars)
+  state.aitr = AitrState{T}(@aitr_state_vars)
   return info
 end
