@@ -1,5 +1,5 @@
 #= raw BLAS and LINPACK calls in ARPACK mapped to Julia code =#
-import LinearAlgebra
+using LinearAlgebra: givens
 ##
 function plane_rotation(f::T, g::T) where T
   g, r = LinearAlgebra.givens(f, g, 1, 2)
@@ -65,6 +65,39 @@ function _scale_from_to(from::T, to::T, v) where T
     broadcast!(*, v, v, mul)
   end
   return v
+end
+
+function _dscal(a::T, v) where T
+  broadcast!(*, v, v, mul)
+end
+##
+function _dlassq(v::AbstractVector{T}) where T
+  scale::T = zero(T)
+  ssq::T = one(T)
+  for xi in v
+    if !iszero(xi)
+      absxi = abs(xi)
+      if scale < absxi
+        ssq = 1+ssq*(scale/absxi)^2
+        scale = absxi
+      else
+        ssq += (absxi/scale)^2
+      end
+    end
+  end
+  return scale, ssq
+end
+
+function _dnrm2(v::AbstractVector{T}) where T
+  n = length(v)
+  norm::T = zero(T)
+  if n == 1
+    norm = abs(v[1])
+  else
+    scale, ssq = _dlassq(v)
+    norm = scale*sqrt(ssq)
+  end
+  return norm::T
 end
 
 ##

@@ -106,6 +106,14 @@ macro jl_arpack_time()
   return esc(:( stats == nothing ? zero(ArpackTime) : time() ))
 end
 
+macro jl_arpack_set_stat(field, value)
+  return esc( quote
+    if stats != nothing
+      stats.$field = value
+    end
+  end )
+end
+
 macro jl_update_time(field, t0 )
   return esc( quote
     if stats != nothing
@@ -154,10 +162,83 @@ macro jl_arpack_check_length(var,len)
   lenstr = string(len)
   errstr1 = "range 1:$lenstr="
   errstr2 = " out of bounds for $varstr of length "
-
   return esc( quote
     if $len > length($var)
       throw(ArgumentError(string($errstr1, $len, $errstr2, length($var))))
     end
   end)
+end
+
+macro jl_arpack_check_size(var,m,n)
+  varstr = string(var)
+  mstr = string(m)
+  nstr = string(n)
+  errstr1 = "size $mstr x $nstr = ("
+  errstr2 = ") out of bounds for $varstr of size "
+  return esc( quote
+    if $m > size($var,1) || $n > size($var, 2)
+      throw(ArgumentError(string($errstr1, $m, ", ", $n, $errstr2, size($var))))
+    end
+  end)
+end
+
+## State saving variables
+
+function _attach_state(statevar,vars...)
+  # we want to build up a block of expressions.
+  block = Expr(:block)
+  for f in vars
+      # each expression in the block consists of
+      # the fieldname = struct.fieldname
+      e = :($f = $statevar.$f)
+      # add this new expression to our block
+      push!(block.args, e)
+  end
+  # now escape the evaled block so that the
+  # new variable declarations get declared in the surrounding scope.
+  return block
+end
+
+
+Base.@kwdef struct AitrState{T}
+  orth1::Bool = false
+  orth2::Bool = false
+  rstart::Bool = false
+  step3::Bool = false
+  step4::Bool = false
+  ierr::Int = 0
+  ipj::Int = 0
+  irj::Int = 0
+  ivj::Int = 0
+  iter::Int = 0
+  itry::Int = 0
+  j::Int = 0
+  rnorm1::T = zero(T)
+  wnorm::T = zero(T)
+  t0::ArpackTime = zero(ArpackTime)
+  t2::ArpackTime = zero(ArpackTime)
+end
+
+const _aitr_state_vars = (
+        :orth1, :orth2, :rstart, :step3, :step4,   # logical vars
+        :ierr, :ipj, :irj, :ivj, :iter, :itry, :j, # integer vars
+        :rnorm1, :wnorm # double vars
+        :t0, :t2
+        )
+
+macro attach_aitr_state(statevar)
+  expr = _attach_state(:($statevar.aitr), _aitr_state_vars...)
+  return esc(:($expr))
+end
+
+macro aitr_state_vars()
+  e = Expr(:parameters, _aitr_state_vars...)
+  return esc( :($e) )
+end
+
+Base.@kwdef mutable struct ArpackState{T}
+  aitr::AitrState{T} = AitrState{T}()
+end
+
+struct ArpackOp
 end

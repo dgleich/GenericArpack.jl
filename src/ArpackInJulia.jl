@@ -9,4 +9,6 @@ include("simple.jl")
 include("arpack-blas.jl")
 include("dstqrb.jl")
 
+include("dsaitr.jl")
+
 end # module
