@@ -33,117 +33,13 @@ if false # switch to true while developing
   end
 end
 
-@testset "macros" begin
-  @testset "docs" begin
-    mutable struct MyTestType
-      x::Int64
-      y::Float64
-    end
-    @test """# Fields
-    ```
-    x :: Int64
-    y :: Float64
-    ```
-    """ == ArpackInJulia._output_fields_in_markdown(MyTestType)
-  end
+include("macros.jl")
 
-  function test_arpack_macros(;stats=nothing)
-    t0 = ArpackInJulia.@jl_arpack_time
-    sleep(5.0)
-    ArpackInJulia.@jl_update_time(taupd, t0)
-    return 5
-  end
-  @test test_arpack_macros()==5 # this checks with no timing information
-
-  arpackstat = ArpackStats()
-  test_arpack_macros(stats=arpackstat)
-  @test arpackstat.taupd > 0
-
-  function test_arpack_debug(x;debug=nothing)
-    msglvl = ArpackInJulia.@jl_arpack_debug(mgets,0)
-    if msglvl > 0
-      x[1] += 1
-    else
-      x[1] = 0
-    end
-  end
-
-  debug=ArpackDebug()
-
-  x = ones(1)
-  test_arpack_debug(x)
-  @test x[1] == 0
-  x = ones(1)
-  test_arpack_debug(x;debug)
-  @test x[1] == 0
-  debug.mgets = 1
-  test_arpack_debug(x;debug)
-  @test x[1] == 1
-
-  function test_arpack_debug_output(x;debug=nothing)
-    msglvl = ArpackInJulia.@jl_arpack_debug(mgets,0)
-    if msglvl > 0
-      println(debug.logfile, "xval=", x[1])
-    end
-  end
-
-  io = IOBuffer()
-  debug=ArpackDebug(logfile=io)
-  x[1] = 0.5
-  @test_nowarn test_arpack_debug_output(x)
-  @test_nowarn test_arpack_debug_output(x;debug=nothing)
-  @test_nowarn test_arpack_debug_output(x;debug)
-  @test String(take!(io)) == ""
-  debug.mgets = 1
-  @test_nowarn test_arpack_debug_output(x;debug)
-  @test String(take!(io)) == "xval=0.5\n"
-end
 
 
 @testset "simple" begin
-  @testset "dsgets" begin
-    ishift = 1
-    for which = [:BE,:LA,:LM,:SM,:SA]
-      kev = 3
-      np = 2
-      ritz = [-1.0, 0.05, -0.001, 1.0, 2.0]
-      bounds = [0.0, 0.01, 0.00001, 2.0, 0.5]
-      pairs = Set(zip(ritz, bounds))
-      shifts = [0.0, 0.0, 0.0]
-      @test_nowarn ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
-      @test pairs == Set(zip(ritz, bounds)) # should get the same pairs in both cases
-
-      kev = 2
-      np = 3
-      ritz = [-1.5, 0.05, -0.001, 1.0, 2.0]
-      bounds = [0.0, 0.01, 0.00001, 2.0, 0.5]
-      shifts = [0.0, 0.0, 0.0]
-      pairs = Set(zip(ritz, bounds))
-      @test_nowarn ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
-      @test pairs == Set(zip(ritz, bounds)) # should get the same pairs in both cases
-
-      @test union!(Set(shifts[1:np]), ritz[np+1:end]) == Set(ritz)
-      if which == :LM
-        @test ritz[end] == 2.0
-        @test ritz[end-1] == -1.5
-      elseif which == :SA
-        @test ritz[end] == -1.5 # smallest algebraic entry
-        @test ritz[end-1] == -0.001
-      elseif which == :SM
-        @test ritz[end] == -0.001 # smallest magnitude is last
-        @test ritz[end-1] == 0.05
-      elseif which == :BE
-        @test ritz[end] == 2.0 # largest magnitude
-        @test ritz[end-1] == -1.5 # largest at other end
-      elseif which == :LA
-        @test ritz[end] == 2.0 # largest magnitude
-        @test ritz[end-1] == 1.0 # largest at other end
-      end
-    end
-
-    ishift = 0
-    # in this case shifts should not really be changed.
-  end
+  include("dsgets_simple.jl")
+  
   @testset "dsconv" begin
     @test_throws ArgumentError ArpackInJulia.dsconv(6, zeros(5), ones(5), 1e-8)
     @test_nowarn ArpackInJulia.dsconv(5, zeros(5), ones(5), 1e-8)
@@ -186,40 +82,7 @@ end
 if "arpackjll" in ARGS
   include("arpackjll.jl") # get the helpful routines to call stuff in "arpackjll"
   @testset "arpackjll" begin
-    @testset "dlarnv" begin # not strictly arpackjll, but this is a good place
-      _dlarnv_check_blas!(idist::Int,
-         iseed::Ref{NTuple{4,Int}},
-        n::Int,
-        x::Vector{Float64}) =
-      ccall((LinearAlgebra.BLAS.@blasfunc("dlarnv_"), LinearAlgebra.BLAS.libblas), Cvoid,
-        (Ref{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, Ptr{Float64}),
-        idist, iseed, n, x)
-
-      seed1 = Base.RefValue(tuple(1,3,5,7))
-      seed2 = Base.RefValue(tuple(1,3,5,7))
-      for n=0:4097
-        z1 = zeros(n)
-        z2 = zeros(n)
-        _dlarnv_check_blas!(2, seed1, length(z1), z1)
-        ArpackInJulia._dlarnv_idist_2!(seed2, length(z2), z2)
-        @test seed1[] == seed2[]
-        @test z1 == z2
-      end
-
-      using Random
-      Random.seed!(0)
-      for t=1:5000 
-        s1 = Base.RefValue(tuple(rand(0:4095),rand(0:4095),rand(0:4095),rand(0:4095)))
-        s2 = Base.RefValue(s1[])
-        n = rand(1:5)
-        z1 = zeros(n)
-        z2 = zeros(n)
-        _dlarnv_check_blas!(2, s1, length(z1), z1)
-        ArpackInJulia._dlarnv_idist_2!(s2, length(z2), z2)
-        @test seed1[] == seed2[]
-        @test z1 == z2
-      end
-    end
+    incldue("dlarnv_arpackjll.jl")
 
     @testset "dsconv" begin
       soln = arpack_dsconv(10, ones(10), zeros(10), 1e-8)
@@ -248,74 +111,8 @@ if "arpackjll" in ARGS
       @test y1==y2
     end
 
-    @testset "dsgets" begin
-      ishift = 1
-      for which = [:BE,:LA,:LM,:SM,:SA]
-        kev = 3
-        np = 2
-        ritz = [-1.0, 0.05, -0.001, 1.0, 2.0]
-        bounds = [0.0, 0.01, 0.00001, 2.0, 0.5]
-        shifts = [0.0, 0.0, 0.0]
-
-        aritz = copy(ritz)
-        abounds = copy(bounds)
-        ashifts = copy(shifts)
-        arpack_dsgets(ishift, which, kev, np, aritz, abounds, ashifts)
-        ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
-        @test ritz == aritz
-        @test bounds == abounds
-        @test shifts == ashifts
-
-        kev = 2
-        np = 3
-        ritz = [-1.0, 0.05, -0.001, 1.0, 2.0]
-        bounds = [0.0, 0.01, 0.00001, 2.0, 0.5]
-        shifts = [0.0, 0.0, 0.0]
-
-        aritz = copy(ritz)
-        abounds = copy(bounds)
-        ashifts = copy(shifts)
-        arpack_dsgets(ishift, which, kev, np, aritz, abounds, ashifts)
-        ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
-        @test ritz == aritz
-        @test bounds == abounds
-        @test shifts == ashifts
-
-        kev = 5
-        np = 0
-        ritz = [-1.0, 0.05, -0.001, 1.0, 2.0]
-        bounds = [0.0, 0.01, 0.00001, 2.0, 0.5]
-        shifts = [0.0, 0.0, 0.0]
-
-        aritz = copy(ritz)
-        abounds = copy(bounds)
-        ashifts = copy(shifts)
-        arpack_dsgets(ishift, which, kev, np, aritz, abounds, ashifts)
-        ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
-        @test ritz == aritz
-        @test bounds == abounds
-        @test shifts == ashifts
-      end
-
-      ishift=0
-      for which = [:BE,:LA,:LM,:SM,:SA]
-        kev = 2
-        np = 3
-        ritz = [-1.0, 0.05, -0.001, 1.0, 2.0]
-        bounds = [0.0, 0.01, 0.00001, 2.0, 0.5]
-        shifts = randn(3)
-        orig_shifts = copy(shifts)
-
-        aritz = copy(ritz)
-        abounds = copy(bounds)
-        ashifts = copy(shifts)
-        arpack_dsgets(ishift, which, kev, np, aritz, abounds, ashifts)
-        ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
-        @test ritz == aritz
-        @test bounds == abounds
-        @test shifts == ashifts == orig_shifts # should be unchanged for ishift=0
-      end
-    end
+    include("dsgets_arpackjll.jl")
+    
     @testset "dstqrb" begin
       include("dstqrb-compare.jl")
     end
