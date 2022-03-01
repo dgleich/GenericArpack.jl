@@ -267,11 +267,16 @@ macro getv0_state_vars()
   return esc( :($e) )
 end
 
+
+## aupd state 
 ## overall state
 Base.@kwdef mutable struct ArpackState{T}
   aitr::AitrState{T} = AitrState{T}()
   getv0::Getv0State{T} = Getv0State{T}()
+  aupd_np = Ref{Int}(0)
+  aupd_mxiter = Ref{Int}(0)
 end
+
 
 struct ArpackOp
 end

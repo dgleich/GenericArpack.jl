@@ -11,5 +11,6 @@ include("dstqrb.jl")
 
 include("dgetv0.jl")
 include("dsaitr.jl")
+include("dsaupd.jl")
 
 end # module
