@@ -40,6 +40,7 @@ begin
 end
 
 ##
+using BenchmarkTools
 using ArpackInJulia
 using LinearAlgebra
 begin
