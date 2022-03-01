@@ -1,5 +1,37 @@
+#=
+running tests
+
+Options:
+debug - Enable debugging macros (@debug statements)
+arpackjll - Check against the Arpack library itself
+full - Check a wider range of options
+
+Example:
+
+In ArparkInJulia environment...
+
+    Pkg.test(;test_args=["debug"])
+
+Elsewhere
+
+    using Pkg; Pkg.test("ArpackInJulia"; test_args=["arpackjll"])
+
+=#    
+
+# This needs to be before ArpackInJulia to get debug macros enabled
+if "debug" in ARGS
+  ENV["JULIA_DEBUG"] = "ArpackInJulia,Main"
+end
+
 using Test
 using ArpackInJulia
+
+# want to run these first... 
+if false # switch to true while developing
+  @testset "development..." begin
+    #include("arpackjll.jl") # uncomment to develop arpackjll tests
+  end
+end
 
 @testset "macros" begin
   @testset "docs" begin
@@ -140,6 +172,7 @@ end
     @test issorted(x)
   end
 
+  include("dgetv0_simple.jl")
 end
 
 @testset "dstqrb" begin
@@ -285,6 +318,9 @@ if "arpackjll" in ARGS
     end
     @testset "dstqrb" begin
       include("dstqrb-compare.jl")
+    end
+    @testset "dgetv0" begin
+      include("dgetv0_arpackjll.jl")
     end
   end
 end

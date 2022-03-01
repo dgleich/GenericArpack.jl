@@ -89,6 +89,7 @@ Base.@kwdef mutable struct ArpackDebug{IOT <: IO}
   ndigit::Int = (Base.displaysize(Base.stdout)[2] > 80 ? 1 : -1)
 
   """ TODO """
+  mgetv0::Int = 0
   maupd::Int = 0
   maup2::Int = 0
   maitr::Int = 0
@@ -109,7 +110,7 @@ end
 macro jl_arpack_set_stat(field, value)
   return esc( quote
     if stats != nothing
-      stats.$field = value
+      stats.$field = $value
     end
   end )
 end
@@ -236,8 +237,40 @@ macro aitr_state_vars()
   return esc( :($e) )
 end
 
+##
+
+Base.@kwdef struct Getv0State{T}
+  iseed::Base.RefValue{NTuple{4,Int64}} = Base.Ref(tuple(1,3,5,7))
+  first::Bool = false
+  orth::Bool = false
+  iter::Int = 0
+  rnorm0::T = zero(T)
+  t0::ArpackTime = zero(ArpackTime)
+  t2::ArpackTime = zero(ArpackTime)
+end
+
+const _getv0_state_vars = (
+        :iseed,
+        #:iseed1, :iseed2, :iseed3, :iseed4, # seed vars
+        :first, :orth, # logical state vars
+        :iter, :rnorm0, # status vars
+        :t0, :t2, # time vars
+        )
+
+macro attach_getv0_state(statevar)
+  expr = _attach_state(:($statevar.getv0), _getv0_state_vars...)
+  return esc(:($expr))
+end
+
+macro getv0_state_vars()
+  e = Expr(:parameters, _getv0_state_vars...)
+  return esc( :($e) )
+end
+
+## overall state
 Base.@kwdef mutable struct ArpackState{T}
   aitr::AitrState{T} = AitrState{T}()
+  getv0::Getv0State{T} = Getv0State{T}()
 end
 
 struct ArpackOp
