@@ -82,7 +82,7 @@ end
 if "arpackjll" in ARGS
   include("arpackjll.jl") # get the helpful routines to call stuff in "arpackjll"
   @testset "arpackjll" begin
-    incldue("dlarnv_arpackjll.jl")
+    include("dlarnv_arpackjll.jl")
 
     @testset "dsconv" begin
       soln = arpack_dsconv(10, ones(10), zeros(10), 1e-8)
