@@ -104,12 +104,12 @@ end
 ArpackTime = Float64
 
 macro jl_arpack_time()
-  return esc(:( stats == nothing ? zero(ArpackTime) : time() ))
+  return esc(:( stats === nothing ? zero(ArpackTime) : time() ))
 end
 
 macro jl_arpack_set_stat(field, value)
   return esc( quote
-    if stats != nothing
+    if stats !== nothing
       stats.$field = $value
     end
   end )
@@ -117,14 +117,14 @@ end
 
 macro jl_update_time(field, t0 )
   return esc( quote
-    if stats != nothing
+    if stats !== nothing
       stats.$field += time() - $t0
     end
   end )
 end
 
 macro jl_arpack_debug(field,default)
-  return esc(:( debug == nothing ? $default : debug.$field ))
+  return esc(:( debug === nothing ? $default : debug.$field ))
 end
 
 """ A timing structure for Arpack computations
