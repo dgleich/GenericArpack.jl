@@ -1,3 +1,6 @@
+""" This function differs from the Arpack original
+so that we can cut and paste the resulting output into
+a julia vector. """
 function _arpack_vout(io::IOT,
   n::Int, idigit::Int, v, msg::String) where {IOT}
   println(io)
@@ -18,6 +21,15 @@ function _arpack_vout(io::IOT,
     print(io, " ")
     for k=k1:k2
       print(io, rpad(v[k], dlen), ", ")
+    end
+    if k2==n
+      # on the last entry, check if we need to pad 
+      # for right alignment of comments 
+      if k2-k1 < nvals
+        for extra in nvals - (k2-k1)
+          print(io, rpad("", dlen), "  ")
+        end
+      end
     end
     print(io, " # ", rpad(k1,ilen), "-", lpad(k2,ilen))
     println(io)
