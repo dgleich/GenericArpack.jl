@@ -959,9 +959,9 @@ Return value:
          > 0: Size of an invariant subspace of OP is found that is
               less than K + NP.
 """
-function dsaitr(
+function dsaitr!(
   ido::Ref{Int},
-  bmat::Symbol,
+  ::Val{BMAT},
   n::Int,
   k::Int,
   np::Int,
@@ -971,13 +971,14 @@ function dsaitr(
   V::AbstractMatrix{T},
   ldv::Int, # TODO, try and remove
   H::AbstractMatrix{T},
-  ipntr::AbstractVector{Int},
-  workd::AbstractVector{T};
+  ldh::Int, 
+  ipntr::AbstractVecOrMat{Int},
+  workd::AbstractVecOrMat{T};
   state::ArpackState{T},
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
-  ) where T
+) where {T, BMAT}
 
   @attach_aitr_state(state)
 
@@ -998,7 +999,10 @@ function dsaitr(
   msglvl = @jl_arpack_debug(maitr,0)
 
   info = 0
-  back_from_reverse_communication = false
+  firststep = false # can't get these from reverse comm, so no need to save 
+  step2 = false 
+  step5 = false 
+  laststep = false 
 
   if ido[] == 0 # first run
     #=
@@ -1018,8 +1022,10 @@ function dsaitr(
     ipj = 1
     irj = ipj + n
     ivj = irj + n
+    # add a variable for julia for the firststep
+    firststep = true 
   else
-    back_from_reverse_communication = true
+    @assert(step3 || step4 || rstart || orth1 || orth2, "need a valid configuration")
   end
 
   #=
@@ -1037,120 +1043,437 @@ function dsaitr(
   #= in Julia, we implement this with a while loop to allow us
   to easily restart by running "continue" =#
   while true
-    if back_from_reverse_communication
-      back_from_reverse_communication = false # reset the flag
-      if step3
-        #Base.@goto _aitr_step3 # label 50 in dsaitr.f
+    if firststep
+      firststep = false 
+
+      # this is label 1000
+      if msglvl > 2
+        @assert debug !== nothing
+        println(debug.logfile, "_saitr: generating Arnoldi vector no. ", j)
+        println(debug.logfile, "_saitr: B-norm of the current residual ", rnorm[])
+      end
+      if rnorm[] <= 0
+        if msglvl > 0
+          println(debug.logfile, "_saitr: ****** restart at step ****** ", j)
+        end
+        # need to run a restart
+        @jl_arpack_set_stat(nrstrt, stats.nrstrt+1)
+        itry = 1
+        # label 20 in dsaitr.f 
+        rstart = true
+        ido[] = 0 # NOTE, dgetv0 will set ido[] != 0
+        # need to get to label 30 in dsaitr.f,
+        # which will happen after the first step... 
+        continue
+      else
+        # TODO need to get to label 40
+        step2 = true 
+        continue 
+      end
+    else # firststep is false ... either we are back from reverse communication or moving around
+      if step2 
+        @debug "start of step 2, label 40 in dsaitr.f"
+        #=
+        c        | STEP 2:  v_{j} = r_{j-1}/rnorm and p_{j} = p_{j}/rnorm  |
+        c        | Note that p_{j} = B*r_{j-1}. In order to avoid overflow |
+        c        | when reciprocating a small RNORM, test against lower    |
+        c        | machine bound.                                          |
+        =#
+        copyto!(@view(V[1:n,j]), @view(resid[1:n]))
+        if rnorm[] >= safmin
+          temp1 = one(T)/rnorm[]
+          _dscal!(temp1, @view(V[1:n,j]))
+          _dscal!(temp1, @view(workd[ipj:ipj+n-1]))
+        else
+          _scale_from_to!(rnorm[], one(T), @view(V[1:n,j]))
+          _scale_from_to!(rnorm[], one(T), @view(workd[ipj:ipj+n-1]))
+        end
+        step2 = false 
+        # setup for step 3
+        #=
+        c        | STEP 3:  r_{j} = OP*v_{j}; Note that p_{j} = B*v_{j} |
+        c        | Note that this is not quite yet r_{j}. See STEP 4    |
+        =#
+        step3 = true
+        @jl_arpack_set_stat(nopx, stats.nopx+1)
+        t2 = @jl_arpack_time()
+        copyto!(@view(workd[ivj:ivj+n-1]), @view(V[1:n,j]))
+        ipntr[1] = ivj
+        ipntr[2] = irj
+        ipntr[3] = ipj
+        ido[] = 1
+        if idonow === nothing
+          # c        | Exit in order to compute OP*v_{j} |
+          break # goto 9000, this will save the current state before return
+        else
+          # we do it right away in Julia...
+          _i_do_now_opx_1!(idonow, ipntr, workd, n) # handle the operation
+        end
+        # if we get here, step3 = true, step2 = false, so we will restart in step3
+      elseif step3
+        @debug "start of step 3, label 50 in dsaitr.f" # label 50 in dsaitr.f
+        # c        | Back from reverse communication;  |
+        # c        | WORKD(IRJ:IRJ+N-1) := OP*v_{j}.   |
+        @jl_update_time(tmvopx, t2)
+        step3 = false
+        # c        | Put another copy of OP*v_{j} into RESID. |
+        copyto!(@view(resid[1:n]), @view(workd[irj:irj+n-1]))
+
+        # setup for step 4
+        #=
+        c        | STEP 4:  Finish extending the symmetric   |
+        c        |          Arnoldi to length j. If MODE = 2 |
+        c        |          then B*OP = B*inv(B)*A = A and   |
+        c        |          we don't need to compute B*OP.   |
+        c        | NOTE: If MODE = 2 WORKD(IVJ:IVJ+N-1) is   |
+        c        | assumed to have A*v_{j}.                  |        
+        =#
+        step4 = true
+        if mode == 2
+          # do nothing...
+          # FORTRAN if (mode .eq. 2) go to 65
+          # this will just swing around and head on down 
+          # to step 4... because step4 = true
+        else
+          t2 = @jl_arpack_time()
+          if BMAT == :G
+            # compute something with B*Op*v ...
+            @jl_arpack_set_stat(nbx, stats.nbx+1)
+            ipntr[1] = irj
+            ipntr[2] = ipj
+            ido[] = 2 
+            if idonow === nothing
+              break # break out of while loop to return ...
+            else
+              _i_do_now_bx!(idonow, ipntr, workd, n)
+            end 
+          elseif BMAT == :I
+            copyto!(@view(workd[ipj:ipj+n-1]), @view(resid[1:n]))
+          end
+        end
       elseif step4
-        #Base.@goto _aitr_step4 # label 60 in dsaitr.f
+        # we aren't quite at label 60 here, because we should only
+        # hit label 60 if mode isn't 2... 
+        step4 = false 
+        if mode == 2
+          # this was in the case above, so we don't want to do more work here either.
+        else
+          @debug "label 60 in dsaitr.f" # label 60 in dsaitr.f
+          # c        | Back from reverse communication;  |
+          # c        | WORKD(IPJ:IPJ+N-1) := B*OP*v_{j}. |
+          if BMAT == :G
+            @jl_update_time(tmvbx, t2)
+          end
+        end
+
+        @debug "label 65 in dsaitr.f" # label 65 in dsaitr.f
+        if mode == 2
+          #=
+          c           | Note that the B-norm of OP*v_{j} |
+          c           | is the inv(B)-norm of A*v_{j}.   |
+          =#
+          wnorm = dot(@view(resid[1:n]), @view(workd[ivj:ivj+n-1]))
+          wnorm = sqrt(abs(wnorm))
+        elseif BMAT == :G
+          wnorm = dot(@view(resid[1:n]), @view(workd[ipj:ipj+n-1]))
+          wnorm = sqrt(abs(wnorm))
+        elseif BMAT == :I
+          #wnorm = _dnrm2(@view(resid[1:n])) # TODO, implement _dnrm2
+          wnorm = norm(@view(resid[1:n]))
+        end
+
+        #=
+        c        | Compute the j-th residual corresponding |
+        c        | to the j step factorization.            |
+        c        | Use Classical Gram Schmidt and compute: |
+        c        | w_{j} <-  V_{j}^T * B * OP * v_{j}      |
+        c        | r_{j} <-  OP*v_{j} - V_{j} * w_{j}      |
+        c
+        c        | Compute the j Fourier coefficients w_{j} |
+        c        | WORKD(IPJ:IPJ+N-1) contains B*OP*v_{j}.  |
+        =#
+
+        # TODO check to make sure the workd[irj:irj+j-1] is correct here...
+        if mode != 2
+          _dgemv_simple!('T', n, j, 1.0, V, ldv, @view(workd[ipj:ipj+n-1]), 
+            0.0, @view(workd[irj:irj+j-1]))
+        else 
+          # the difference is ipj (mode != 2) and ivj (mode == 2)
+          _dgemv_simple!('T', n, j, 1.0, V, ldv, @view(workd[ivj:ivj+n-1]), 
+            0.0, @view(workd[irj:irj+j-1]))
+        end
+      
+        # c        | Orthgonalize r_{j} against V_{j}.    |
+        # c        | RESID contains OP*v_{j}. See STEP 3. | 
+      
+        _dgemv_simple!('N', n, j, -1.0, V, ldv, @view(workd[irj:irj+j-1]), 
+          1.0, @view(resid[1:n]))
+
+        # c        | Extend H to have j rows and columns. |
+
+        H[j,2] = workd[irj+j-1]
+
+        if j == 1 || rstart
+          H[j,1] = 0
+        else
+          H[j,1] = rnorm[]
+        end 
+
+        # start the orthgonalization step
+        t4 = @jl_arpack_time()
+        orth1 = true
+        iter = 0 
+        # TODO, figure out how to save this sequence...
+        t2 = @jl_arpack_time()
+        if BMAT == :G
+          # compute something with B*Op*v ...
+          @jl_arpack_set_stat(nbx, stats.nbx+1)
+          copyto!(@view(workd[irj:irj+n-1]), @view(resid[1:n]))
+          ipntr[1] = irj
+          ipntr[2] = ipj
+          ido[] = 2 
+          if idonow === nothing
+            break # break out of while loop to return ...
+          else
+            _i_do_now_bx!(idonow, ipntr, workd, n)
+          end 
+        elseif BMAT == :I
+          copyto!(@view(workd[ipj:ipj+n-1]), @view(resid[1:n]))
+        end
       elseif orth1
-        #Base.@goto _aitr_orth1 # label 70 in dsaitr.f
+        @debug "orth1==true case, label 70 in dsaitr.f" # label 70 in dsaitr.f
+        orth1 = false 
+        # c        | Back from reverse communication if ORTH1 = .true. |
+        # c        | WORKD(IPJ:IPJ+N-1) := B*r_{j}.                    |
+        if BMAT == :G
+          @jl_update_time(tmvbx, t2)
+        end
+
+        # c        | Compute the B-norm of r_{j}. |
+        # TODO, this is a shared function we could out-source...
+        # it occurs one other place...
+        if BMAT == :G
+          rnorm[] = dot(@view(resid[1:n]), @view(workd[ipj:ipj+n-1]))
+          rnorm[] = sqrt(abs(rnorm[]))
+        elseif BMAT == :I
+          #wnorm = _dnrm2(@view(resid[1:n])) # TODO, implement _dnrm2
+          rnorm[] = norm(@view(resid[1:n]))
+        end
+
+        # end of step4 move to step5 if necessary...
+
+        #=
+        c        | STEP 5: Re-orthogonalization / Iterative refinement phase |
+        c        | Maximum NITER_ITREF tries.                                |
+        c        |                                                           |
+        c        |          s      = V_{j}^T * B * r_{j}                     |
+        c        |          r_{j}  = r_{j} - V_{j}*s                         |
+        c        |          alphaj = alphaj + s_{j}                          |
+        c        |                                                           |
+        c        | The stopping criteria used for iterative refinement is    |
+        c        | discussed in Parlett's book SEP, page 107 and in Gragg &  |
+        c        | Reichel ACM TOMS paper; Algorithm 686, Dec. 1990.         |
+        c        | Determine if we need to correct the residual. The goal is |
+        c        | to enforce ||v(:,1:j)^T * r_{j}|| .le. eps * || r_{j} ||  |
+        =#
+
+        if rnorm[] > 0.717*wnorm
+          # GOTO label 100
+          laststep = true 
+        else 
+          step5 = true
+        end
+      elseif step5 == true
+        @debug "label 80 in dsaitr.f"
+        step5 = false 
+        
+        @jl_arpack_set_stat(nrorth, stats.nrorth+1)
+        #=
+        c        | Enter the Iterative refinement phase. If further  |
+        c        | refinement is necessary, loop back here. The loop |
+        c        | variable is ITER. Perform a step of Classical     |
+        c        | Gram-Schmidt using all the Arnoldi vectors V_{j}  |
+        =#
+          
+        if msglvl > 2
+          # no xtemp here... just use two print statements...
+          println(debug.logfile, "_saitr: re-orthonalization ; wnorm is ", wnorm)
+          println(debug.logfile, "_saitr: re-orthonalization ; rnorm is ", rnorm[])
+        end
+        # c        | Compute V_{j}^T * B * r_{j}.                       |
+        # c        | WORKD(IRJ:IRJ+J-1) = v(:,1:J)'*WORKD(IPJ:IPJ+N-1). |
+        _dgemv_simple!('T', n, j, one(T), V, ldv, @view(workd[ipj:ipj+n-1]), 
+          zero(T), @view(workd[irj:irj+j-1]))
+        #=
+        c        | Compute the correction to the residual:      |
+        c        | r_{j} = r_{j} - V_{j} * WORKD(IRJ:IRJ+J-1).  |
+        c        | The correction to H is v(:,1:J)*H(1:J,1:J) + |
+        c        | v(:,1:J)*WORKD(IRJ:IRJ+J-1)*e'_j, but only   |
+        c        | H(j,j) is updated.                           |
+        =#
+        _dgemv_simple!('N', n, j, -one(T), V, ldv, 
+            @view(workd[irj:irj+j-1]), 
+            one(T), @view(resid[1:n]))
+        if j == 1 || rstart 
+          H[j,1] = 0
+        end
+        H[j,2] = H[j,2] + workd[irj+j-1]
+
+        orth2 = true
+
+        # TODO, figure out how to save this sequence... t is reused...
+        t2 = @jl_arpack_time()
+        if BMAT == :G
+          # compute something with B*Op*v ...
+          @jl_arpack_increment_stat(nbx)
+          copyto!(@view(workd[irj:irj+n-1]), @view(resid[1:n]))
+          ipntr[1] = irj
+          ipntr[2] = ipj
+          ido[] = 2 
+          if idonow === nothing
+            break # break out of while loop to return ...
+          else
+            _i_do_now_bx!(idonow, ipntr, workd, n)
+          end 
+        elseif BMAT == :I
+          copyto!(@view(workd[ipj:ipj+n-1]), @view(resid[1:n]))
+        end
+        # c           | Exit in order to compute B*r_{j}. |
+        # c           | r_{j} is the corrected residual.  |
       elseif orth2
-        #Base.@goto _aitr_orth2 # label 90 in dsaitr.f
-      elseif rstart
-        Base.@goto _aitr_rstart # label 30 in dsaitr.f
+        @debug "orth2 == true, label 90 in dsaitr.f"
+
+        # This line isn't in dsaitr.f, but given our looping logic, 
+        # we need it here because we need to get down to laststep
+        # below if rnorm1 > rnorm or if we aren't doing more
+        # iterative refinement
+        orth2 = false 
+
+        # c        | Back from reverse communication if ORTH2 = .true. |
+        if BMAT == :G
+          @jl_update_time(tmvbx, t2)
+        end
+
+        # c        | Compute the B-norm of the corrected residual r_{j}. |
+        if BMAT == :G
+          rnorm1 = dot(@view(resid[1:n]), @view(workd[ipj:ipj+n-1]))
+          rnorm1 = sqrt(abs(rnorm1))
+        elseif BMAT == :I
+          rnorm1 = norm(@view(resid[1:n]))
+        end
+
+        if msglvl > 0 && iter > 0
+          println(debug.logfile, "_saitr: iterative refinement for Arnoldi residual ", j)
+          if msglvl > 2
+            # no xtemp here... just use two print statements...
+            println(debug.logfile, "_saitr: iterative refinement ; rnorm is ", rnorm[])
+            println(debug.logfile, "_saitr: iterative refinement ; rnorm1 is ", rnorm1)
+          end
+        end
+
+        # c        | Determine if we need to perform another |
+        # c        | step of re-orthogonalization.           |
+        if rnorm1 > 0.717*rnorm[]
+          rnorm[] = rnorm1 
+          laststep = true 
+        else
+          # c           | Another step of iterative refinement step |
+          # c           | is required. NITREF is used by stat.h     |
+          @jl_arpack_increment_stat(nitref)
+          rnorm[] = rnorm1 
+          iter += 1
+          if iter <= 1
+            step5 = true # go back up to label 80...
+          else
+            # c           | Otherwise RESID is numerically in the span of V |
+            fill!(@view(resid[1:n]), 0)
+            rnorm[] = 0 
+            # need to get to label 100 now, so we are going to set laststep = true
+            laststep = true
+          end 
+        end
+      elseif laststep # this is the end of the iteration
+        #=
+        c        | Branch here directly if iterative refinement |
+        c        | wasn't necessary or after at most NITER_REF  |
+        c        | steps of iterative refinement.               |
+        =# 
+        @debug "laststep == true, label 100 in dsaitr.f"
+        laststep = false 
+
+        # label 100 in the Fortran code! 
+        rstart = false
+        orth2 = false 
+        @jl_update_time(titref, t4)
+        #=
+        c        | Make sure the last off-diagonal element is non negative  |
+        c        | If not perform a similarity transformation on H(1:j,1:j) |
+        c        | and scale v(:,j) by -1.                                  |
+        =#
+        if H[j,1] < 0
+          H[j,1] = - H[j,1]
+          if j < k+np 
+            _dscal!(-one(T), @view(V[1:n,j+1]))
+          else
+            _dscal!(-one(T), @view(resid[1:n]))
+          end
+        end 
+
+        #=
+        c        | STEP 6: Update  j = j+1;  Continue |
+        =#
+        j = j+1
+
+        if j > k+np
+          # we are done... prep for exit from the routine...
+          @jl_update_time(taitr, t0)
+          ido[] = 99
+          if msglvl > 1
+            _arpack_vout(debug, "_saitr: main diagonal of matrix H of step K+NP", 
+              @view(H[1:k+np, 2]))
+            if k+np > 1
+              _arpack_vout(debug, "_saitr: sub diagonal of matrix H of step K+NP", 
+                @view(H[2:k+np-1, 1]))
+            end
+          end
+          break 
+        else
+          # c        | Loop back to extend the factorization by another step. |
+          firststep = true
+        end
+      elseif rstart # rstart often stays on for a while, so it should come last...
+        # label 30 in dsaitr.f
+        ierr = dgetv0!(ido, Val(BMAT), itry, false, n, j, V, 
+                      ldv, resid, rnorm, ipntr, workd;
+                      state, debug, stats, idonow)
+        if ido[] != 99
+          break # we want to exit the while loop and return
+        end
+        if ierr < 0 
+          itry += 1
+
+          if itry <= 3
+            # we just inline the code for label 20 here 20 again here...
+            rstart = true
+            ido[] = 0 
+            continue # this will move us back to label 30
+          end
+          #=
+          c              | Give up after several restart attempts.        |
+          c              | Set INFO to the size of the invariant subspace |
+          c              | which spans OP and exit.                       |
+          =#
+          info = j-1 
+          @jl_update_time(taitr, t2)
+          ido[] = 99 
+          break #
+        end
+        step2 = true
+        # no real need for continue here... 
       else
         error("impossible situtation")
       end
     end
-
-    if msglvl > 2
-      @assert debug != nothing
-      println(debug.logfile, "_saitr: generating Arnoldi vector no. ", j)
-      println(debug.logfile, "_saitr: B-norm of the current residual ", rnorm[])
-    end
-    if rnorm <= 0
-      if msglvl > 0
-        println(debug.logfile, "_saitr: ****** restart at step ****** ", j)
-      end
-      # need to run a restart
-      @jl_arpack_set_stat(nrstrt, stats.nrstrt+1)
-      itry = 1
-      rstart = true
-      ido[] = 0 # NOTE, dgetv0 will set ido[] != 0
-      #Base.@label _aitr_rstart
-      dgetv0(ido, bmat, itry, false, n, j, V, ldv, resid, rnorm, ipntr, workd, ierr)
-    else
-    end
-
-    if rnorm >= 0
-      # skip the stuff below and
-    else
-      Base.@label _aitr_rstart # LABEL 30
-      # restart process because we
-      # repeatedly call dgetv0
-      # until ierr >= 0
-
-      # TODO, work out logic here
-    end
-    Base.@label _aitr_rstart_done # LABEL 40
-    copyto!(@view(v[1:n,j]), @view(resid[1:n]))
-    if rnorm[] >= safmin
-      temp1 = one/rnorm
-      _dscal(temp1, @view(v[1:n,j]))
-      _dscal(temp1, @view(workd[ipj:ipj+n-1]))
-    else
-      _scale_from_to!(rnorm[], one(T), @view(v[1:n,j]))
-      _scale_from_to!(rnorm[], one(T), @view(workd[ipj:ipj+n-1]))
-    end
-
-    #=
-    c        | STEP 3:  r_{j} = OP*v_{j}; Note that p_{j} = B*v_{j} |
-    c        | Note that this is not quite yet r_{j}. See STEP 4    |
-    =#
-    step3 = true
-    @jl_arpack_set_stat(nopx, stats.nopx+1)
-    t2 = @jl_arpack_time()
-    copyto!(@view(workd[ivj:ivj+n-1]), @view(v[1:n,j]))
-    ipntr[1] = ivj
-    ipntr[2] = irj
-    ipntr[3] = ipj
-    ido[] = 1
-    if idonow == nothing
-      break # goto 9000, this will save the current state before return
-    else
-      #_arpack_op!(idonow, @view[])
-    end
-
-    Base.@label _aitr_step3
-    @jl_update_time(tmvopx, t2)
-    step3 = false
-
-    copyto!(@view(resid[1:n]), @view(workd[irj:irj+n-1]))
-    if mode == 2
-      # skip lots below
-    elseif bmat == :G
-      # compute something with B*Op*v ...
-      t2 = @jl_arpack_time()
-      step4 = true
-      if idonow == nothing
-        break # break out of while loop to return ...
-      else
-        #_arpack_Bop!(idonow, @view[])
-      end
-      # return from reverse communication...
-      Base.@label _aitr_step4
-      step4 = false
-    elseif bmat == :I
-      copyto!(@view(workd[ipj:ipj+n-1]), @view(resid[1:n]))
-    end
-
-    if mode == 2
-      # time to do soemthing
-      #=
-      c           | Note that the B-norm of OP*v_{j} |
-      c           | is the inv(B)-norm of A*v_{j}.   |
-      =#
-      wnorm = dot(@view(resid[1:n]), @view(workd[ivj:ivj+n-1]))
-      wnorm = sqrt(abs(wnorm))
-    elseif bmat == :G
-      wnorm = dot(@view(resid[1:n]), @view(workd[ipj:ipj+n-1]))
-      wnorm = sqrt(abs(wnorm))
-    elseif bmat == :I
-      #wnorm = _dnrm2(@view(resid[1:n])) # TODO, implement _dnrm2
-      wnorm = norm(@view(resid[1:n]))
-    end
-
   end
 
   state.aitr = AitrState{T}(@aitr_state_vars)

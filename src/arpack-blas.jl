@@ -67,8 +67,8 @@ function _scale_from_to(from::T, to::T, v) where T
   return v
 end
 
-function _dscal(a::T, v) where T
-  broadcast!(*, v, v, mul)
+function _dscal!(a::T, v) where T
+  broadcast!(*, v, v, a)
 end
 ##
 function _dlassq(v::AbstractVector{T}) where T

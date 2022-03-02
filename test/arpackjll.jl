@@ -111,3 +111,47 @@ function arpack_dgetv0!(ido::Ref{LinearAlgebra.BlasInt}, bmat::Symbol, itry::Int
     ido, string(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd, ierr)
   return ierr[]
 end
+
+
+##
+import Arpack_jll, LinearAlgebra
+function arpack_dsaitr!(
+    ido::Ref{LinearAlgebra.BlasInt}, 
+    bmat::Symbol, 
+    n::Int, 
+    k::Int,
+    np::Int, 
+    mode::Int, 
+    resid::StridedVecOrMat{Float64},
+    rnorm::Ref{Float64},
+    v::StridedVecOrMat{Float64},
+    ldv::Int,
+    h::StridedVecOrMat{Float64},
+    ldh::Int,
+    ipntr::StridedVecOrMat{LinearAlgebra.BlasInt},
+    workd::StridedVecOrMat{Float64}
+)
+  info = Ref{LinearAlgebra.BlasInt}(0)
+  # NOTE, arpack doesn't touch ierr unless ido[] == 0 or there is
+  # a restart failure.
+  # @show ido[], itry, initv, n, j, string(bmat)
+  ccall((:dsaitr_, Arpack_jll.libarpack), Cvoid,
+    (Ref{LinearAlgebra.BlasInt}, # ido
+     Ptr{UInt8}, # bmat
+     Ref{LinearAlgebra.BlasInt}, #n
+     Ref{LinearAlgebra.BlasInt}, #k 
+     Ref{LinearAlgebra.BlasInt}, #np
+     Ref{LinearAlgebra.BlasInt}, #mode 
+     Ptr{Float64}, #resid
+     Ref{Float64}, #rnorm
+     Ptr{Float64}, #v
+     Ref{LinearAlgebra.BlasInt}, #ldv
+     Ptr{Float64}, #h
+     Ref{LinearAlgebra.BlasInt}, #lhd
+     Ptr{LinearAlgebra.BlasInt}, #ipntr
+     Ptr{Float64}, #workd
+     Ref{LinearAlgebra.BlasInt}), #info
+    ido, string(bmat), n, k, np, mode, resid, rnorm, 
+    v, ldv, h, ldh, ipntr, workd, info)
+  return info[]
+end

@@ -115,6 +115,14 @@ macro jl_arpack_set_stat(field, value)
   end )
 end
 
+macro jl_arpack_increment_stat(field)
+  return esc( quote
+    if stats !== nothing
+      stats.$field += 1
+    end
+  end )
+end
+
 macro jl_update_time(field, t0 )
   return esc( quote
     if stats !== nothing
@@ -207,24 +215,25 @@ Base.@kwdef struct AitrState{T}
   rstart::Bool = false
   step3::Bool = false
   step4::Bool = false
-  ierr::Int = 0
-  ipj::Int = 0
-  irj::Int = 0
-  ivj::Int = 0
+  ierr::Int = 0 # TODO check and remove... 
+  ipj::Int = 0 # TODO remove
+  irj::Int = 0 # TODO remove
+  ivj::Int = 0 # TODO remove 
   iter::Int = 0
-  itry::Int = 0
-  j::Int = 0
-  rnorm1::T = zero(T)
+  itry::Int = 0 
+  j::Int = 0 
+  rnorm1::T = zero(T) # TODO remove 
   wnorm::T = zero(T)
   t0::ArpackTime = zero(ArpackTime)
   t2::ArpackTime = zero(ArpackTime)
+  t4::ArpackTime = zero(ArpackTime)
 end
 
 const _aitr_state_vars = (
         :orth1, :orth2, :rstart, :step3, :step4,   # logical vars
         :ierr, :ipj, :irj, :ivj, :iter, :itry, :j, # integer vars
         :rnorm1, :wnorm, # double vars
-        :t0, :t2
+        :t0, :t2, :t4
         )
 
 macro attach_aitr_state(statevar)
