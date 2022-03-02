@@ -22,7 +22,7 @@ function _check_dgetv0_sequence!(M;
   workd = zeros(2n)
 
   # allocate a separate copy of Arpack
-  arido = Ref{Int}(0)
+  arido = Ref{Int}(ido[])
   arv = copy(v)
   arresid = copy(resid0)
   arrnorm = Ref{Float64}(rnorm[])
