@@ -503,7 +503,7 @@ IERR    Integer.  (OUTPUT)
 """
 function dgetv0!(
   ido::Ref{Int}, # input/output
-  bmat::Type{Val{BMAT}},
+  ::Val{BMAT},
   itry::Int, # input
   initv::Bool,
   n::Int,

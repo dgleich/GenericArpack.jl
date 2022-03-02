@@ -30,7 +30,7 @@
 
     state=ArpackInJulia.ArpackState{Float64}()
     ierr = ArpackInJulia.dgetv0!(
-      ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+      ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state)
     @test resid == v0
     @test state.getv0.iseed[] != tuple(1,3,5,7)
@@ -56,7 +56,7 @@
 
     state=ArpackInJulia.ArpackState{Float64}()
     ierr = ArpackInJulia.dgetv0!(
-      ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+      ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state)
     @test ierr == 0
     @test state.getv0.first == false
@@ -76,7 +76,7 @@
       mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),M,@view(workd[ipntr[1]:ipntr[1]+n-1]))
     end
     ierr = ArpackInJulia.dgetv0!(
-      ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+      ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state)
     @test state.getv0.first == false
     @test state.getv0.orth == false
@@ -107,7 +107,7 @@
 
     state=ArpackInJulia.ArpackState{Float64}()
     ierr = ArpackInJulia.dgetv0!(
-      ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+      ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state)
     @test ierr == 0
     @test ido[] == -1
@@ -119,7 +119,7 @@
       mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),M,@view(workd[ipntr[1]:ipntr[1]+n-1]))
     end
     ierr = ArpackInJulia.dgetv0!(
-      ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+      ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state)
     @test state.getv0.first == true
     @test state.getv0.orth == false
@@ -135,7 +135,7 @@
 
 
     ierr = ArpackInJulia.dgetv0!(
-      ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+      ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state)
     
     @test state.getv0.first == false
@@ -167,7 +167,7 @@
 
     state=ArpackInJulia.ArpackState{Float64}()
     ierr = ArpackInJulia.dgetv0!(
-      ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+      ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state)
     @test ierr == -1
 
@@ -187,7 +187,7 @@
     stats=ArpackInJulia.ArpackStats()
     debug.mgetv0 = 4
     ierr = ArpackInJulia.dgetv0!(
-      ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+      ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state, debug, stats)
     @test ierr == 0
     @test isapprox(sum(resid), 0.0; atol=n*eps(1.0))
@@ -224,7 +224,7 @@
     stats=ArpackInJulia.ArpackStats()
     while ido[] != 99
       ierr = ArpackInJulia.dgetv0!(
-        ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
+        ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
         state,stats)
       niter += 1
       if ido[] == -1
