@@ -656,8 +656,8 @@ function dgetv0!(
       c     | Parlett's book, page 107 and in Gragg & Reichel TOMS paper.   |
       =#
 
-      _dgemv_simple!('T', n, j-1, 1.0, V, ldv, workd, 0.0, @view(workd[(n+1):(2n)]))
-      _dgemv_simple!('N', n, j-1, -1.0, V, ldv, @view(workd[(n+1):(2n)]), 1.0,
+      _dgemv_blas!('T', n, j-1, 1.0, V, ldv, workd, 0.0, @view(workd[(n+1):(2n)]))
+      _dgemv_blas!('N', n, j-1, -1.0, V, ldv, @view(workd[(n+1):(2n)]), 1.0,
         @view(resid[1:n]))
       # c     | Compute the B-norm of the orthogonalized starting vector |
       t2 = @jl_arpack_time()
@@ -757,22 +757,3 @@ _dlarnv_blas!(idist::Int,
     (Ref{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, Ptr{Float64}),
     idist, iseed, n, x)#
 
-
-_dgemv_simple!(
-  trans::Char,
-  m::Int,
-  n::Int,
-  alpha::Float64,
-  a::StridedVecOrMat{Float64},
-  lda::Int,
-  x::StridedVecOrMat{Float64},
-  beta::Float64,
-  y::StridedVecOrMat{Float64},
-  ) =
-  ccall((LinearAlgebra.BLAS.@blasfunc("dgemv_"), LinearAlgebra.BLAS.libblas), Cvoid,
-   (Ref{UInt8}, Ref{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt},
-    Ref{Float64}, Ptr{Float64}, Ref{LinearAlgebra.BlasInt},
-      Ptr{Float64}, Ref{LinearAlgebra.BlasInt},
-      Ref{Float64}, # beta
-       Ptr{Float64}, Ref{LinearAlgebra.BlasInt}),
-   trans, m, n, alpha, a, lda, x, stride(x,1), beta, y, stride(y,1))

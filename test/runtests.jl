@@ -23,6 +23,8 @@ if "debug" in ARGS
   ENV["JULIA_DEBUG"] = "ArpackInJulia,Main"
 end
 
+include("utility.jl")
+
 using Test
 using ArpackInJulia
 

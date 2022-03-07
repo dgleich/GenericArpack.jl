@@ -1022,6 +1022,11 @@ function dsaitr!(
     ipj = 1
     irj = ipj + n
     ivj = irj + n
+    #
+    iter = 0 
+    itry = 0 
+    rnorm1 = zero(T) 
+    wnorm = zero(T) 
     # add a variable for julia for the firststep
     firststep = true 
   else
@@ -1066,7 +1071,7 @@ function dsaitr!(
         # which will happen after the first step... 
         continue
       else
-        # TODO need to get to label 40
+        # need to get to label 40
         step2 = true 
         continue 
       end
@@ -1166,6 +1171,9 @@ function dsaitr!(
           end
         end
 
+        # c        | The following is needed for STEP 5. |
+        # c        | Compute the B-norm of OP*v_{j}.     |
+
         @debug "label 65 in dsaitr.f" # label 65 in dsaitr.f
         if mode == 2
           #=
@@ -1179,7 +1187,7 @@ function dsaitr!(
           wnorm = sqrt(abs(wnorm))
         elseif BMAT == :I
           #wnorm = _dnrm2(@view(resid[1:n])) # TODO, implement _dnrm2
-          wnorm = norm(@view(resid[1:n]))
+          wnorm = _dnrm2_unroll_ext(@view(resid[1:n]))
         end
 
         #=
@@ -1195,18 +1203,18 @@ function dsaitr!(
 
         # TODO check to make sure the workd[irj:irj+j-1] is correct here...
         if mode != 2
-          _dgemv_simple!('T', n, j, 1.0, V, ldv, @view(workd[ipj:ipj+n-1]), 
+          _dgemv_blas!('T', n, j, 1.0, V, ldv, @view(workd[ipj:ipj+n-1]), 
             0.0, @view(workd[irj:irj+j-1]))
         else 
           # the difference is ipj (mode != 2) and ivj (mode == 2)
-          _dgemv_simple!('T', n, j, 1.0, V, ldv, @view(workd[ivj:ivj+n-1]), 
+          _dgemv_blas!('T', n, j, 1.0, V, ldv, @view(workd[ivj:ivj+n-1]), 
             0.0, @view(workd[irj:irj+j-1]))
         end
       
         # c        | Orthgonalize r_{j} against V_{j}.    |
         # c        | RESID contains OP*v_{j}. See STEP 3. | 
       
-        _dgemv_simple!('N', n, j, -1.0, V, ldv, @view(workd[irj:irj+j-1]), 
+        _dgemv_blas!('N', n, j, -1.0, V, ldv, @view(workd[irj:irj+j-1]), 
           1.0, @view(resid[1:n]))
 
         # c        | Extend H to have j rows and columns. |
@@ -1257,7 +1265,7 @@ function dsaitr!(
           rnorm[] = sqrt(abs(rnorm[]))
         elseif BMAT == :I
           #wnorm = _dnrm2(@view(resid[1:n])) # TODO, implement _dnrm2
-          rnorm[] = norm(@view(resid[1:n]))
+          rnorm[] = _dnrm2_unroll_ext(@view(resid[1:n]))
         end
 
         # end of step4 move to step5 if necessary...
@@ -1302,7 +1310,7 @@ function dsaitr!(
         end
         # c        | Compute V_{j}^T * B * r_{j}.                       |
         # c        | WORKD(IRJ:IRJ+J-1) = v(:,1:J)'*WORKD(IPJ:IPJ+N-1). |
-        _dgemv_simple!('T', n, j, one(T), V, ldv, @view(workd[ipj:ipj+n-1]), 
+        _dgemv_blas!('T', n, j, one(T), V, ldv, @view(workd[ipj:ipj+n-1]), 
           zero(T), @view(workd[irj:irj+j-1]))
         #=
         c        | Compute the correction to the residual:      |
@@ -1311,7 +1319,7 @@ function dsaitr!(
         c        | v(:,1:J)*WORKD(IRJ:IRJ+J-1)*e'_j, but only   |
         c        | H(j,j) is updated.                           |
         =#
-        _dgemv_simple!('N', n, j, -one(T), V, ldv, 
+        _dgemv_blas!('N', n, j, -one(T), V, ldv, 
             @view(workd[irj:irj+j-1]), 
             one(T), @view(resid[1:n]))
         if j == 1 || rstart 
@@ -1359,7 +1367,7 @@ function dsaitr!(
           rnorm1 = dot(@view(resid[1:n]), @view(workd[ipj:ipj+n-1]))
           rnorm1 = sqrt(abs(rnorm1))
         elseif BMAT == :I
-          rnorm1 = norm(@view(resid[1:n]))
+          rnorm1 = _dnrm2_unroll_ext(@view(resid[1:n]))
         end
 
         if msglvl > 0 && iter > 0
@@ -1433,7 +1441,7 @@ function dsaitr!(
               @view(H[1:k+np, 2]))
             if k+np > 1
               _arpack_vout(debug, "_saitr: sub diagonal of matrix H of step K+NP", 
-                @view(H[2:k+np-1, 1]))
+                @view(H[2:k+np, 1]))
             end
           end
           break 
@@ -1443,6 +1451,7 @@ function dsaitr!(
         end
       elseif rstart # rstart often stays on for a while, so it should come last...
         # label 30 in dsaitr.f
+        @debug "calling dgetv0"
         ierr = dgetv0!(ido, Val(BMAT), itry, false, n, j, V, 
                       ldv, resid, rnorm, ipntr, workd;
                       state, debug, stats, idonow)

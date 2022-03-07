@@ -29,6 +29,33 @@ _dlascl_blas!(cfrom::Float64, cto::Float64, a::StridedVecOrMat{Float64}) = begin
   a
 end
 
+
+_dgemv_blas!(
+  trans::Char,
+  m::Int,
+  n::Int,
+  alpha::Float64,
+  a::StridedVecOrMat{Float64},
+  lda::Int,
+  x::StridedVecOrMat{Float64},
+  beta::Float64,
+  y::StridedVecOrMat{Float64},
+  ) =
+  ccall((LinearAlgebra.BLAS.@blasfunc("dgemv_"), LinearAlgebra.BLAS.libblas), Cvoid,
+   (Ref{UInt8}, Ref{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt},
+    Ref{Float64}, Ptr{Float64}, Ref{LinearAlgebra.BlasInt},
+      Ptr{Float64}, Ref{LinearAlgebra.BlasInt},
+      Ref{Float64}, # beta
+       Ptr{Float64}, Ref{LinearAlgebra.BlasInt}),
+   trans, m, n, alpha, a, lda, x, stride(x,1), beta, y, stride(y,1))
+
+_dnrm2_blas(
+  a::StridedVecOrMat{Float64},
+) = ccall((LinearAlgebra.BLAS.@blasfunc("dnrm2_"), LinearAlgebra.BLAS.libblas), Float64,
+  (Ref{LinearAlgebra.BlasInt}, Ptr{Float64}, Ref{LinearAlgebra.BlasInt}),
+  length(a), a, stride(a,1))
+
+
 ##
 function _dlapy2_blas(x::Float64, y::Float64)
   return ccall((LinearAlgebra.BLAS.@blasfunc("dlapy2_"), LinearAlgebra.BLAS.libblas), Float64,
