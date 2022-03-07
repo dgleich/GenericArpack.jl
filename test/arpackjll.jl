@@ -1,7 +1,30 @@
-import Arpack_jll, LinearAlgebra
+import Arpack_jll, LinearAlgebra, SHA
 
 # show the library if we are debugging...
-@debug Arpack_jll.libarpack
+@debug Arpack_jll.libarpack, bytes2hex(open(SHA.sha256, Arpack_jll.libarpack))
+
+function _reset_libarpack_dgetv0_iseed()
+  # we need hardcoded offsets because we can't get these from cglobal :( )
+  sha = open(SHA.sha256, Arpack_jll.libarpack)
+  if bytes2hex(sha) == "5c1e951fad68bd7b180b83f2d821324efbdda7e00f5926698fad720249d6ac3f"
+    iseedoffset = 0x0000000000059fc0
+    dgetv0offset = 0x000000000001f940
+  else
+    @error("Unknown libarpack sha $sha for $(Arpack_jll.libarpack)")
+  end
+  libar = Base.Libc.dlopen(Arpack_jll.libarpack)
+  dgetv0_real_offset = Base.Libc.dlsym(libar, "dgetv0_")
+  base_offset = dgetv0_real_offset-dgetv0offset # this comes from the command above
+  piseedoffset = Ptr{LinearAlgebra.BlasInt}(base_offset + iseedoffset)
+  previseed = unsafe_load.(piseedoffset, (1,2,3,4))
+
+
+  # store the values 1,3,5,6 at indices 1,2,3,4... which resets to the initial Arpack config.
+  unsafe_store!.(piseedoffset, (1,3,5,7), (1,2,3,4))
+  newiseed = unsafe_load.(piseedoffset, (1,2,3,4))
+
+  return previseed, newiseed
+end 
 
 function arpack_set_debug_high()
   # [Documentation and structure of debug block here.](https://github.com/opencollab/arpack-ng/blob/master/SRC/debug.h)
