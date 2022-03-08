@@ -49,7 +49,7 @@ function _check_dgetv0_sequence!(M;
     @test arido[] == ido[]
     @test arv == v
     @test arresid == resid
-    @test arrnorm[] ≈ rnorm[]
+    @test arrnorm[] == rnorm[]
     @test aripntr == ipntr
     @test arworkd == workd  
     if ido[] == -1

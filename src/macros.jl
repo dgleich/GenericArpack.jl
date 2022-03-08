@@ -99,6 +99,18 @@ Base.@kwdef mutable struct ArpackDebug{IOT <: IO}
   meupd::Int = 0
 end
 
+function set_debug_high!(debug::ArpackDebug)
+  debug.mgetv0 = 4
+  debug.maupd = 4
+  debug.maup2 = 4
+  debug.maitr = 4 
+  debug.meigt = 4
+  debug.mapps = 4
+  debug.mgets = 4
+  debug.meupd = 4
+  return debug
+end 
+
 #ArpackDebug(;) = ArpackDebug(;logfile=stdout,ndigit=(displaysize(stdout)[2] > 80) ? 1 : -1)
 
 ArpackTime = Float64
@@ -164,6 +176,14 @@ Base.@kwdef mutable struct ArpackStats
   tgetv0::ArpackTime = 0.0
   titref::ArpackTime = 0.0
   trvec::ArpackTime = 0.0
+end
+
+macro jl_arpack_check_bmat(var)
+  return esc( quote
+    if ($var != :I) && ($var != :G)
+      throw(ArgumentError(string("bmat is ", $var, " which is not :I or :G")))
+    end 
+  end)
 end
 
 macro jl_arpack_check_length(var,len)
@@ -255,7 +275,7 @@ Base.@kwdef struct Getv0State{T}
   iter::Int = 0
   rnorm0::T = zero(T)
   t0::ArpackTime = zero(ArpackTime)
-  t2::ArpackTime = zero(ArpackTime)
+  t2::ArpackTime = zero(ArpackTime) 
 end
 
 const _getv0_state_vars = (

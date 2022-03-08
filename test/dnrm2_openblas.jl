@@ -39,7 +39,7 @@ end
 =#
 
 ##
-if ARCH==:x86_64 || ARCH==:x86
+if Sys.ARCH==:x86_64 || Sys.ARCH==:x86
   @testset "_dnrm2 Compare to OpenBLAS on x86 / x86_64" begin
     import LinearAlgebra
     _dnrm2_blas(

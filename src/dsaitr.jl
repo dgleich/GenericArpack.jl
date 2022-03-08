@@ -989,6 +989,7 @@ function dsaitr!(
   @jl_arpack_check_length(resid, n)
   @jl_arpack_check_size(V, n, k+np)
   @jl_arpack_check_size(H, k+np, 2)
+  @jl_arpack_check_bmat(BMAT)
 
   #=
   c        | Initialize timing statistics  |

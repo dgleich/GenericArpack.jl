@@ -10,7 +10,10 @@ function _reset_libarpack_dgetv0_iseed()
     iseedoffset = 0x0000000000059fc0
     dgetv0offset = 0x000000000001f940
   else
-    @error("Unknown libarpack sha $sha for $(Arpack_jll.libarpack)")
+    errmsg = """Unknown libarpack sha $sha for $(Arpack_jll.libarpack)
+
+    Please post a new issue on the github page for ArpackInJulia."""
+    @error(errmsg)
   end
   libar = Base.Libc.dlopen(Arpack_jll.libarpack)
   dgetv0_real_offset = Base.Libc.dlsym(libar, "dgetv0_")

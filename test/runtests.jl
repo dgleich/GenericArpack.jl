@@ -29,10 +29,13 @@ using Test
 using ArpackInJulia
 
 # want to run these first... 
+# Generally, the strategy is to write "method_simple" and "method_arpackjll" here...
 if false # switch to true while developing
   @testset "development..." begin
     #include("arpackjll.jl") # uncomment to develop arpackjll tests
+
   end
+  #exit(0)
 end
 
 include("macros.jl")
@@ -71,6 +74,7 @@ include("macros.jl")
   end
 
   include("dgetv0_simple.jl")
+  include("dsaitr_simple.jl")
 end
 
 @testset "dstqrb" begin
@@ -114,6 +118,10 @@ if "arpackjll" in ARGS
     end
 
     include("dsgets_arpackjll.jl")
+
+    @testset "dsaitr" begin 
+      include("dsaitr_arpackjll.jl")
+    end 
     
     @testset "dstqrb" begin
       include("dstqrb-compare.jl")
@@ -139,6 +147,8 @@ function all_permutations(v::Vector{Float64};
 end
 ##
 if "full" in ARGS
+  include("dnrm2_openblas.jl")
+
   @testset "dsortr" begin
     for range in [0:0.0,0:1.0,-1:1.0,-2:1.0,-2:2.0,-2:3.0,-3:3.0,-4:3.0,-4:4.0,-4:5.0]
       X = all_permutations(collect(range))
