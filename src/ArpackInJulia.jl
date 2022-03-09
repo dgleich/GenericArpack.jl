@@ -2,6 +2,9 @@ module ArpackInJulia
 
 include("macros.jl")
 export ArpackDebug, ArpackStats, ArpackTime
+include("idonow_ops.jl")
+
+
 
 include("output.jl")
 include("simple.jl")

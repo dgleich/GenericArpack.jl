@@ -43,6 +43,7 @@ include("macros.jl")
 
 
 @testset "simple" begin
+  include("idonow_ops_simple.jl")
   include("dsgets_simple.jl")
   
   @testset "dsconv" begin

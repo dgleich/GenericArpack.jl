@@ -40,6 +40,7 @@ function _run_saitr_sequence!(M;
   stats = nothing,
   debug = nothing, 
   state = nothing, 
+  idonow = nothing, 
 ) where T
   resid0 = copy(resid)
 
@@ -53,13 +54,13 @@ function _run_saitr_sequence!(M;
       NamedTuple{(:info,:ido,:rnorm), Tuple{Int64,Int64,T}}
   }()
 
-  if state == nothing
+  if state === nothing
     state = ArpackInJulia.ArpackState{Float64}()
   end 
   while ido[] != 99
     info = ArpackInJulia.dsaitr!(
       ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd;
-      state, stats, debug)
+      state, stats, debug, idonow)
 
     if ido[] == -1 || ido[] == 1
       if mode == 2
@@ -326,4 +327,39 @@ end
     end
   end 
 
+  @testset "Simple Standard Eigenproblem with idonow" begin 
+    using LinearAlgebra
+    using Random 
+    Random.seed!(0)
+    ido = Ref{Int}(0)
+    bmat = :I
+    n = 10
+    k = 0 # number of current columns in V
+    np = 3
+    mode = 1
+    resid = randn(n)
+    rnorm = Ref{Float64}(norm(resid))
+
+    V = zeros(n,k+np)
+    ldv = n 
+    H = zeros(n,2) # full h
+    ldh = n 
+
+    M = Diagonal(1.0:n)
+    idonow = ArpackInJulia.ArpackSimpleOp(M)
+    stats = ArpackStats()
+    hist = _run_saitr_sequence!(M; idostart=0,
+      n, k, np, mode, resid, rnorm, V, H, ldv, ldh, stats, bmat, idonow
+    )
+    @test length(hist) == 1 
+    @test stats.nrstrt == 0 
+    @test stats.tgetv0 == 0 
+    @test stats.nopx > 0 
+    @test stats.taitr > 0 
+    @test stats.tmvopx > 0 
+    @test V'*V ≈ Matrix(1.0I,np,np)
+    @test norm(V'*resid) ≈ 0 atol=eps(1.0)
+
+    
+  end 
 end 

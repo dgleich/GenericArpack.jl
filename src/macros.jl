@@ -307,5 +307,4 @@ Base.@kwdef mutable struct ArpackState{T}
 end
 
 
-struct ArpackOp
-end
+
