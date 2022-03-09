@@ -191,21 +191,21 @@ function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
   
   # lots of work to get the last bit right...
   # inline sqrt_dd_dd from DoubleFloats.jl
-  r = inv(sqrt(ss1[1]))
+  rf = inv(sqrt(ss1[1]))
   h = (ss1[1]*0.5, ss1[2]*0.5)
-  r2 = two_prod(r, r) 
+  r2 = two_prod(rf, rf) 
   hr2 = mul_dddd_dd(h, r2)
   radj = sub_fpdd_dd(0.5, hr2)
-  radj = mul_dddd_dd(radj, (r, 0.0))
-  r = add_fpdd_dd(r, radj)
+  radj = mul_dddd_dd(radj, (rf, 0.0))
+  rdd = add_fpdd_dd(rf, radj)
 
-  r2 = mul_dddd_dd(r,r)
+  r2 = mul_dddd_dd(rdd,rdd)
   hr2 = mul_dddd_dd(h, r2)
   radj = sub_fpdd_dd(0.5, hr2)
-  radj = mul_dddd_dd(radj, r)
-  r = add_dddd_dd(r, radj)
+  radj = mul_dddd_dd(radj, rdd)
+  rdd = add_dddd_dd(rdd, radj)
 
-  r = mul_dddd_dd(r, ss1)
-  r = mul_dddd_dd(r, (1/scale, zero(T)))
-  return r[1]
+  rdd = mul_dddd_dd(rdd, ss1)
+  rdd = mul_dddd_dd(rdd, (1/scale, zero(T)))
+  return rdd[1]
 end  
