@@ -297,11 +297,47 @@ macro getv0_state_vars()
 end
 
 
+## aup2 state
+Base.@kwdef struct Saup2State{T}
+  cnorm::Bool = false
+  getv0::Bool = false
+  initv::Bool = false 
+  update::Bool = false
+  ushift::Bool = false
+  iter::Int = 0
+  kplusp::Int = 0
+  nconv::Int = 0
+  nev0::Int = 0 
+  np0::Int = 0 
+  rnorm::T = zero(T)
+  t0::ArpackTime = zero(ArpackTime)
+  t2::ArpackTime = zero(ArpackTime) 
+end
+
+const _saupd2_state_vars = (
+        :cnorm, :getv0, :initv, :update, :ushift, 
+        :iter, :kplusp, :nconv, :nev0, :np0, 
+        :rnorm, 
+        :t0, :t2, # time vars
+        )
+
+macro attach_saup2_state(statevar)
+  expr = _attach_state(:($statevar.saup2), _saupd2_state_vars...)
+  return esc(:($expr))
+end
+
+macro saup2_state_vars()
+  e = Expr(:parameters, _saupd2_state_vars...)
+  return esc( :($e) )
+end
+
+
 ## aupd state 
 ## overall state
 Base.@kwdef mutable struct ArpackState{T}
   aitr::AitrState{T} = AitrState{T}()
   getv0::Getv0State{T} = Getv0State{T}()
+  saup2::Saup2State{T} = Saup2State{T}()
   aupd_np = Ref{Int}(0)
   aupd_mxiter = Ref{Int}(0)
 end

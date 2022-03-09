@@ -591,8 +591,7 @@ function dsapps!(
   state::Union{ArpackState{T},Nothing}=nothing, # not actually used
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
-)
-
+) where T
   @error("This code is not debugged or tested")
 
   @jl_arpack_check_size(V, ldv, kev+np)

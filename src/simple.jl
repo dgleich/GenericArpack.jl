@@ -36,8 +36,8 @@ Return value
 """
 function dsconv(
             n::Int,
-            ritz::Vector{Float64},
-            bounds::Vector{Float64},
+            ritz::AbstractVector{Float64},
+            bounds::AbstractVector{Float64},
             tol::Float64;
             stats=nothing,
             debug=nothing
@@ -262,8 +262,8 @@ function dsortr(
   which::Symbol, # Input
   apply::Bool, # Input
   n::Int, # Input
-  x1::Vector{Float64}, # Input/Output
-  x2::Vector{Float64}, # Input/Output
+  x1::AbstractVector{Float64}, # Input/Output
+  x2::AbstractVector{Float64}, # Input/Output
   )
 
   @jl_arpack_check_length(x1, n)
@@ -527,15 +527,16 @@ c
       end
 =#
 
-function _swap_within_array(n::Int, v::Vector{T}, offset::Int) where T
-  @jl_arpack_check_length(v, n)
+function _swap_within_array(n::Int, v::AbstractVector{T}, offset::Int, ioffset::Int=1) where T
+  @jl_arpack_check_length(v, ioffset+n-1)
   @jl_arpack_check_length(v, n+offset-1)
   for i=1:n #
     tmp=v[offset-1+i]
-    v[offset-1+i]=v[i]
-    v[i] = tmp
+    v[offset-1+i]=v[i+ioffset-1]
+    v[i+ioffset-1] = tmp
   end
 end
+
 function _copyn!(n::Int, dst::Vector{T}, src::Vector{T}) where T
   #@assert n <= length(dst) && n <= length(src)
   @jl_arpack_check_length(dst, n)

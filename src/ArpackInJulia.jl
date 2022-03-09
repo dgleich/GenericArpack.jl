@@ -15,6 +15,11 @@ include("dstqrb.jl")
 
 include("dgetv0.jl")
 include("dsaitr.jl")
+
+include("dsapps.jl")
+include("dsaup2.jl")
 include("dsaupd.jl")
+
+
 
 end # module
