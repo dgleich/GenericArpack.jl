@@ -31,6 +31,54 @@ module CheckWithArpackjll
     handle_getv0::Symbol = :use
   end 
 
+  function dsaup2(
+    ido::Ref{Int}, 
+    ::Val{BMAT},
+    n::Int,
+    which::Symbol,
+    nev::Ref{Int},
+    np::Ref{Int}, 
+    tol::T,
+    resid::AbstractVecOrMat{T},
+    mode::Int, 
+    iupd::Int,
+    ishift::Int,
+    mxiter::Ref{Int},
+    V::AbstractMatrix{T},
+    ldv::Int, 
+    H::AbstractMatrix{T}, 
+    ldh::Int,
+    ritz::AbstractVecOrMat{T},
+    bounds::AbstractVecOrMat{T},
+    Q::AbstractMatrix{T},
+    ldq::Int, 
+    workl::AbstractVecOrMat{T},
+    ipntr::AbstractVecOrMat{Int},
+    workd::AbstractVecOrMat{T},
+    info_initv0::Int, # info in Arpack, but we return info... 
+    state::ArpackjllState{T}
+    ;
+    stats::Union{ArpackStats,Nothing}=nothing,
+    debug::Union{ArpackDebug,Nothing}=nothing,
+    idonow::Union{ArpackOp,Nothing}=nothing
+  ) where {T, BMAT}
+    # these codes won't work with idonow. 
+    @assert idonow === nothing 
+    normalstate = ArpackInJulia.ArpackState{T}()
+    normalstate.getv0 = state.getv0
+
+    if state.handle_saup2 == :use
+      return Main.arpack_dsaup2(ido, BMAT, n, which, nev, np, tol, resid, mode,
+        iupd, ishift, mxiter, V, ldv, H, ldh, ritz, bounds, Q, ldq, 
+        workl, ipntr, workd, info_initv0
+      )
+    elseif state.handle_saup2 == :check
+      @error("Shouldn't get here. state.handle_saup2 = $(state.handle_saup2) ':check'")
+    else
+      # just pass this one...
+    end
+  end 
+
   function ArpackInJulia.dgetv0!(
     ido::Ref{Int}, # input/output
     ::Val{BMAT},
