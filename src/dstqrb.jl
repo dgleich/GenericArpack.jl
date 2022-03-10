@@ -604,19 +604,20 @@ using LinearAlgebra: SymTridiagonal, norm
   This is mostly a modification of the LAPACK routine dsteqr.
   See Remarks.
 """
-function dstqrb(
+function dstqrb!(
   n::Int,
-  d::Vector{Float64},
-  e::Vector{Float64},
-  z::Vector{Float64},
-  work::Vector{Float64}
-)
+  d::AbstractVector{T},
+  e::AbstractVector{T},
+  z::AbstractVector{T},
+  work::AbstractVector{T},
+  ::Union{AbstractArpackState{T},Nothing} # we have state for dispatch
+) where T
   @jl_arpack_check_length(d,n)
   @jl_arpack_check_length(e,n-1)
   @jl_arpack_check_length(z,n)
   @jl_arpack_check_length(work, max(2*n-2,1))
 
-  conceptual_dstqrb(SymTridiagonal(@view(d[1:n]), @view(e[1:n-1]));
+  conceptual_dstqrb!(SymTridiagonal(@view(d[1:n]), @view(e[1:n-1]));
     z, work)
 end
 

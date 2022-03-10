@@ -992,6 +992,7 @@ function dsaup2(
 ) where {T, BMAT}
 
   @attach_saup2_state(state)
+  rnorm = state.saup2_rnorm
 
   # check lengths
   # RESID   Double precision array of length N.  (INPUT/OUTPUT)
@@ -1104,7 +1105,7 @@ function dsaup2(
         # c           | of length NEV0+NP0. INFO is returned with the size  |  
         # c           | of the factorization built. Exit main loop.         |
         np[] = info
-        mxiter = iter
+        mxiter[] = iter
         info = -9999
         errorexit = true
         break
@@ -1178,7 +1179,7 @@ function dsaup2(
         end
       end
 
-      if (nconv >= nev0) || (iter > mxiter) || (np[] == 0)
+      if (nconv >= nev0) || (iter > mxiter[]) || (np[] == 0)
         # we either have converged, or hit maxiter... 
         #=
         c           | Prepare to exit. Put the converged Ritz values |
@@ -1234,6 +1235,65 @@ function dsaup2(
           temp = max(eps23, abs(ritz[j]))
           bounds[j] = bounds[j]/temp
         end
+
+        #= 
+        c           | Sort the Ritz values according to the scaled Ritz  |
+        c           | esitmates.  This will push all the converged ones  |
+        c           | towards the front of ritzr, ritzi, bounds          |
+        c           | (in the case when NCONV < NEV.)                    |
+        =#
+        wprime = :LA
+        dsortr(wprime, true, nev0, bounds, ritz)
+
+        # c           | Scale the Ritz estimate back to its original |
+        # c           | value.                                       |
+        for j=1:nev0
+          temp = max(eps23, abs(ritz[j]))
+          bounds[j] = bounds[j] * temp
+        end 
+
+        #=
+        c           | Sort the "converged" Ritz values again so that   |
+        c           | the "threshold" values and their associated Ritz |
+        c           | estimates appear at the appropriate position in  |
+        c           | ritz and bound.                                  |
+        =#
+        if which == :BE
+          # c              | Sort the "converged" Ritz values in increasing |
+          # c              | order.  The "threshold" values are in the      |
+          # c              | middle.                                        |
+          wprime = :LA
+          dsortr(wprime, true, nconv, ritz, bounds)
+        else
+          # c              | In LM, SM, LA, SA case, sort the "converged" |
+          # c              | Ritz values according to WHICH so that the   |
+          # c              | "threshold" value appears at the front of    |
+          # c              | ritz.                                        |
+          dsortr(which, true, nconv, ritz, bounds)
+        end
+          
+        # c           |  Use h( 1,1 ) as storage to communicate  |
+        # c           |  rnorm to _seupd if needed               |
+        H[1,1] = rnorm[]
+        
+        if msglvl > 1
+          _arpack_vout(debug, "_saup2: Sorted Ritz values.", @view(ritz[1:kplusp]))
+          _arpack_vout(debug, "_saup2: Sorted Ritz estimates.", @view(bounds[1:kplusp]))
+        end
+
+        # c           | Max iterations have been exceeded. | 
+        if (iter > mxiter[]) && (nconv < nev[])
+          info = 1
+        end
+
+        # c           | No shifts to apply. | 
+        if (np[] == 0) && (nconv[] < nev0)
+          info = 2
+        end
+
+        np[] = nconv
+        successexit = true
+        break # go to 1100 / successexit
       elseif (nconv < nev[]) && (ishift == 1)
         #= 
         c           | Do not have all the requested eigenvalues yet.    |
@@ -1351,7 +1411,7 @@ function dsaup2(
         rnorm[] = dot(@view(resid[1:n]),@view(workd[1:n]))
         rnorm[] = sqrt(abs(rnorm[]))
       elseif BMAT == :I
-        rnorm = _dnrm2_unroll_ext(@view(resid[1:n]))
+        rnorm[] = _dnrm2_unroll_ext(@view(resid[1:n]))
       end 
       # cnorm = .false. # this is set above
 
@@ -1393,7 +1453,7 @@ function dsaup2(
 
   if successexit || errorexit
     if successexit
-      mxiter = iter
+      mxiter[] = iter
       nev = nconv
     end
     ido[] = 99

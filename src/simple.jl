@@ -36,12 +36,12 @@ Return value
 """
 function dsconv(
             n::Int,
-            ritz::AbstractVector{Float64},
-            bounds::AbstractVector{Float64},
+            ritz::AbstractVector{T},
+            bounds::AbstractVector{T},
             tol::Float64;
             stats=nothing,
             debug=nothing
-  )
+  ) where T
 #=
   c\Author
   c     Danny Sorensen               Phuong Vu
@@ -54,19 +54,13 @@ function dsconv(
   Julia port by David F. Gleich, Purdue University
 =#
 
-#=
-c     | Executable Statements |
-=#
+  # c     | Executable Statements |
   t0 = @jl_arpack_time
 
-  if n > length(ritz)
-    throw(ArgumentError("range 1:n=$n out of bounds for ritz, of length $(length(ritz))"))
-  end
-  if n > length(bounds)
-    throw(ArgumentError("range 1:n=$n out of bounds for bounds, of length $(length(bounds))"))
-  end
-
-  eps23::Float64 = (eps(1.0)/2)^(2.0/3.0) # dlamch("E")**(2.0D+0 / 3.0D+0)
+  @jl_arpack_check_length(ritz, n)
+  @jl_arpack_check_length(bounds, n)
+  
+  eps23::Float64 = (eps(T)/2)^((2one(T))/(3one(T))) # dlamch("E")**(2.0D+0 / 3.0D+0)
   nconv::Int = 0
   @inbounds for i=1:n
     #=
@@ -262,9 +256,9 @@ function dsortr(
   which::Symbol, # Input
   apply::Bool, # Input
   n::Int, # Input
-  x1::AbstractVector{Float64}, # Input/Output
-  x2::AbstractVector{Float64}, # Input/Output
-  )
+  x1::AbstractVector{T}, # Input/Output
+  x2::AbstractVector{T}, # Input/Output
+) where T
 
   @jl_arpack_check_length(x1, n)
   if apply
@@ -968,7 +962,8 @@ function dseigt!(
   ldh::Int,
   eig::AbstractVecOrMat{T},
   bounds::AbstractVecOrMat{T},
-  workl::AbstractVecOrMat{T}
+  workl::AbstractVecOrMat{T},
+  state::Union{AbstractArpackState{T},Nothing}
   ; 
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
@@ -997,7 +992,9 @@ function dseigt!(
 
   copyto!(@view(eig[1:n]), @view(H[1:n,2]))
   copyto!(@view(workl[1:n-1]), @view(H[2:n,1]))
-  ierr = dstqrb(n, @view(eig[1:n]), @view(workl[1:n-1]), @view(bounds[1:n]), @view(workl[1:n]))
+  ierr = dstqrb!(
+    n, @view(eig[1:n]), @view(workl[1:n-1]), @view(bounds[1:n]), @view(workl[1:n]), state
+  )
   if ierr != 0 
     # failure, don't do anything and just return 
   else

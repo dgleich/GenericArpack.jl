@@ -309,7 +309,7 @@ Base.@kwdef struct Saup2State{T}
   nconv::Int = 0
   nev0::Int = 0 
   np0::Int = 0 
-  rnorm::T = zero(T)
+  #rnorm::T = zero(T) # needs to be a ref as it's mutated by other funcs
   t0::ArpackTime = zero(ArpackTime)
   t2::ArpackTime = zero(ArpackTime) 
 end
@@ -344,6 +344,7 @@ Base.@kwdef mutable struct ArpackState{T} <: AbstractArpackState{T}
   aupd_nev0 = Ref{Int}(0)
   aupd_np = Ref{Int}(0)
   aupd_mxiter = Ref{Int}(0)
+  aup2_rnorm = Ref{T}(zero(T))
 end
 
 

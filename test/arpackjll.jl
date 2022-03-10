@@ -181,3 +181,66 @@ function arpack_dsaitr!(
     v, ldv, h, ldh, ipntr, workd, info)
   return info[]
 end
+
+
+##
+import Arpack_jll, LinearAlgebra
+function arpack_dsaup2!(
+  ido::Ref{Int}, 
+  bmat::Symbol,
+  n::Int,
+  which::Symbol,
+  nev::Ref{Int},
+  np::Ref{Int}, 
+  tol::Float64,
+  resid::StridedVecOrMat{Float64},
+  mode::Int, 
+  iupd::Int,
+  ishift::Int,
+  mxiter::Ref{Int},
+  V::StridedMatrix{Float64},
+  ldv::Int, 
+  H::StridedMatrix{Float64}, 
+  ldh::Int,
+  ritz::StridedVecOrMat{Float64},
+  bounds::StridedVecOrMat{Float64},
+  Q::StridedMatrix{Float64},
+  ldq::Int, 
+  workl::StridedVecOrMat{Float64},
+  ipntr::StridedVecOrMat{Int},
+  workd::StridedVecOrMat{Float64},
+  info_initv0::Int, # info in Arpack, but we return info... 
+)
+  info = Ref{LinearAlgebra.BlasInt}(info_initv0)
+  ccall((:dsaup2_, Arpack_jll.libarpack), Cvoid,
+    (Ref{LinearAlgebra.BlasInt}, # ido
+     Ptr{UInt8}, # bmat
+     Ref{LinearAlgebra.BlasInt}, #n
+     Ptr{UInt8}, # which
+     Ref{LinearAlgebra.BlasInt}, # nev
+     Ref{LinearAlgebra.BlasInt}, # np
+     Ref{Float64}, # tol
+     Ptr{Float64}, # resid
+     Ref{LinearAlgebra.BlasInt}, # mode
+     Ref{LinearAlgebra.BlasInt}, # iupd
+     Ref{LinearAlgebra.BlasInt}, # ishift
+     Ref{LinearAlgebra.BlasInt}, # mxiter
+     Ptr{Float64}, # V
+     Ref{LinearAlgebra.BlasInt}, # ldv
+     Ptr{Float64}, # H
+     Ref{LinearAlgebra.BlasInt}, # ldh
+     Ptr{Float64}, # ritz
+     Ptr{Float64}, # bounds 
+     Ptr{Float64}, # Q
+     Ref{LinearAlgebra.BlasInt}, # ldq
+     Ptr{Float64}, # workl
+     Ptr{LinearAlgebra.BlasInt}, # ipntr
+     Ptr{Float64}, # workd
+     Ref{LinearAlgebra.BlasInt}), #info
+    ido, string(bmat), n, string(which), nev, np, tol, 
+    resid, 
+    mode, iupd, ishift, mxiter, 
+    v, ldv, h, ldh, ritz, bounds, Q, ldq, 
+    workl, ipntr, workd, info)
+  return info[]
+end
