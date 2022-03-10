@@ -338,6 +338,7 @@ Base.@kwdef mutable struct ArpackState{T}
   aitr::AitrState{T} = AitrState{T}()
   getv0::Getv0State{T} = Getv0State{T}()
   saup2::Saup2State{T} = Saup2State{T}()
+  aupd_nev0 = Ref{Int}(0)
   aupd_np = Ref{Int}(0)
   aupd_mxiter = Ref{Int}(0)
 end

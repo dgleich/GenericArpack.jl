@@ -1016,7 +1016,7 @@ function dsaup2(
 
   info = 0 
 
-  if idonow[] == 0 
+  if ido[] == 0 
     # c        | Initialize timing statistics  |
     t0 = @jl_arpack_time()
     

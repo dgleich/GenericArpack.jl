@@ -1004,7 +1004,7 @@ function dsaupd!(
     # c        | NEV0 is the local variable designating the   |
     # c        | size of the invariant subspace desired.      |
     state.aupd_np[] = ncv - nev # this need to be saved as it's changed by aupd2
-    nev0 = nev
+    state.aupd_nev0[] = nev 
 
     # copied straight from the workspace setup...
     # note that none of these are "output" parameters, only
@@ -1043,7 +1043,7 @@ function dsaupd!(
     end
 
     ierr = dsaupd2!(ido, bmat, n, which, 
-      nev0, 
+      state.aupd_nev, # this is the only output variable
       state.aupd_np, # this is the only output variable
       tol, resid, mode,
       iupd, ishift, state.aupd_mxiter, v, ldv,
