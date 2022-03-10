@@ -974,7 +974,7 @@ function dsaitr!(
   ldh::Int, 
   ipntr::AbstractVecOrMat{Int},
   workd::AbstractVecOrMat{T};
-  state::ArpackState{T},
+  state::AbstractArpackState{T},
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing

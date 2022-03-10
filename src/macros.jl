@@ -334,7 +334,10 @@ end
 
 ## aupd state 
 ## overall state
-Base.@kwdef mutable struct ArpackState{T}
+
+abstract type AbstractArpackState{T} end
+
+Base.@kwdef mutable struct ArpackState{T} <: AbstractArpackState{T}
   aitr::AitrState{T} = AitrState{T}()
   getv0::Getv0State{T} = Getv0State{T}()
   saup2::Saup2State{T} = Saup2State{T}()

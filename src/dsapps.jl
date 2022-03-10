@@ -588,7 +588,6 @@ function dsapps!(
   ldq::Int,
   workd::AbstractVecOrMat{T}
   ;
-  state::Union{ArpackState{T},Nothing}=nothing, # not actually used
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
 ) where T

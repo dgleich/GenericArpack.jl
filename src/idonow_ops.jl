@@ -46,7 +46,6 @@ c     WORKL(IPNTR(6)) through WORKL(IPNTR(6)+NCV-1). They are in the
 c     order defined by WHICH. The associated Ritz estimates are located in
 c     WORKL(IPNTR(8)), WORKL(IPNTR(8)+1), ... , WORKL(IPNTR(8)+NCV-1).
 =#
-_i_do_now_shift!(idonow, np[], ipntr, workl)
 function _i_do_now_shifts!(idonow::OpT, np::Int, ipntr, workl) where {OpT <: ArpackOp}
   offsets = ipntr[11]:ipntr[11]+np-1
   # TODO, handle eigenvalues and ritz estimates

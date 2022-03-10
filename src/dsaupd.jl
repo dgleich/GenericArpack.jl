@@ -883,7 +883,8 @@ Note that info is only used for Input.
                          possibly from a previous run.
 
 Return value (this is `info` in Fortran)
-------------                         
+------------       
+The return value is a pair 
          Error flag on output.
          =  0: Normal exit.
          =  1: Maximum number of iterations taken.
@@ -914,6 +915,8 @@ Return value (this is `info` in Fortran)
                   IPARAM(5) returns the size of the current Arnoldi
                   factorization. The user is advised to check that
                   enough workspace and array storage has been allocated.
+
+
 """
 function dsaupd!(
   ido::Ref{Int}, # input/output
@@ -933,14 +936,18 @@ function dsaupd!(
   lworkl::Int, 
   info::Ref{Int} # input
   ;
-  state::Union{ArpackState{T}},
+  state::StateT = nothing,
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
-  ) where {T, BMAT}
+  ) where {T, BMAT, StateT <: Union{AbstractArpackState{T},Nothing}}
 
   msglvl = @jl_arpack_debug(maupd,0) # msaupd in Fortran
   t0 = @jl_arpack_time()
+
+  if state === nothing
+    state = ArpackState{T}()
+  end 
 
   # NOTE, recompute easy-to-recompute state...
   # this differs from Arpack, which stores this state in 
@@ -1121,5 +1128,5 @@ function dsaupd!(
         "     Total time in convergence testing          = ", stats.tsconv,"\n")
     end
   end # ido[]==99
-  return ierr
+  return (;ierr, state)
 end

@@ -514,7 +514,7 @@ function dgetv0!(
   rnorm::Ref{T}, # output
   ipntr::AbstractVector{Int}, # output
   workd::AbstractVector{T}; # output
-  state::ArpackState{T},
+  state::AbstractArpackState{T},
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing

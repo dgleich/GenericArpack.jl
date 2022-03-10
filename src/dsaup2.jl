@@ -985,7 +985,7 @@ function dsaup2(
   workd::AbstractVecOrMat{T},
   info_initv0::Int, # info in Arpack, but we return info... 
   ;
-  state::Union{ArpackState{T}},
+  state::AbstractArpackState{T},
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
@@ -1313,7 +1313,7 @@ function dsaup2(
       c        | factorization of length NEV.                            |
       =#
       dsapps!(n, nev[], np[], ritz, V, ldv, H, ldh, resid, Q, ldq, workd;
-        state, stats, debug
+        stats, debug
       )
 
       # c        | Compute the B-norm of the updated residual. |
