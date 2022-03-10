@@ -984,8 +984,8 @@ function dsaup2(
   ipntr::AbstractVecOrMat{Int},
   workd::AbstractVecOrMat{T},
   info_initv0::Int, # info in Arpack, but we return info... 
+  state::AbstractArpackState{T}
   ;
-  state::AbstractArpackState{T},
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
@@ -1061,8 +1061,8 @@ function dsaup2(
       c     | force it into the range of the operator OP. |
       =# 
       info = dgetv0!(ido, 
-        Val(BMAT), 1, initv, n, 1, V, ldv, resid, rnorm, ipntr, workd;
-        state, debug, stats, idonow
+        Val(BMAT), 1, initv, n, 1, V, ldv, resid, rnorm, ipntr, workd, state; 
+        debug, stats, idonow
       )
       if ido[] != 99
         break # this will exit the while loop and "go to 9000"
@@ -1093,8 +1093,8 @@ function dsaup2(
       # no need to set update to true...
       @debug "label 20"
       info = dsaitr!(ido[], 
-        Val(BMAT), n, nev[], np[], mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd;
-        state, debug, stats, idonow
+        Val(BMAT), n, nev[], np[], mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd, state;
+        debug, stats, idonow
       )
       if ido[] != 99
         break # go to 9000
@@ -1368,8 +1368,8 @@ function dsaup2(
       @debug "initalizing the iteration"
       # c     | Compute the first NEV steps of the Lanczos factorization |
       info = dsaitr!(ido[], 
-        Val(BMAT), n, 0, nev0, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd;
-        state, debug, stats, idonow
+        Val(BMAT), n, 0, nev0, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd, state;
+        debug, stats, idonow
       )
       if ido[] != 99
         break # go to 9000

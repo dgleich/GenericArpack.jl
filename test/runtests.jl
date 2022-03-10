@@ -33,16 +33,14 @@ using ArpackInJulia
 if false # switch to true while developing
   @testset "development..." begin
     #include("arpackjll.jl") # uncomment to develop arpackjll tests
-
+    
   end
   #exit(0)
 end
 
 include("macros.jl")
 
-
-
-@testset "simple" begin
+@testset "simple features" begin
   include("idonow_ops_simple.jl")
   include("dsgets_simple.jl")
   
@@ -76,6 +74,12 @@ include("macros.jl")
 
   include("dgetv0_simple.jl")
   include("dsaitr_simple.jl")
+end
+
+@testset "fancy features" begin
+  @testset "override methods" begin 
+    include("dgetv0_override.jl")
+  end 
 end
 
 @testset "dstqrb" begin

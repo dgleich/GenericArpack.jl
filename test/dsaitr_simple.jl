@@ -59,8 +59,8 @@ function _run_saitr_sequence!(M;
   end 
   while ido[] != 99
     info = ArpackInJulia.dsaitr!(
-      ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd;
-      state, stats, debug, idonow)
+      ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd, state; 
+      stats, debug, idonow)
 
     if ido[] == -1 || ido[] == 1
       if mode == 2
@@ -319,7 +319,7 @@ end
 
       info = ArpackInJulia.dsaitr!(
         ido, Val(bmat), n, k, np, mode, resid, rnorm, 
-        V, ldv, H, ldh, ipntr, workd;
+        V, ldv, H, ldh, ipntr, workd,
         state 
       )
       @test workd[ipntr[1]:ipntr[1]+n-1] ≈ resid0/norm(resid0)

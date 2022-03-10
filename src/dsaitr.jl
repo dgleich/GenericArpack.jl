@@ -973,8 +973,8 @@ function dsaitr!(
   H::AbstractMatrix{T},
   ldh::Int, 
   ipntr::AbstractVecOrMat{Int},
-  workd::AbstractVecOrMat{T};
-  state::AbstractArpackState{T},
+  workd::AbstractVecOrMat{T},
+  state::AbstractArpackState{T};
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
@@ -1454,8 +1454,8 @@ function dsaitr!(
         # label 30 in dsaitr.f
         @debug "calling dgetv0"
         ierr = dgetv0!(ido, Val(BMAT), itry, false, n, j, V, 
-                      ldv, resid, rnorm, ipntr, workd;
-                      state, debug, stats, idonow)
+                      ldv, resid, rnorm, ipntr, workd, state; 
+                      debug, stats, idonow)
         if ido[] != 99
           break # we want to exit the while loop and return
         end

@@ -936,11 +936,11 @@ function dsaupd!(
   lworkl::Int, 
   info::Ref{Int} # input
   ;
-  state::StateT = nothing,
+  state::Union{AbstractArpackState{T},Nothing}=nothing, 
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
-  ) where {T, BMAT, StateT <: Union{AbstractArpackState{T},Nothing}}
+  ) where {T, BMAT}
 
   msglvl = @jl_arpack_debug(maupd,0) # msaupd in Fortran
   t0 = @jl_arpack_time()

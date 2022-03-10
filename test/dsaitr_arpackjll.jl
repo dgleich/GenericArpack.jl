@@ -35,7 +35,7 @@
     state = ArpackInJulia.ArpackState{Float64}()
     while ido[] != 99
       info = ArpackInJulia.dsaitr!(
-        ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd;
+        ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd,
         state)
 
         
