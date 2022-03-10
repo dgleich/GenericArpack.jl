@@ -153,7 +153,7 @@ end
     ldv = n 
     H = zeros(n,2) # full h
     ldh = n 
-    M = Diagonal(1.0I, 10)
+    M = Diagonal(1.0I, 10) # 10x10 identity 
 
 
     stats = ArpackStats()

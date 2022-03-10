@@ -80,7 +80,21 @@ function eval_nrm2_dd(a::AbstractVector{T}) where T
 
   r = ArpackInJulia.mul_dddd_dd(r, ss1)
   return r[1]/scale 
-end  
+end 
+
+@testset "initial random" begin 
+  # this came from a test where we overrode dgetv0
+  vals = [0.3957424639187579, 0.0008649603975001696, -0.9227205789982591, 
+    -0.9165671495278005, 0.1175963848841306, -0.2996262520371218, 
+    0.9038269570258635, -0.25045104802183715, 0.33224741301423677, -0.29023922021963955]
+  n1 = _eval_dnrm2_blas(vals)
+  n2 = eval_nrm2_dd(vals)
+  n3 = ArpackInJulia._dnrm2_unroll_ext(vals)
+  @show norm(vals), n1, n2, n3 
+  @test n1 == n2
+  @test n1 == n3
+end 
+
 
 @testset "Long vector failure" begin
   import Random

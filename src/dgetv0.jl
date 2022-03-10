@@ -626,7 +626,7 @@ function dgetv0!(
         rnorm0 = dot(@view(resid[1:n]), @view(workd[1:n]))
         rnorm0 = sqrt(abs(rnorm0))
       else
-        rnorm0 = norm(@view(resid[1:n]),2) # compute two-norm
+        rnorm0 = _dnrm2_unroll_ext(@view(resid[1:n]))
       end
       rnorm[] = rnorm0
       if j==1
@@ -691,7 +691,7 @@ function dgetv0!(
         lrnorm = dot(@view(resid[1:n]), @view(workd[1:n]))
         rnorm[] = sqrt(abs(lrnorm))
       else
-        rnorm[] = norm(@view(resid[1:n]),2) # compute two-norm
+        rnorm[] = _dnrm2_unroll_ext(@view(resid[1:n])) # compute two-norm
       end
 
       # c     | Check for further orthogonalization. |

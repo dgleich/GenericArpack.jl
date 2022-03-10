@@ -64,7 +64,8 @@
     @test state.getv0.iseed[] == tuple(1,3,5,7)
     @test ido[] == 99
     @test resid == resid0
-    @test rnorm[] == norm(resid0)
+    @test rnorm[] == ArpackInJulia._dnrm2_unroll_ext(resid0)
+    @test rnorm[] ≈ norm(resid0)
 
     #= Old code for testing the updated dgetv0.jl
     @test ido[] == -1

@@ -134,6 +134,10 @@ if "arpackjll" in ARGS
     @testset "dgetv0" begin
       include("dgetv0_arpackjll.jl")
     end
+
+    # The next set of tests delves deeply into
+    # comparisons between Arpackjll and our code
+    include("arpackjll_check_state.jl")
   end
 end
 ##
