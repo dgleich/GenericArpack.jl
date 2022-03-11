@@ -25,7 +25,7 @@ function _arpack_vout(io::IOT,
     if k2==n
       # on the last entry, check if we need to pad 
       # for right alignment of comments 
-      if k2-k1 < nvals
+      if k2-k1+1 < nvals
         for extra in nvals - (k2-k1)
           print(io, rpad("", dlen), "  ")
         end
