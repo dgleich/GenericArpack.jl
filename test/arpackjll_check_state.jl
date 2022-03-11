@@ -25,13 +25,14 @@ module CheckWithArpackjll
     aupd_nev0 = Ref{Int}(0)
     aupd_np = Ref{Int}(0)
     aupd_mxiter = Ref{Int}(0)
+    aup2_rnorm = Ref{T}(zero(T))
 
     handle_saitr::Symbol = :use
     handle_saup2::Symbol = :use
     handle_getv0::Symbol = :use
   end 
 
-  function dsaup2(
+  function ArpackInJulia.dsaup2!(
     ido::Ref{Int}, 
     ::Val{BMAT},
     n::Int,
@@ -62,13 +63,14 @@ module CheckWithArpackjll
     debug::Union{ArpackDebug,Nothing}=nothing,
     idonow::Union{ArpackOp,Nothing}=nothing
   ) where {T, BMAT}
+    @debug "In override dsaup2"
     # these codes won't work with idonow. 
     @assert idonow === nothing 
     normalstate = ArpackInJulia.ArpackState{T}()
     normalstate.getv0 = state.getv0
 
     if state.handle_saup2 == :use
-      return Main.arpack_dsaup2(ido, BMAT, n, which, nev, np, tol, resid, mode,
+      return Main.arpack_dsaup2!(ido, BMAT, n, which, nev, np, tol, resid, mode,
         iupd, ishift, mxiter, V, ldv, H, ldh, ritz, bounds, Q, ldq, 
         workl, ipntr, workd, info_initv0
       )
@@ -138,6 +140,123 @@ module CheckWithArpackjll
       @error("Shouldn't get here. state.handle_getv0 = $(state.handle_getv0) is not ':use' or ':check'")
     end  
   end 
+end
+
+
+
+@testset "arpack run with overrides on internal" begin
+  # This test runs a simple eigenvalue problem with a random 
+  # start but with our dsaupd calling the Arpack dsaup2 
+  # to make sure we get the outer logic mostly correct...
+  using LinearAlgebra
+  function mysimpleeigvals_with_checks(op::ArpackOp, nev::Int = 6)
+    ido = Ref{Int}(0)
+    bmat = :I
+    n = size(op.A,1)
+    which = :LM
+    tol = 0.0 # just use the default
+    resid = zeros(n)
+    ncv = min(2nev, n-1)
+    V = zeros(n,ncv)
+    ldv = n
+    mode = 1 
+    iparam = zeros(Int,11)
+    iparam[1] = 1
+    iparam[3] = 300
+    iparam[4] = 1
+    iparam[7] = mode 
+    ipntr = zeros(Int,11)
+    workd = zeros(n,3)
+    lworkl = ncv*ncv + 8*ncv
+    workl = zeros(lworkl)
+
+    iparam0 = copy(iparam)
+    info_initv = 0
+
+    T = Float64
+    histdata = Vector{
+      NamedTuple{(:ido, :resid, :V, :iparam, :ipntr, :workd, :workl, :ierr), 
+        Tuple{Int,Vector{T}, Matrix{T}, Vector{Int}, Vector{Int}, Matrix{T}, Vector{T}, Int}}
+    }()
+    arhistdata = copy(histdata) 
+
+    # reset for Arpack call
+    _reset_libarpack_dgetv0_iseed()
+
+    # Note that we cannot run two sequences at once and check them where we start a whole
+    # second arpack call because of the expected Arpack state. 
+    state = CheckWithArpackjll.ArpackjllState{Float64}()
+    state.handle_saup2 = :use
+    stats = ArpackStats()
+    while ido[] != 99
+      ierr, state = ArpackInJulia.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+        ipntr, workd, workl, lworkl, info_initv;
+        state, stats
+      )
+      # iparam9..11 are stats that aren't tracked the same... 
+      push!(histdata, (;ido=ido[], resid=copy(resid), V=copy(V), iparam=iparam[1:8], 
+        ipntr=copy(ipntr), workd=copy(workd), workl=copy(workl), ierr))
+
+      if ido[] == 1 || ido[] == -1
+        ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+      elseif ido[] == 99
+        break
+      else
+        @error("this only supports standard eigenvalue problems")
+      end 
+    end
+
+    # reset for Arpack call
+    _reset_libarpack_dgetv0_iseed()
+    fill!(resid, zero(T))
+    fill!(V, zero(T))
+    copyto!(iparam, iparam0)
+    fill!(ipntr, 0)
+    fill!(workd, zero(T))
+    fill!(workl, zero(T))
+    
+    
+    ido[] = 0 
+    while ido[] != 99
+      ierr = arpack_dsaupd!(ido, bmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, 
+        ipntr, workd, workl, lworkl, info_initv)
+      # iparam9..11 are stats that aren't tracked the same... 
+      push!(arhistdata, (;ido=ido[], resid=copy(resid), V=copy(V), iparam=iparam[1:8], 
+        ipntr=copy(ipntr), workd=copy(workd), workl=copy(workl), ierr))
+      
+      if ido[] == 1 || ido[] == -1
+        ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+      elseif ido[] == 99
+        break
+      else
+        @error("this only supports standard eigenvalue problems")
+      end 
+    end
+
+    @test length(histdata) == length(arhistdata)
+    for i=1:min(length(histdata),length(arhistdata))
+      if histdata[i] != arhistdata[i]
+        println("First difference in iteration call $i")
+        @test histdata[i].ido == arhistdata[i].ido
+        @test histdata[i].workl == arhistdata[i].workl
+        @test histdata[i].resid == arhistdata[i].resid
+        @test histdata[i].ierr == arhistdata[i].ierr
+        @test histdata[i].V == arhistdata[i].V
+        
+        @test histdata[i].ipntr == arhistdata[i].ipntr
+        @test histdata[i].iparam == arhistdata[i].iparam
+        @test histdata[i].workd == arhistdata[i].workd
+        
+      else 
+        @test histdata[i] == arhistdata[i]
+      end
+    end 
+  end 
+
+  A = Diagonal(1.0:10)
+  op = ArpackInJulia.ArpackSimpleOp(A)
+  mysimpleeigvals_with_checks(op);
+
 end
 
 function _run_saitr_sequence!(M; 
@@ -289,4 +408,6 @@ end
     # because it's the identity, resid should still be zero...
     @test norm(resid) ≈ 0 atol=n*eps(1.0)
   end 
+
+  
 end 

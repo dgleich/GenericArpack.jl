@@ -920,7 +920,7 @@ The return value is a pair
 """
 function dsaupd!(
   ido::Ref{Int}, # input/output
-  bmat::Type{Val{BMAT}},
+  ::Val{BMAT},
   n::Int,
   which::Symbol,
   nev::Int,
@@ -934,7 +934,7 @@ function dsaupd!(
   workd::AbstractVecOrMat{T}, # output
   workl::AbstractVecOrMat{T}, # output
   lworkl::Int, 
-  info::Ref{Int} # input
+  info_initv::Int # input
   ;
   state::Union{AbstractArpackState{T},Nothing}=nothing, 
   stats::Union{ArpackStats,Nothing}=nothing,
@@ -961,11 +961,11 @@ function dsaupd!(
 
   # check errors only on initial run. 
   if ido[] == 0 
-    if n < 0 
+    if n <= 0 
       ierr = -1
-    elseif (nev < 0)
+    elseif (nev <= 0)
       ierr = -2
-    elseif (ncv < nev || ncv < n)
+    elseif (ncv <= nev || ncv > n)
       ierr = -3
     end
     np = ncv - nev
@@ -975,7 +975,7 @@ function dsaupd!(
     if which != :LM && which != :SM && which != :LA && which != :SA && which != :BE
       ierr = -5
     end
-    if bmat != :I && bmat != :G
+    if BMAT != :I && BMAT != :G
       ierr = -6
     end
     # we add a check of Julia length too
@@ -984,7 +984,7 @@ function dsaupd!(
     end
     if (mode < 1 || mode > 5) 
       ierr = -10
-    elseif (mode == 1 && bmat == :G)
+    elseif (mode == 1 && BMAT == :G)
       ierr = -11
     elseif (ishift < 0 || ishift > 1) 
       ierr = -12
@@ -1049,19 +1049,19 @@ function dsaupd!(
       ipntr[11] = iw
     end
 
-    ierr = dsaupd2!(ido, bmat, n, which, 
-      state.aupd_nev, # this is the only output variable
+    ierr = dsaup2!(ido, Val(BMAT), n, which, 
+      state.aupd_nev0, # this is the only output variable
       state.aupd_np, # this is the only output variable
       tol, resid, mode,
-      iupd, ishift, state.aupd_mxiter, v, ldv,
-       @view(workl[ih:ritz-1]), ldh,
+      iupd, ishift, state.aupd_mxiter, V, ldv,
+       reshape(@view(workl[ih:ritz-1]), ldh, 2), ldh,
        @view(workl[ritz:bounds-1]),
        @view(workl[bounds:iq-1]),
-       @view(workl[iq:iw-1]), ldq,
+       reshape(@view(workl[iq:iw-1]), ldq, ncv), ldq,
        @view(workl[iw:next-1]),
-       ipntr, workd
-      ; 
-      state, stats, debug, idonow
+      ipntr, workd, info_initv, 
+      state;
+      stats, debug, idonow
     )
   end
 

@@ -19,6 +19,12 @@ end
 opx!(y,OP::ArpackSimpleOp,x) = mul!(y,OP.A,x)      
 is_arpack_mode_valid_for_op(mode::Int, ::ArpackSimpleOp) = mode == 1 
 
+## These map from the raw codes to more user-friendly functions. 
+
+function _i_do_now_opx_neg1!(idonow::OpT, ipntr, workd, n) where {OpT <: ArpackOp} # handle the operation
+  opx!(@view(workd[ipntr[2]:ipntr[2]+n-1]),idonow,@view(workd[ipntr[1]:ipntr[1]+n-1]))
+end
+
 function _i_do_now_opx_1!(idonow::OpT, ipntr, workd, n) where {OpT <: ArpackOp} # handle the operation
   opx!(@view(workd[ipntr[2]:ipntr[2]+n-1]),idonow,@view(workd[ipntr[1]:ipntr[1]+n-1]))
 end

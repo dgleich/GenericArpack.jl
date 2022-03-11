@@ -959,7 +959,7 @@ INFO    Integer.  (INPUT/OUTPUT)
      = -9999: Could not build an Lanczos factorization.
               Size that was built in returned in NP.
 """              
-function dsaup2(
+function dsaup2!(
   ido::Ref{Int}, 
   ::Val{BMAT},
   n::Int,
