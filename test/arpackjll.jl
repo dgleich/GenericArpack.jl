@@ -133,8 +133,9 @@ function arpack_dgetv0!(ido::Ref{LinearAlgebra.BlasInt}, bmat::Symbol, itry::Int
      Ref{Float64},
      Ptr{LinearAlgebra.BlasInt},
      Ptr{Float64},
-     Ref{LinearAlgebra.BlasInt}),
-    ido, string(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd, ierr)
+     Ref{LinearAlgebra.BlasInt},
+     Int),
+    ido, string(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd, ierr, 1)
   return ierr[]
 end
 
@@ -176,9 +177,9 @@ function arpack_dsaitr!(
      Ref{LinearAlgebra.BlasInt}, #lhd
      Ptr{LinearAlgebra.BlasInt}, #ipntr
      Ptr{Float64}, #workd
-     Ref{LinearAlgebra.BlasInt}), #info
+     Ref{LinearAlgebra.BlasInt}, Int), #info
     ido, string(bmat), n, k, np, mode, resid, rnorm, 
-    v, ldv, h, ldh, ipntr, workd, info)
+    v, ldv, h, ldh, ipntr, workd, info, 1)
   return info[]
 end
 
@@ -236,11 +237,12 @@ function arpack_dsaup2!(
      Ptr{Float64}, # workl
      Ptr{LinearAlgebra.BlasInt}, # ipntr
      Ptr{Float64}, # workd
-     Ref{LinearAlgebra.BlasInt}), #info
+     Ref{LinearAlgebra.BlasInt},
+     Int, Int), #info
     ido, string(bmat), n, string(which), nev, np, tol, 
     resid, 
     mode, iupd, ishift, mxiter, 
     v, ldv, h, ldh, ritz, bounds, Q, ldq, 
-    workl, ipntr, workd, info)
+    workl, ipntr, workd, info, 1, 2)
   return info[]
 end
