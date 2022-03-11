@@ -586,7 +586,8 @@ function dsapps!(
   resid::AbstractVecOrMat{T},
   Q::AbstractMatrix{T},
   ldq::Int,
-  workd::AbstractVecOrMat{T}
+  workd::AbstractVecOrMat{T},
+  state::Union{AbstractArpackState{T},Nothing}
   ;
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,

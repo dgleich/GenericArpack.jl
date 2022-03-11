@@ -1118,8 +1118,8 @@ function dsaup2!(
 
       # c        | Compute the eigenvalues and corresponding error bounds |
       # c        | of the current symmetric tridiagonal matrix.           |
-      ierr = dseigt!(rnorm[], kplusp, H, ldh, ritz, bounds, workl;
-        state, stats, Base.default_color_debug
+      ierr = dseigt!(rnorm[], kplusp, H, ldh, ritz, bounds, workl, state;
+        stats, debug
       )
       if ierr != 0 
         info = -8
@@ -1372,7 +1372,7 @@ function dsaup2!(
       c        | After dsapps is done, we have a Lanczos                 |
       c        | factorization of length NEV.                            |
       =#
-      dsapps!(n, nev[], np[], ritz, V, ldv, H, ldh, resid, Q, ldq, workd;
+      dsapps!(n, nev[], np[], ritz, V, ldv, H, ldh, resid, Q, ldq, workd, state;
         stats, debug
       )
 

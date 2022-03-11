@@ -110,6 +110,26 @@ function arpack_dstqrb!(n::Int, d::Vector{Float64}, e::Vector{Float64},
   return info[]
 end
 
+function arpack_dseigt!(rnorm::T,
+  n::Int, H::AbstractMatrix{T}, ldh::Int,
+  eig::AbstractVecOrMat{T}, bounds::AbstractVecOrMat{T}, 
+  workl::AbstractVecOrMat{T}
+) where T <: Float64 
+  info = Ref{LinearAlgebra.BlasInt}(-1)
+  ccall((:dseigt_, Arpack_jll.libarpack), Cvoid,
+    (Ref{Float64},
+      Ref{LinearAlgebra.BlasInt},
+      Ptr{Float64},
+      Ref{LinearAlgebra.BlasInt},
+      Ptr{Float64},
+      Ptr{Float64},
+      Ptr{Float64},
+      Ref{LinearAlgebra.BlasInt}),
+    rnorm, n, H, ldh, eig, bounds, workl, info
+  )
+  return info[]
+end
+
 ##
 import Arpack_jll, LinearAlgebra
 function arpack_dgetv0!(ido::Ref{LinearAlgebra.BlasInt}, bmat::Symbol, itry::Int, initv::Bool,

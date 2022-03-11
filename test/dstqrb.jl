@@ -6,46 +6,6 @@ function reverse_T(T::SymTridiagonal)
   return SymTridiagonal(reverse(T.dv), reverse(T.ev))
 end
 
-
-""" Count the number of floats between but treat the range [-ref,ref] as two
-fractional floating point values,
-
-relfloatsbetween(-ref,ref;ref) = 2.0
-relfloatsbetween(-prevfloat(ref),nextfloat(ref);ref) = 4.0
-relfloatsbetween(ref/4,ref/2;ref) = 0.25
-"""
-function relfloatsbetween(a::T,b::T;ref=eps(T)) where {T <: Float64}
-  # this is awful code at the moment :(
-  if b < a
-    flipsign = -1
-    a,b = b,a # swap so we are in order to minimize cases below
-  else
-    flipsign = 1
-  end
-
-  rval = 0.0
-  if a < -ref && b < -ref # then since a < b, we can just return this directly
-    rval += floatsbetween(a,b)
-  elseif a <= -ref && b <= ref
-    rval += floatsbetween(a, -ref)
-    rval += (b-(-ref))/ref
-  elseif a <= -ref && b > ref
-    rval += floatsbetween(a, -ref)
-    rval += floatsbetween(ref, b)
-    rval += 2.0
-  elseif a <= ref && b <= ref
-    # a in [-ref,ref], b in [-ref,ref]
-    rval += (b-a)/ref
-  elseif a <= ref && b > ref
-    rval += (ref-a)/ref
-    rval += floatsbetween(ref, b)
-  else
-    # a >= ref, b >= ref
-    rval += floatsbetween(a,b)
-  end
-
-  return flipsign*rval
-end
 ##
 @testset "small" begin
   T = SymTridiagonal(ones(1,1))

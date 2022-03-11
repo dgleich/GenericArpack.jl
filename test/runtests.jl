@@ -33,7 +33,7 @@ using ArpackInJulia
 if false # switch to true while developing
   @testset "development..." begin
     #include("arpackjll.jl") # uncomment to develop arpackjll tests
-    
+
   end
   #exit(0)
 end
@@ -70,6 +70,29 @@ include("macros.jl")
     x = randn(8)
     @test_nowarn ArpackInJulia.dsortr(:LA, false, length(x), x, zeros(0))
     @test issorted(x)
+  end
+
+  @testset "dseigt" begin
+    using LinearAlgebra
+    n = 34 # don't use odd values as they have a zero eigenvalue that is annoying.
+    lams = 2*cos.(pi.*(1:n)./(n+1))
+    sort!(lams) # sort lams
+    T = SymTridiagonal(zeros(n), ones(n-1))
+    H = zeros(n, 2)
+    H[2:end,1] .= T.ev
+    H[:,2] .= T.dv
+    rnorm = 128.0
+    eigval = randn(n)
+    bounds = randn(n) 
+    workl = randn(n,3)
+    debug = ArpackDebug(logfile=IOBuffer())
+    ArpackInJulia.set_debug_high!(debug)
+    stats = ArpackStats()
+    ArpackInJulia.dseigt!(rnorm, n, H, n, eigval, bounds, workl, nothing; debug, stats)
+
+    # check against the analytical results...
+    @test maximum(abs.(map(relfloatsbetween, lams, eigval))) .<= 2*n
+    @test norm(bounds - abs(rnorm)*abs.(sqrt(2/(n+1)).*sin.(n.*(1:n).*pi/(n+1)))) <= 2*n*eps(1.0)*rnorm  
   end
 
   include("dgetv0_simple.jl")
@@ -120,6 +143,35 @@ if "arpackjll" in ARGS
       arpack_dsortr(:LA, true, length(x), x2, y2)
       @test x1==x2
       @test y1==y2
+    end
+
+    @testset "dseigt" begin
+      using LinearAlgebra
+      n = 30
+      lams = 2*cos.(pi.*(1:n)./(n+1))
+      sort!(lams) # sort lams
+      T1 = SymTridiagonal(zeros(n), ones(n-1))
+      H = zeros(n, 2)
+      H[2:end,1] .= T1.ev
+      H[:,2] .= T1.dv
+      H2 = copy(H)
+      rnorm = 64.0
+      # when we compare, we want zeros...
+      eigval1 = randn(n)
+      bounds1 = randn(n) 
+      workl1 = randn(n,3)
+
+      eigval2 = copy(eigval1)
+      bounds2 = copy(bounds1)
+      workl2 = copy(workl1)
+
+      info1 = ArpackInJulia.dseigt!(rnorm, n, H, n, eigval1, bounds1, workl1, nothing)
+      info2 = arpack_dseigt!(rnorm, n, H2, n, eigval2, bounds2, workl2)
+      @test H == H2
+      @test eigval1 == eigval2 
+      @test bounds1 == bounds2 
+      @test workl1 == workl2 
+      @test info1 == info2
     end
 
     include("dsgets_arpackjll.jl")

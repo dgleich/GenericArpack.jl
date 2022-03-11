@@ -968,8 +968,6 @@ function dseigt!(
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
 ) where T 
-
-  @error("untested, do not use")
   
   @jl_arpack_check_length(eig, n)
   @jl_arpack_check_length(bounds, n)
@@ -980,7 +978,7 @@ function dseigt!(
   # c     | Initialize timing statistics  |
   # c     | & message level for debugging |
   t0 = @jl_arpack_time()
-  msglvl = @jl_arpack_debug(mseigt,0)
+  msglvl = @jl_arpack_debug(meigt,0)
 
   if msglvl > 0
     _arpack_vout(debug, "_seigt: main diagonal of matrix H", @view(H[1:n,2]))
@@ -989,12 +987,17 @@ function dseigt!(
     end 
   end
 
-
   copyto!(@view(eig[1:n]), @view(H[1:n,2]))
   copyto!(@view(workl[1:n-1]), @view(H[2:n,1]))
-  ierr = dstqrb!(
-    n, @view(eig[1:n]), @view(workl[1:n-1]), @view(bounds[1:n]), @view(workl[1:n]), state
+  dstqrb!(
+    n, @view(eig[1:n]), @view(workl[1:n-1]), @view(bounds[1:n]), @view(workl[n+1:3n]), state
   )
+  # Julia note:
+  # We have dstqrb! throw a hard error if the eigenvalue 
+  # routine fails as this is a very serious problem that
+  # really should cause a bigger error than just a bad
+  # return value. So this is a slight deviation from Arpack
+  ierr = 0 
   if ierr != 0 
     # failure, don't do anything and just return 
   else
@@ -1002,11 +1005,11 @@ function dseigt!(
       _arpack_vout(debug, "_seigt: last row of the eigenvector matrix for H", 
         @view(bounds[1:n]))
     end
-    # c     | Finally determine the error bounds associated |
-    # c     | with the n Ritz values of H.                  |
-    for k=1:n
-      bounds[k] = rnorm*abs(bounds[k])
-    end
+  end
+  # c     | Finally determine the error bounds associated |
+  # c     | with the n Ritz values of H.                  |
+  for k=1:n
+    bounds[k] = rnorm*abs(bounds[k])
   end
 
   # note, arpack doesn't update this on a failure, but I think we should...
