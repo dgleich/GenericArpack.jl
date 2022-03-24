@@ -316,44 +316,33 @@ end
 ##
 import Arpack_jll, LinearAlgebra
 function arpack_dsapps!(
-  ido::Ref{Int}, 
-  bmat::Symbol,
   n::Int,
-  which::Symbol,
-  nev::Int,
-  tol::Float64,
-  resid::StridedVecOrMat{Float64},
-  ncv::Int, 
+  kev::Int,
+  np::Int,
+  shift::StridedVecOrMat{Float64},
   V::StridedMatrix{Float64},
   ldv::Int,
-  iparam::StridedVecOrMat{Int},
-  ipntr::StridedVecOrMat{Int},
-  workd::StridedVecOrMat{Float64},
-  workl::StridedVecOrMat{Float64},
-  lworkl::Int,   
-  info_initv0::Int, # info in Arpack, but we return info... 
+  H::StridedVecOrMat{Float64},
+  ldh::Int,
+  resid::StridedVecOrMat{Float64},
+  Q::StridedMatrix{Float64},
+  ldq::Int,
+  workd::StridedVecOrMat{Float64}
 )
-  info = Ref{LinearAlgebra.BlasInt}(info_initv0)
-  ccall((:dsaupd_, Arpack_jll.libarpack), Cvoid,
-    (Ref{LinearAlgebra.BlasInt}, # ido
-     Ptr{UInt8}, # bmat
-     Ref{LinearAlgebra.BlasInt}, #n
-     Ptr{UInt8}, # which
-     Ref{LinearAlgebra.BlasInt}, # nev
-     Ref{Float64}, # tol
+  ccall((:dsapps_, Arpack_jll.libarpack), Cvoid,
+    (Ref{LinearAlgebra.BlasInt}, # n
+     Ref{LinearAlgebra.BlasInt}, # kev
+     Ref{LinearAlgebra.BlasInt}, # np
+     Ptr{Float64}, # shift
+     Ptr{Float64}, # v
+     Ref{LinearAlgebra.BlasInt}, # ldv 
+     Ptr{Float64}, # h
+     Ref{LinearAlgebra.BlasInt}, # ldh,
      Ptr{Float64}, # resid
-     Ref{LinearAlgebra.BlasInt}, # ncv
-     Ptr{Float64}, # V
-     Ref{LinearAlgebra.BlasInt}, # ldv
-     Ptr{LinearAlgebra.BlasInt}, # iparam
-     Ptr{LinearAlgebra.BlasInt}, # ipntr
-     Ptr{Float64}, # workd
-     Ptr{Float64}, # workl
-     Ref{LinearAlgebra.BlasInt}, # lworkl
-     Ref{LinearAlgebra.BlasInt}, # info
-     Int, Int), #info
-    ido, string(bmat), n, string(which), nev, tol,
-    resid, ncv, 
-    V, ldv, iparam, ipntr, workd, workl, lworkl, info, 1, 2)
-  return info[]
+     Ptr{Float64}, # Q
+     Ref{LinearAlgebra.BlasInt}, # ldq
+     Ptr{Float64}, # workd 
+     )
+    n, kev, np, shift, V, ldv, H, ldh, resid, Q, ldq, workd)
+  return nothing 
 end
