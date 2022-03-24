@@ -326,7 +326,6 @@ end
 const _saupd2_state_vars = (
         :cnorm, :getv0, :initv, :update, :ushift, 
         :iter, :kplusp, :nconv, :nev0, :np0, 
-        :rnorm, 
         :t0, :t2, # time vars
         )
 

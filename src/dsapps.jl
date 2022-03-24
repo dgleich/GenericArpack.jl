@@ -582,7 +582,7 @@ function dsapps!(
   V::AbstractMatrix{T},
   ldv::Int,
   H::AbstractMatrix{T},
-  lhd::Int,
+  ldh::Int,
   resid::AbstractVecOrMat{T},
   Q::AbstractMatrix{T},
   ldq::Int,
@@ -594,11 +594,11 @@ function dsapps!(
 ) where T
 
   @jl_arpack_check_size(V, n, kev+np) # needs to be this long
-  @jl_arpack_check_size(H, n, 2)
+  @jl_arpack_check_size(H, kev+np, 2)
   # make sure our leading dimensions are correct 
   # these mean we need ldv entries in each column until the last... where we need fewer
   @jl_arpack_check_length(V, ldv*(kev+np-1)+(kev+np)) 
-  @jl_arpack_check_length(H, ldh+n)
+  @jl_arpack_check_length(H, ldh+kev+np)
 
   @jl_arpack_check_length(resid, n)
   @jl_arpack_check_length(workd, 2n)
@@ -612,7 +612,7 @@ function dsapps!(
   # c     | Initialize timing statistics  |
   # c     | & message level for debugging |
   t0 = @jl_arpack_time()
-  msglvl = @jl_arpack_debug(msapps,0)
+  msglvl = @jl_arpack_debug(mapps,0)
 
   kplusp = kev+np
 
@@ -620,7 +620,7 @@ function dsapps!(
   # c     | kplusp used to accumulate the rotations.     |
   # this should not do any allocation and treat one(T)*I implicitly
   # based on testing on 2022-03-04
-  copyto!(@view(Q[1:kplusp, 1:kplusp]), one(T)*I)
+  copyto!(@view(Q[1:kplusp, 1:kplusp]), one(T)*LinearAlgebra.I)
 
   # c     | Quick return if there are no shifts to apply |
   # if (np == 0) return
@@ -831,7 +831,7 @@ function dsapps!(
 
   # c     |  Move v(:,kplusp-kev+1:kplusp) into v(:,1:kev). |
   for i=1:kev
-    copyto!(V[1:n,i], V[1:n,np+i])
+    copyto!(@view(V[1:n,i]), @view(V[1:n,np+i]))
   end
 
   # c     | Copy the (kev+1)-st column of (V*Q) in the |

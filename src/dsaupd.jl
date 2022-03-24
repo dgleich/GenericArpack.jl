@@ -1080,21 +1080,22 @@ function dsaupd!(
 
     if msglvl > 0
       #_arpack_vout(debug, "_saupd: number of update iterations taken")
-      println(debug.io,
+      finalnp = state.aupd_np[]
+      println(debug.logfile,
         "_saupd: number of update iterations taken ",  state.aupd_mxiter[])
-      println(debug.io,
-        "_saupd: number of \"converged\" Ritz values", np)
+      println(debug.logfile,
+        "_saupd: number of \"converged\" Ritz values", finalnp)
       _arpack_vout(debug, "_saupd: final Ritz values", 
-        @view workl[ritz:ritz+np-1])
+        @view workl[ritz:ritz+finalnp-1])
       _arpack_vout(debug, "_saupd: corresponding error bounds", 
-        @view workl[bounds:bounds+np-1])  
+        @view workl[bounds:bounds+finalnp-1])  
     end
 
 
     @jl_update_time(taupd, t0)
 
     if msglvl > 0 
-      print(debug.io,
+      print(debug.logfile,
         "     ==========================================", "\n",
         "     = Symmetric implicit Arnoldi update code =", "\n",
         "     = Version Number:  2.4                   =", "\n",
@@ -1109,10 +1110,10 @@ function dsaupd!(
                   state.aupd_mxiter[], "\n")
     end
     if msglvl > 0 && stats !== nothing
-      print(debug.io,
+      print(debug.logfile,
         "     Total number of OP*x operations            = ", stats.nopx,"\n",
         "     Total number of B*x operations             = ", stats.nbx,"\n",
-        "     Total number of reorthogonalization steps  = ", stats.nroth,"\n",
+        "     Total number of reorthogonalization steps  = ", stats.nrorth,"\n",
         "     Total number of iterative refinement steps = ", stats.nitref,"\n",
         "     Total number of restart steps              = ", stats.nrstrt,"\n",
         "     Total time in user OP*x operation          = ", stats.tmvopx,"\n",
@@ -1123,9 +1124,9 @@ function dsaupd!(
         "     Total time in reorthogonalization phase    = ", stats.titref,"\n",
         "     Total time in (re)start vector generation  = ", stats.tgetv0,"\n",
         "     Total time in trid eigenvalue subproblem   = ", stats.teigt,"\n",
-        "     Total time in getting the shifts           = ", stats.tsgets,"\n",
-        "     Total time in applying the shifts          = ", stats.tsapps,"\n",
-        "     Total time in convergence testing          = ", stats.tsconv,"\n")
+        "     Total time in getting the shifts           = ", stats.tgets,"\n",
+        "     Total time in applying the shifts          = ", stats.tapps,"\n",
+        "     Total time in convergence testing          = ", stats.tconv,"\n")
     end
   end # ido[]==99
   return (;ierr, state)

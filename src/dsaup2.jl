@@ -992,7 +992,7 @@ function dsaup2!(
 ) where {T, BMAT}
 
   @attach_saup2_state(state)
-  rnorm = state.saup2_rnorm
+  rnorm = state.aup2_rnorm
 
   # check lengths
   # RESID   Double precision array of length N.  (INPUT/OUTPUT)
@@ -1013,7 +1013,7 @@ function dsaup2!(
   eps23 = _eps23(T)
 
   # c        | & message level for debugging |
-  msglvl = @jl_arpack_debug(msaup2,0)
+  msglvl = @jl_arpack_debug(maup2,0)
 
   info = 0 
 
@@ -1094,7 +1094,7 @@ function dsaup2!(
     elseif update
       # no need to set update to true...
       @debug "label 20"
-      info = dsaitr!(ido[], 
+      info = dsaitr!(ido, 
         Val(BMAT), n, nev[], np[], mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd, state;
         debug, stats, idonow
       )
@@ -1313,7 +1313,7 @@ function dsaup2!(
         np[] = kplusp - nev[]
         # c           | If the size of NEV was just increased |
         # c           | resort the eigenvalues.               |
-        if nevbef < nev
+        if nevbef < nev[]
           dsgets(
             ishift, which, nev[], np[], ritz, bounds, workl;
             stats, debug 
@@ -1360,7 +1360,7 @@ function dsaup2!(
         println(debug.logfile, "_saup2: The number of shifts to apply ", np[])
         _arpack_vout(debug, "_saup2: shifts selected", @view(workl[1:np[]]))
         if ishift == 1
-          _arpack_vout(debug, "_saup2: corresponding Ritz estimates", bounds(workl[1:np[]]))
+          _arpack_vout(debug, "_saup2: corresponding Ritz estimates", @view(bounds[1:np[]]))
         end 
       end
 
@@ -1426,7 +1426,7 @@ function dsaup2!(
       # init lanczos... 
       @debug "initalizing the iteration"
       # c     | Compute the first NEV steps of the Lanczos factorization |
-      info = dsaitr!(ido[], 
+      info = dsaitr!(ido, 
         Val(BMAT), n, 0, nev0, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd, state;
         debug, stats, idonow
       )

@@ -513,7 +513,7 @@ function dgetv0!(
   resid::AbstractVecOrMat{T},
   rnorm::Ref{T}, # output
   ipntr::AbstractVector{Int}, # output
-  workd::AbstractVector{T}, # output
+  workd::AbstractVecOrMat{T}, # output
   state::AbstractArpackState{T};
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,

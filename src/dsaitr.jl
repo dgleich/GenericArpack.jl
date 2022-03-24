@@ -1091,8 +1091,8 @@ function dsaitr!(
           _dscal!(temp1, @view(V[1:n,j]))
           _dscal!(temp1, @view(workd[ipj:ipj+n-1]))
         else
-          _scale_from_to!(rnorm[], one(T), @view(V[1:n,j]))
-          _scale_from_to!(rnorm[], one(T), @view(workd[ipj:ipj+n-1]))
+          _scale_from_to(rnorm[], one(T), @view(V[1:n,j]))
+          _scale_from_to(rnorm[], one(T), @view(workd[ipj:ipj+n-1]))
         end
         step2 = false 
         # setup for step 3

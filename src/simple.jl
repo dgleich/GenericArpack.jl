@@ -531,7 +531,7 @@ function _swap_within_array(n::Int, v::AbstractVector{T}, offset::Int, ioffset::
   end
 end
 
-function _copyn!(n::Int, dst::Vector{T}, src::Vector{T}) where T
+function _copyn!(n::Int, dst::AbstractVecOrMat{T}, src::AbstractVecOrMat{T}) where T
   #@assert n <= length(dst) && n <= length(src)
   @jl_arpack_check_length(dst, n)
   @jl_arpack_check_length(src, n)
@@ -595,9 +595,9 @@ function dsgets(
     which::Symbol,
     kev::Int,
     np::Int,
-    ritz::Vector{Float64},
-    bounds::Vector{Float64},
-    shifts::Vector{Float64};
+    ritz::AbstractVecOrMat{Float64},
+    bounds::AbstractVecOrMat{Float64},
+    shifts::AbstractVecOrMat{Float64};
     stats::Union{ArpackStats,Nothing}=nothing,
     debug::Union{ArpackDebug,Nothing}=nothing
     )
@@ -667,7 +667,7 @@ function dsgets(
     _copyn!(np, shifts, ritz)
   end
 
-  @jl_update_time(tsgets, t0)
+  @jl_update_time(tgets, t0)
 
   if msglvl > 0
     #@jl_arpack_ivout()
