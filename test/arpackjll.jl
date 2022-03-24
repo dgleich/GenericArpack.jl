@@ -342,7 +342,7 @@ function arpack_dsapps!(
      Ptr{Float64}, # Q
      Ref{LinearAlgebra.BlasInt}, # ldq
      Ptr{Float64}, # workd 
-     )
+     ),
     n, kev, np, shift, V, ldv, H, ldh, resid, Q, ldq, workd)
   return nothing 
 end

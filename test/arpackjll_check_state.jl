@@ -18,9 +18,18 @@ module CheckWithArpackjll
   import ArpackInJulia: AitrState, Getv0State, Saup2State, AbstractArpackState
   using LinearAlgebra
 
+  # this 
+  Base.@kwdef mutable struct ArpackjllState_CheckSaup2_Nostate{T} <: AbstractArpackState{T}
+    aitr::AitrState{T} = AitrState{T}()
+    getv0::Getv0State{T} = Getv0State{T}()
+    saup2::Saup2State{T} = Saup2State{T}()
+    aupd_nev0 = Ref{Int}(0)
+    aupd_np = Ref{Int}(0)
+    aupd_mxiter = Ref{Int}(0)
+    aup2_rnorm = Ref{T}(zero(T))
+  end 
 
-
-  Base.@kwdef mutable struct ArpackjllState_CheckSaup2{T} <: AbstractArpackState{T}
+  Base.@kwdef mutable struct ArpackjllState_CheckSaupd{T} <: AbstractArpackState{T}
     aitr::AitrState{T} = AitrState{T}()
     getv0::Getv0State{T} = Getv0State{T}()
     saup2::Saup2State{T} = Saup2State{T}()
@@ -65,7 +74,7 @@ module CheckWithArpackjll
     ipntr::AbstractVecOrMat{Int},
     workd::AbstractVecOrMat{T},
     info_initv0::Int, # info in Arpack, but we return info... 
-    state::ArpackjllState_CheckSaup2{T}
+    state::ArpackjllState_CheckSaupd{T}
     ;
     stats::Union{ArpackStats,Nothing}=nothing,
     debug::Union{ArpackDebug,Nothing}=nothing,
@@ -89,7 +98,6 @@ module CheckWithArpackjll
       @error("Shouldn't get here. state.handle_saup2 = $(state.handle_saup2) ':check'")
     else
       @error("Shouldn't get here. state.handle_saup2 = $(state.handle_saup2) ':check'")
-      
     end
   end 
 
@@ -106,7 +114,7 @@ module CheckWithArpackjll
     rnorm::Ref{T}, # output
     ipntr::AbstractVector{Int}, # output
     workd::AbstractVector{T}, # output
-    state::ArpackjllState_CheckSaup2{T};
+    state::ArpackjllState_CheckSaupd{T};
     stats::Union{ArpackInJulia.ArpackStats,Nothing}=nothing,
     debug::Union{ArpackInJulia.ArpackDebug,Nothing}=nothing,
     idonow::Union{ArpackInJulia.ArpackOp,Nothing}=nothing
@@ -197,7 +205,7 @@ end
 
     # Note that we cannot run two sequences at once and check them where we start a whole
     # second arpack call because of the expected Arpack state. 
-    state = CheckWithArpackjll.ArpackjllState_CheckSaup2{Float64}()
+    state = CheckWithArpackjll.ArpackjllState_CheckSaupd{Float64}()
     state.handle_saup2 = :use
     stats = ArpackStats()
     while ido[] != 99
@@ -354,7 +362,7 @@ end
 
     _reset_libarpack_dgetv0_iseed()
 
-    state = CheckWithArpackjll.ArpackjllState_CheckSaup2{Float64}()
+    state = CheckWithArpackjll.ArpackjllState_CheckSaupd{Float64}()
     state.handle_getv0 = :use
     stats = ArpackStats()
     @test_nowarn rval = _run_saitr_sequence!(M; idostart=0,
@@ -398,7 +406,7 @@ end
 
     _reset_libarpack_dgetv0_iseed()
 
-    state = CheckWithArpackjll.ArpackjllState_CheckSaup2{Float64}()
+    state = CheckWithArpackjll.ArpackjllState_CheckSaupd{Float64}()
     state.handle_getv0 = :check
     stats = ArpackStats()
     @test_nowarn rval = _run_saitr_sequence!(M; idostart=0,
