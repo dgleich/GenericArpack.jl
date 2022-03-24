@@ -1,3 +1,12 @@
+function _eps23(::Type{T}) where {T <: AbstractFloat}
+  return (eps(T)/2)^((2one(T))/(3one(T)))
+end
+
+function _eps2(::Type{T}) where {T <: AbstractFloat}
+  return eps(T)*eps(T)
+end
+
+
 """ Print out the fields for a specific type in Markdown format.
 
 This is similar to what is in the Base.Docs module to automatically

@@ -1004,7 +1004,7 @@ function dsaupd!(
       nb = 1
     end
     if tol < 0 
-      tol = eps(1.0)/2 # dlmach
+      tol = eps(T)/2 # dlamch ('EpsMach')
     end
     # c        | NP is the number of additional steps to      |
     # c        | extend the length NEV Lanczos factorization. |

@@ -60,7 +60,7 @@ function dsconv(
   @jl_arpack_check_length(ritz, n)
   @jl_arpack_check_length(bounds, n)
   
-  eps23::Float64 = (eps(T)/2)^((2one(T))/(3one(T))) # dlamch("E")**(2.0D+0 / 3.0D+0)
+  eps23::T = _eps23(T) # dlamch("E")**(2.0D+0 / 3.0D+0)
   nconv::Int = 0
   @inbounds for i=1:n
     #=
@@ -671,7 +671,7 @@ function dsgets(
 
   if msglvl > 0
     #@jl_arpack_ivout()
-    @assert debug != nothing
+    @assert debug !== nothing
     println(debug.logfile, "_sgets: KEV is ", kev)
     println(debug.logfile, "_sgets: NP is ", np)
     _arpack_vout(debug,"_sgets: Eigenvalues of current H matrix", @view ritz[1:kev+np])

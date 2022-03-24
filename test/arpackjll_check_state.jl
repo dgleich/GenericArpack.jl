@@ -18,7 +18,9 @@ module CheckWithArpackjll
   import ArpackInJulia: AitrState, Getv0State, Saup2State, AbstractArpackState
   using LinearAlgebra
 
-  Base.@kwdef mutable struct ArpackjllState{T} <: AbstractArpackState{T}
+
+
+  Base.@kwdef mutable struct ArpackjllState_CheckSaup2{T} <: AbstractArpackState{T}
     aitr::AitrState{T} = AitrState{T}()
     getv0::Getv0State{T} = Getv0State{T}()
     saup2::Saup2State{T} = Saup2State{T}()
@@ -27,9 +29,15 @@ module CheckWithArpackjll
     aupd_mxiter = Ref{Int}(0)
     aup2_rnorm = Ref{T}(zero(T))
 
+    # okay, given the new design, these aren't needed anymore
+    # but I want to leave them to get a commit in during
+    # the refactor. 
     handle_saitr::Symbol = :use
     handle_saup2::Symbol = :use
     handle_getv0::Symbol = :use
+    handle_sapps::Symbol = :pass
+    handle_seigt::Symbol = :pass
+    handle_sgets::Symbol = :pass
   end 
 
   function ArpackInJulia.dsaup2!(
@@ -57,7 +65,7 @@ module CheckWithArpackjll
     ipntr::AbstractVecOrMat{Int},
     workd::AbstractVecOrMat{T},
     info_initv0::Int, # info in Arpack, but we return info... 
-    state::ArpackjllState{T}
+    state::ArpackjllState_CheckSaup2{T}
     ;
     stats::Union{ArpackStats,Nothing}=nothing,
     debug::Union{ArpackDebug,Nothing}=nothing,
@@ -67,7 +75,10 @@ module CheckWithArpackjll
     # these codes won't work with idonow. 
     @assert idonow === nothing 
     normalstate = ArpackInJulia.ArpackState{T}()
+    normalstate.aitr = state.aitr
     normalstate.getv0 = state.getv0
+    normalstate.saup2 = state.saup2
+    normalstate.aup2_rnorm = state.aup2_rnorm
 
     if state.handle_saup2 == :use
       return Main.arpack_dsaup2!(ido, BMAT, n, which, nev, np, tol, resid, mode,
@@ -77,7 +88,8 @@ module CheckWithArpackjll
     elseif state.handle_saup2 == :check
       @error("Shouldn't get here. state.handle_saup2 = $(state.handle_saup2) ':check'")
     else
-      # just pass this one...
+      @error("Shouldn't get here. state.handle_saup2 = $(state.handle_saup2) ':check'")
+      
     end
   end 
 
@@ -94,7 +106,7 @@ module CheckWithArpackjll
     rnorm::Ref{T}, # output
     ipntr::AbstractVector{Int}, # output
     workd::AbstractVector{T}, # output
-    state::ArpackjllState{T};
+    state::ArpackjllState_CheckSaup2{T};
     stats::Union{ArpackInJulia.ArpackStats,Nothing}=nothing,
     debug::Union{ArpackInJulia.ArpackDebug,Nothing}=nothing,
     idonow::Union{ArpackInJulia.ArpackOp,Nothing}=nothing
@@ -185,7 +197,7 @@ end
 
     # Note that we cannot run two sequences at once and check them where we start a whole
     # second arpack call because of the expected Arpack state. 
-    state = CheckWithArpackjll.ArpackjllState{Float64}()
+    state = CheckWithArpackjll.ArpackjllState_CheckSaup2{Float64}()
     state.handle_saup2 = :use
     stats = ArpackStats()
     while ido[] != 99
@@ -342,7 +354,7 @@ end
 
     _reset_libarpack_dgetv0_iseed()
 
-    state = CheckWithArpackjll.ArpackjllState{Float64}()
+    state = CheckWithArpackjll.ArpackjllState_CheckSaup2{Float64}()
     state.handle_getv0 = :use
     stats = ArpackStats()
     @test_nowarn rval = _run_saitr_sequence!(M; idostart=0,
@@ -386,7 +398,7 @@ end
 
     _reset_libarpack_dgetv0_iseed()
 
-    state = CheckWithArpackjll.ArpackjllState{Float64}()
+    state = CheckWithArpackjll.ArpackjllState_CheckSaup2{Float64}()
     state.handle_getv0 = :check
     stats = ArpackStats()
     @test_nowarn rval = _run_saitr_sequence!(M; idostart=0,

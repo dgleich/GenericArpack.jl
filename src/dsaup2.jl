@@ -1010,7 +1010,7 @@ function dsaup2!(
   @jl_arpack_check_bmat(BMAT)
 
   # c        | Set machine dependent constant. |
-  eps23 = (eps(T)/2)^(2one(T)/3one(T))
+  eps23 = _eps23(T)
 
   # c        | & message level for debugging |
   msglvl = @jl_arpack_debug(msaup2,0)
@@ -1072,6 +1072,7 @@ function dsaup2!(
         # c           | The initial vector is zero. Error exit. | 
         errorexit = true
         info = -9
+        break
       end  
       getv0 = false 
       ido[] = 0 
@@ -1143,8 +1144,10 @@ function dsaup2!(
       =#
       nev[] = nev0
       np[] = np0
+      # TODO, add state for override...
       dsgets(
-        ishift, which, nev0, np0, ritz, bounds, workl;
+        # this call has nev, np in fortran, but these are just set to the same here 
+        ishift, which, nev0, np0, ritz, bounds, workl; 
         stats, debug 
       )
 
@@ -1199,12 +1202,12 @@ function dsaup2!(
           =#
           wprime = :SA
           dsortr(wprime, true, kplusp, ritz, bounds)
-          nevd2 = nev0/2
+          nevd2 = div(nev0,2)
           nevm2 = nev0 - nevd2 
           if (nev[] > 1)
             np[] = kplusp - nev0
-            _swap_within_array(min(nevd2,np[]), ritz, max(kplusp-nevd2+1,kplusp-n[]+1), nevm2+1)
-            _swap_within_array(min(nevd2,np[]), bounds, max(kplusp-nevd2+1,kplusp-n[]+1), nevm2+1)
+            _swap_within_array(min(nevd2,np[]), ritz, max(kplusp-nevd2+1,kplusp-np[]+1), nevm2+1)
+            _swap_within_array(min(nevd2,np[]), bounds, max(kplusp-nevd2+1,kplusp-np[]+1), nevm2+1)
           end
         else
           #=
@@ -1316,10 +1319,6 @@ function dsaup2!(
             stats, debug 
           )
         end
-      else
-        if msglvl > 2
-          println(debug.logfile, "_saup2: reached else block")
-        end
       end 
 
       if msglvl > 0
@@ -1419,7 +1418,7 @@ function dsaup2!(
       if msglvl > 2
         println(debug.logfile, "_saup2: B-norm of residual for NEV factorization", rnorm[])
         _arpack_vout(debug, "_saup2: main diagonal of compressed H matrix", @view(H[1:nev[],2]))
-        _arpack_vout(debug, "_saup2: main subdiagonal of compressed H matrix", @view(H[1:nev[]-1,1]))
+        _arpack_vout(debug, "_saup2: main subdiagonal of compressed H matrix", @view(H[2:nev[],1]))
       end
       startiter = true # next iteration! # go to 1000
     else

@@ -592,18 +592,19 @@ function dsapps!(
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
 ) where T
-  @error("This code is not debugged or tested")
 
-  @jl_arpack_check_size(V, ldv, kev+np)
-  @jl_arpack_check_size(H, ldh, 2)
   @jl_arpack_check_size(V, n, kev+np) # needs to be this long
   @jl_arpack_check_size(H, n, 2)
+  # make sure our leading dimensions are correct 
+  # these mean we need ldv entries in each column until the last... where we need fewer
+  @jl_arpack_check_length(V, ldv*(kev+np-1)+(kev+np)) 
+  @jl_arpack_check_length(H, ldh+n)
 
   @jl_arpack_check_length(resid, n)
   @jl_arpack_check_length(workd, 2n)
   @jl_arpack_check_length(shift, np)
-  @jl_arpack_check_size(Q, ldq, kev+np) # should be this long...
-  @jl_arpack_check_size(Q, kev+np, kev+np) # but needs to be this long.
+  @jl_arpack_check_size(Q, kev+np, kev+np) # needs to be this size 
+  @jl_arpack_check_length(Q, ldq*(kev+np-1) + (kev+np)) # should be this long...
 
   epsmch = eps(T)/2
   itop = 1
@@ -624,7 +625,7 @@ function dsapps!(
   # c     | Quick return if there are no shifts to apply |
   # if (np == 0) return
   # removed for Julia because it just complicates the code
-  # the for loop elow will do the same thing.
+  # the for loop below will do the same thing.
   
   #= 
   c     | Apply the np shifts implicitly. Apply each shift to the  |
@@ -642,11 +643,21 @@ function dsapps!(
     c        | If above condition tests true then we set h(i+1,1) = 0.  |
     c        | Note that h(1:KEV+NP,1) are assumed to be non negative.  |
     =#
+    # in Fortran, there is a label 20 here to setup a loop to keep iterating
+    # over blocks that have been split. 
+    # so the alg is: find a block; apply shifts; find next block... 
+    # the loop in Fortran is 
+    #   istart -> find iend; loop body; istart = iend + 1; if iend < kplusp, go back to start. 
+    # which we map to 
+    # while istart <= kplusp
+    #   find iend; loop body; istart = iend + 1; 
+    # end which will end in the same place.
     while istart <= kplusp 
       # we will apply shift jj 
 
       # c        | The following loop exits early if we encounter |
       # c        | a negligible off diagonal element.             |
+      iend = kplusp # this may be reduced by the Julia loop 
       for i=istart:kplusp-1
         big = abs(H[i,2]) + abs(H[i+1,2])
         if (H[i+1,1] <= epsmch*big) 
@@ -657,21 +668,24 @@ function dsapps!(
           end
           H[i+1,1] = 0
           iend=i
+          break # go to 40, but we already set iend to the default above, so just exit the loop
         end
       end
+      # In Julia, we set iend = kplusp at initialization, but then may reduce it in the loop
+
+
 
       if istart < iend
         # c           | Construct the plane rotation G'(istart,istart+1,theta) |
         # c           | that attempts to drive h(istart+1,1) to zero.          |
         f = H[istart,2] - shift[jj]
         g = H[istart+1,1]
-        c, s, r = plane_rotation(g, f)
+        c, s, r = plane_rotation(f, g)
         #=
         c            | Apply rotation to the left and right of H;            |
         c            | H <- G' * H * G,  where G = G(istart,istart+1,theta). |
         c            | This will create a "bulge".                           |
-        =# 
-        # TODO, check these indices
+        =#  
         a1 = c*H[istart,2]   + s*H[istart+1,1]
         a2 = c*H[istart+1,1] + s*H[istart+1,2]
         a4 = c*H[istart+1,2] - s*H[istart+1,1]
@@ -681,7 +695,7 @@ function dsapps!(
         H[istart+1,1] = c*a3 + s*a4
 
         # c            | Accumulate the rotation in the matrix Q;  Q <- Q*G |
-        for j=1:min(istart+jj:kplusp)
+        for j=1:min(istart+jj,kplusp)
           a1 = c*Q[j,istart] + s*Q[j,istart+1]
           Q[j,istart+1]  = -s*Q[j,istart] + c*Q[j,istart+1]
           Q[j,istart] = a1
@@ -734,7 +748,7 @@ function dsapps!(
           H[i+1,1] = c*a3 + s*a4
 
           # c               | Accumulate the rotation in the matrix Q;  Q <- Q*G |
-          for j=1:min(i+jj:kplusp)
+          for j=1:min(i+jj,kplusp)
             a1 = c*Q[j,i] + s*Q[j,i+1]
             Q[j,i+1] = -s*Q[j,i] + c*Q[j,i+1]
             Q[j,i] = a1 
