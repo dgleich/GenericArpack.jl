@@ -32,16 +32,24 @@ using ArpackInJulia
 # Generally, the strategy is to write "method_simple" and "method_arpackjll" here...
 if false # switch to true while developing
   @testset "development..." begin
-    #include("arpackjll.jl") # uncomment to develop arpackjll tests
-
+    # include("arpackjll.jl") # uncomment to develop arpackjll tests
+    
   end
   #exit(0)
 end
+
+#@testset "external interfaces" begin 
+#end 
 
 include("macros.jl")
 
 @testset "simple features" begin
   include("idonow_ops_simple.jl")
+
+  @testset "dsaupd" begin 
+    include("dsaupd_simple.jl")
+  end 
+
   include("dsgets_simple.jl")
   
   @testset "dsconv" begin
@@ -190,6 +198,7 @@ if "arpackjll" in ARGS
     # The next set of tests delves deeply into
     # comparisons between Arpackjll and our code
     include("arpackjll_check_state.jl")
+    include("dsapps_override.jl")
   end
 end
 ##

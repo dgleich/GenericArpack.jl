@@ -99,7 +99,7 @@ module CheckWithArpackjll
     else
       @error("Shouldn't get here. state.handle_saup2 = $(state.handle_saup2) ':check'")
     end
-  end 
+  end
 
   function ArpackInJulia.dgetv0!(
     ido::Ref{Int}, # input/output
