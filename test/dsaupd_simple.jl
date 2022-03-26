@@ -36,10 +36,12 @@ using LinearAlgebra
     # second arpack call because of the expected Arpack state. 
     state = ArpackInJulia.ArpackState{Float64}()
     stats = ArpackStats()
+    debug = ArpackInJulia.ArpackDebug(logfile=IOBuffer())
+    ArpackInJulia.set_debug_high!(debug)
     while ido[] != 99
       ierr, state = ArpackInJulia.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
         ipntr, workd, workl, lworkl, info_initv;
-        state, stats
+        state, stats, debug 
       )
       #ierr = arpack_dsaupd!(ido, bmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, 
       #  ipntr, workd, workl, lworkl, info_initv)

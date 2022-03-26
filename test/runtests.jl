@@ -33,6 +33,7 @@ using ArpackInJulia
 if false # switch to true while developing
   @testset "development..." begin
     # include("arpackjll.jl") # uncomment to develop arpackjll tests
+    # arpack_set_debug_high()
     
   end
   #exit(0)
@@ -124,6 +125,7 @@ end
 if "arpackjll" in ARGS
   include("arpackjll.jl") # get the helpful routines to call stuff in "arpackjll"
   @testset "arpackjll" begin
+
     include("dlarnv_arpackjll.jl")
 
     @testset "dsconv" begin
@@ -182,11 +184,14 @@ if "arpackjll" in ARGS
       @test info1 == info2
     end
 
+    
     include("dsgets_arpackjll.jl")
 
     @testset "dsaitr" begin 
       include("dsaitr_arpackjll.jl")
     end 
+
+    include("dsaupd_arpackjll.jl")
     
     @testset "dstqrb" begin
       include("dstqrb-compare.jl")
@@ -194,6 +199,8 @@ if "arpackjll" in ARGS
     @testset "dgetv0" begin
       include("dgetv0_arpackjll.jl")
     end
+
+    
 
     # The next set of tests delves deeply into
     # comparisons between Arpackjll and our code

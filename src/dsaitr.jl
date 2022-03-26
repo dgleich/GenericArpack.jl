@@ -1059,11 +1059,20 @@ function dsaitr!(
         println(debug.logfile, "_saitr: B-norm of the current residual ", rnorm[])
       end
       if rnorm[] <= 0
+        #=
+        c           | Invariant subspace found, generate a new starting |
+        c           | vector which is orthogonal to the current Arnoldi |
+        c           | basis and continue the iteration.                 |
+        =#
         if msglvl > 0
           println(debug.logfile, "_saitr: ****** restart at step ****** ", j)
         end
-        # need to run a restart
-        @jl_arpack_set_stat(nrstrt, stats.nrstrt+1)
+        #= 
+        c           | ITRY is the loop variable that controls the |
+        c           | maximum amount of times that a restart is   |
+        c           | attempted. NRSTRT is used by stat.h         |
+        =#
+        @jl_arpack_increment_stat(nrstrt)
         itry = 1
         # label 20 in dsaitr.f 
         rstart = true
@@ -1296,7 +1305,8 @@ function dsaitr!(
         @debug "label 80 in dsaitr.f"
         step5 = false 
         
-        @jl_arpack_set_stat(nrorth, stats.nrorth+1)
+        # see LOOP ISSUE below with respect to label 80
+        @jl_arpack_increment_stat(nrorth)
         #=
         c        | Enter the Iterative refinement phase. If further  |
         c        | refinement is necessary, loop back here. The loop |
@@ -1393,6 +1403,11 @@ function dsaitr!(
           iter += 1
           if iter <= 1
             step5 = true # go back up to label 80...
+            # LOOP ISSUE
+            # but _decrement_ nrorth, this is because we always 
+            # increase north in "our" label 80, but Arpack
+            # didn't if we "go to" label 80...
+            @jl_arpack_set_stat(nrorth, stats.nrorth - 1)
           else
             # c           | Otherwise RESID is numerically in the span of V |
             fill!(@view(resid[1:n]), 0)

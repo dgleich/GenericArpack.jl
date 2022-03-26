@@ -1077,6 +1077,13 @@ function dsaupd!(
       iparam[10] = stats.nbx 
       iparam[11] = stats.nrorth
     end
+  end
+  if ido[] == 99 && ierr >= 0 
+    # c     | Exit if there was an informational  |
+    # c     | error within dsaup2 .               |
+    if ierr == 2 
+      ierr = 3 # if (info .eq. 2) info = 3
+    end 
 
     if msglvl > 0
       #_arpack_vout(debug, "_saupd: number of update iterations taken")
