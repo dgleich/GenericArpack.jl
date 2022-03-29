@@ -88,8 +88,9 @@
       else
         @error("Wrong ido, $(ido[])")
       end
+      iter += 1
     end
-    return nothing
+    return iter
   end
 
 
@@ -110,6 +111,23 @@
     @testset "run 2" begin 
       # make sure there aren't any weird duplicate scenarios. 
       seqdata = _check_dsaupd_sequence!(M;bmat, nev, initv=resid, mode)
+    end 
+  end 
+
+
+  @testset "dsaupd compare arpackjll simple call long diagonal" begin
+    using LinearAlgebra
+    bmat = :I
+    n = 1000
+    nev = 6
+    mode = 1
+    resid = ones(n)/sqrt(n)
+
+    M = Diagonal(1.0:n)
+    
+    @testset "run 1" begin 
+      seqdata = _check_dsaupd_sequence!(M;bmat, nev, initv=resid, mode)
+      #println("Long diagonal run takes $(seqdata) iterations")
     end 
   end 
 
