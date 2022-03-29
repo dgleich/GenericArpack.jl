@@ -1213,19 +1213,23 @@ function dsaitr!(
 
         # TODO check to make sure the workd[irj:irj+j-1] is correct here...
         if mode != 2
-          _dgemv_blas!('T', n, j, 1.0, V, ldv, @view(workd[ipj:ipj+n-1]), 
-            0.0, @view(workd[irj:irj+j-1]))
+          #_dgemv_blas!('T', n, j, 1.0, V, ldv, @view(workd[ipj:ipj+n-1]), 
+          #  0.0, @view(workd[irj:irj+j-1]))
+          # A B α + C β ==> mul!(C, A, B, α, β)
+          mul!(@view(workd[irj:irj+j-1]), adjoint(@view(V[1:n, 1:j])), @view(workd[ipj:ipj+n-1]))
         else 
           # the difference is ipj (mode != 2) and ivj (mode == 2)
-          _dgemv_blas!('T', n, j, 1.0, V, ldv, @view(workd[ivj:ivj+n-1]), 
-            0.0, @view(workd[irj:irj+j-1]))
+          # _dgemv_blas!('T', n, j, 1.0, V, ldv, @view(workd[ivj:ivj+n-1]), 
+          #  0.0, @view(workd[irj:irj+j-1]))
+          mul!(@view(workd[irj:irj+j-1]), adjoint(@view(V[1:n, 1:j])), @view(workd[ivj:ivj+n-1]))
         end
       
         # c        | Orthgonalize r_{j} against V_{j}.    |
         # c        | RESID contains OP*v_{j}. See STEP 3. | 
       
-        _dgemv_blas!('N', n, j, -1.0, V, ldv, @view(workd[irj:irj+j-1]), 
-          1.0, @view(resid[1:n]))
+        #_dgemv_blas!('N', n, j, -1.0, V, ldv, @view(workd[irj:irj+j-1]), 
+        #  1.0, @view(resid[1:n]))
+        mul!(@view(resid[1:n]), @view(V[1:n, 1:j]), @view(workd[irj:irj+j-1]), -one(T), one(T))
 
         # c        | Extend H to have j rows and columns. |
 
@@ -1321,8 +1325,9 @@ function dsaitr!(
         end
         # c        | Compute V_{j}^T * B * r_{j}.                       |
         # c        | WORKD(IRJ:IRJ+J-1) = v(:,1:J)'*WORKD(IPJ:IPJ+N-1). |
-        _dgemv_blas!('T', n, j, one(T), V, ldv, @view(workd[ipj:ipj+n-1]), 
-          zero(T), @view(workd[irj:irj+j-1]))
+        #_dgemv_blas!('T', n, j, one(T), V, ldv, @view(workd[ipj:ipj+n-1]), 
+        #  zero(T), @view(workd[irj:irj+j-1]))
+        mul!(@view(workd[irj:irj+j-1]), adjoint(@view(V[1:n,1:j])), @view(workd[ipj:ipj+n-1]))
         #=
         c        | Compute the correction to the residual:      |
         c        | r_{j} = r_{j} - V_{j} * WORKD(IRJ:IRJ+J-1).  |
@@ -1330,9 +1335,10 @@ function dsaitr!(
         c        | v(:,1:J)*WORKD(IRJ:IRJ+J-1)*e'_j, but only   |
         c        | H(j,j) is updated.                           |
         =#
-        _dgemv_blas!('N', n, j, -one(T), V, ldv, 
-            @view(workd[irj:irj+j-1]), 
-            one(T), @view(resid[1:n]))
+        #_dgemv_blas!('N', n, j, -one(T), V, ldv, 
+        #    @view(workd[irj:irj+j-1]), 
+        #    one(T), @view(resid[1:n]))
+        mul!(@view(resid[1:n]), @view(V[1:n, 1:j]), @view(workd[irj:irj+j-1]), -one(T), one(T))
         if j == 1 || rstart 
           H[j,1] = 0
         end

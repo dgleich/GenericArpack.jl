@@ -656,9 +656,13 @@ function dgetv0!(
       c     | Parlett's book, page 107 and in Gragg & Reichel TOMS paper.   |
       =#
 
-      _dgemv_blas!('T', n, j-1, 1.0, V, ldv, workd, 0.0, @view(workd[(n+1):(2n)]))
-      _dgemv_blas!('N', n, j-1, -1.0, V, ldv, @view(workd[(n+1):(2n)]), 1.0,
-        @view(resid[1:n]))
+      #_dgemv_blas!('T', n, j-1, 1.0, V, ldv, workd, 0.0, @view(workd[(n+1):(2n)]))
+      # mul!(C, A, B, alpha, beta) ==> A B α + C β.
+      mul!(@view(workd[(n+1):(n+j-1)]), adjoint(@view(V[1:n,1:j-1])), @view(workd[1:n]))
+      #_dgemv_blas!('N', n, j-1, -1.0, V, ldv, @view(workd[(n+1):(2n)]), 1.0,
+        #@view(resid[1:n]))
+      mul!(@view(resid[1:n]), @view(V[1:n,1:j-1]), @view(workd[(n+1):(n+j-1)]), -one(T), one(T))
+      
       # c     | Compute the B-norm of the orthogonalized starting vector |
       t2 = @jl_arpack_time()
       if BMAT == :G

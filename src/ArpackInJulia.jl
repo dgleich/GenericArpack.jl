@@ -11,7 +11,7 @@ include("output.jl")
 include("simple.jl")
 
 include("arpack-blas.jl")
-include("arpack-blas-direct-temp.jl")
+#include("arpack-blas-direct-temp.jl")
 include("arpack-blas-qr.jl")
 include("dstqrb.jl")
 
