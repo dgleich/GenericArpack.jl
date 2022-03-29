@@ -843,7 +843,7 @@ function _ql_iteration(d::AbstractVecOrMat{T},
       #  @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]),
       #  @view(z[is:lastm])') # note don't need "1" here...
        #  @view(z[is:lastm]), 1)
-      _apply_plane_rotations_right!(@view(z[is:lastm])',
+      _apply_plane_rotations_right!(adjoint(@view(z[is:lastm])),
          @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]); rev=true)
         # backwards in ql
       d[is] -= p
@@ -953,7 +953,7 @@ function _qr_iteration(d::AbstractVecOrMat{T},
       #  @view(work[lastm:is-1]), @view(work[(n-1).+(lastm:is-1)]),
       #  @view(z[lastm:is]), 1)
       #@show z
-      _apply_plane_rotations_right!(@view(z[lastm:is])',
+      _apply_plane_rotations_right!(adjoint(@view(z[lastm:is])),
         @view(work[lastm:is-1]),
         @view(work[(n-1).+(lastm:is-1)]);rev=false) # forwards in qr
       d[is] -= p

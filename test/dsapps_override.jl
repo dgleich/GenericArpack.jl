@@ -93,6 +93,10 @@ function mysimpleeigvals_check_dsapps(op::ArpackOp, nev::Int = 6)
       Tuple{Int,Vector{T}, Matrix{T}, Vector{Int}, Vector{Int}, Matrix{T}, Vector{T}, Int}}
   }()
 
+  
+  # make sure we reset this seed...
+  _reset_libarpack_dgetv0_iseed()
+
   # Note that we cannot run two sequences at once and check them where we start a whole
   # second arpack call because of the expected Arpack state. 
   state = CheckDsappsWithArpackjll.CheckDsappsState{Float64}()
@@ -117,6 +121,8 @@ function mysimpleeigvals_check_dsapps(op::ArpackOp, nev::Int = 6)
     # iparam9..11 are stats that aren't tracked the same... 
     push!(histdata, (;ido=ido[], resid=copy(resid), V=copy(V), iparam=copy(iparam), 
       ipntr=copy(ipntr), workd=copy(workd), workl=copy(workl), ierr))
+
+
 
     arierr = arpack_dsaupd!(arido, bmat, n, which, nev, tol, arresid, ncv, arV, ldv, ariparam, 
       aripntr, arworkd, arworkl, lworkl, info_initv)

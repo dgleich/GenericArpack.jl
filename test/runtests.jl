@@ -34,7 +34,7 @@ if false # switch to true while developing
   @testset "development..." begin
     # include("arpackjll.jl") # uncomment to develop arpackjll tests
     # arpack_set_debug_high()
-    
+
   end
   #exit(0)
 end
@@ -104,6 +104,10 @@ include("macros.jl")
     @test norm(bounds - abs(rnorm)*abs.(sqrt(2/(n+1)).*sin.(n.*(1:n).*pi/(n+1)))) <= 2*n*eps(1.0)*rnorm  
   end
 
+  @testset "dnrm2" begin 
+    @test ArpackInJulia._dnrm2_unroll_ext(zeros(5)) == 0 # make sure we get zero
+  end 
+
   include("dgetv0_simple.jl")
   include("dsaitr_simple.jl")
 end
@@ -123,10 +127,15 @@ end
 # using Pkg; Pkg.test("ArpackInJulia"; test_args=["arpackjll"])
 #
 if "arpackjll" in ARGS
+  @testset "blas-lapack" begin
+    # comparisons with blas/lapack
+    include("dlarnv_arpackjll.jl")
+    include("blas-qr-compare.jl")
+  end
+  
+
   include("arpackjll.jl") # get the helpful routines to call stuff in "arpackjll"
   @testset "arpackjll" begin
-
-    include("dlarnv_arpackjll.jl")
 
     @testset "dsconv" begin
       soln = arpack_dsconv(10, ones(10), zeros(10), 1e-8)
@@ -206,6 +215,8 @@ if "arpackjll" in ARGS
     # comparisons between Arpackjll and our code
     include("arpackjll_check_state.jl")
     include("dsapps_override.jl")
+
+    
   end
 end
 ##

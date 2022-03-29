@@ -124,3 +124,30 @@ _dlartg(f::Float64, g::Float64) = begin
     f, g, c, s, r)
   return c[], s[], r[]
 end
+
+##
+_iladlc_blas(A::StridedMatrix) = begin
+  ccall((LinearAlgebra.BLAS.@blasfunc("iladlc_"), LinearAlgebra.BLAS.libblas), LinearAlgebra.BlasInt,
+    (Ref{LinearAlgebra.BlasInt},Ref{LinearAlgebra.BlasInt},Ref{Float64},Ref{LinearAlgebra.BlasInt}),
+    size(A,1),size(A,2),A,stride(A,2))
+end
+
+##
+_dgeqr2_blas!(A::StridedMatrix{Float64}) = begin
+  tau = zeros(minimum(size(A)))
+  work = zeros(size(A,2))
+  info = Ref{LinearAlgebra.BlasInt}(0) 
+  ccall((LinearAlgebra.BLAS.@blasfunc("dgeqr2_"), LinearAlgebra.BLAS.libblas), 
+    Cvoid, 
+    (Ref{LinearAlgebra.BlasInt},Ref{LinearAlgebra.BlasInt}, Ptr{Float64}, # m, n, A
+    Ref{LinearAlgebra.BlasInt},  # lda 
+    Ptr{Float64}, # tau 
+    Ptr{Float64}, # work 
+    Ref{LinearAlgebra.BlasInt}), # info
+    size(A,1),size(A,2),A,stride(A,2),
+    tau, work, info
+    )
+  return A, tau
+end
+
+

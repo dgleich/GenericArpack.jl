@@ -188,6 +188,10 @@ function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
   ss1 = add_dddd_dd(ss1, ss3)
   ss1 = add_dddd_dd(ss1, ss2) 
   ss1 = add_dddd_dd(ss1, ss4) 
+
+  if iszero(ss1[1])
+    return zero(T)
+  end 
   
   # lots of work to get the last bit right...
   # inline sqrt_dd_dd from DoubleFloats.jl

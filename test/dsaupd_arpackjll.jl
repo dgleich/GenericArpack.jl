@@ -93,7 +93,7 @@
   end
 
 
-  @testset "dsaitr compare arpackjll simple call" begin
+  @testset "dsaupd compare arpackjll simple call" begin
     using LinearAlgebra
     bmat = :I
     n = 10 
@@ -113,7 +113,7 @@
     end 
   end 
 
-  @testset "dsaitr compare arpackjll generalized call" begin
+  @testset "dsaupd compare arpackjll generalized call" begin
     using LinearAlgebra
     bmat = :G
     n = 10
@@ -124,6 +124,9 @@
     M = Diagonal(1.0:n)
     B = Diagonal(range(0.1, 1.0, length=n))
     bmat = :G
+
+    # this one does need a random getv0
+    _reset_libarpack_dgetv0_iseed()
 
     @testset "run 1" begin 
       seqdata = _check_dsaupd_sequence!(M;B, bmat,nev,initv=resid, mode)
