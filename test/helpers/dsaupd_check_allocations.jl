@@ -39,7 +39,7 @@ iparam[3] = 300 #
 iparam[4] = 1
 iparam[7] = mode 
 ipntr = zeros(Int,11)
-workd = zeros(n,3)
+workd = zeros(3n)
 lworkl = ncv*ncv + 8*ncv
 workl = zeros(lworkl)
 
