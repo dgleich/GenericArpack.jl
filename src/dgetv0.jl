@@ -750,14 +750,3 @@ function dgetv0!(
   return ierr
 end
 
-
-##
-using LinearAlgebra: BLAS, BlasInt, LinearAlgebra
-_dlarnv_blas!(idist::Int,
-       iseed::Ref{NTuple{4,Int}},
-      n::Int,
-      x::Vector{Float64}) =
-  ccall((LinearAlgebra.BLAS.@blasfunc("dlarnv_"), LinearAlgebra.BLAS.libblas), Cvoid,
-    (Ref{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, Ptr{Float64}),
-    idist, iseed, n, x)#
-

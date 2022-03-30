@@ -1,5 +1,7 @@
 module ArpackInJulia
 
+import LinearAlgebra
+
 include("macros.jl")
 export ArpackDebug, ArpackStats, ArpackTime
 include("idonow_ops.jl")

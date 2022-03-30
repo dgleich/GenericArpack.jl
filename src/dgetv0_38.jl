@@ -748,34 +748,3 @@ function dgetv0!(
   state.getv0 = Getv0State{T}(@getv0_state_vars)
   return ierr
 end
-
-
-##
-using LinearAlgebra: BLAS, BlasInt, LinearAlgebra
-_dlarnv_blas!(idist::Int,
-       iseed::Ref{NTuple{4,Int}},
-      n::Int,
-      x::Vector{Float64}) =
-  ccall((LinearAlgebra.BLAS.@blasfunc("dlarnv_"), LinearAlgebra.BLAS.libblas), Cvoid,
-    (Ref{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, Ptr{Float64}),
-    idist, iseed, n, x)#
-
-
-_dgemv_simple!(
-  trans::Char,
-  m::Int,
-  n::Int,
-  alpha::Float64,
-  a::StridedVecOrMat{Float64},
-  lda::Int,
-  x::StridedVecOrMat{Float64},
-  beta::Float64,
-  y::StridedVecOrMat{Float64},
-  ) =
-  ccall((LinearAlgebra.BLAS.@blasfunc("dgemv_"), LinearAlgebra.BLAS.libblas), Cvoid,
-   (Ref{UInt8}, Ref{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt},
-    Ref{Float64}, Ptr{Float64}, Ref{LinearAlgebra.BlasInt},
-      Ptr{Float64}, Ref{LinearAlgebra.BlasInt},
-      Ref{Float64}, # beta
-       Ptr{Float64}, Ref{LinearAlgebra.BlasInt}),
-   trans, m, n, alpha, a, lda, x, stride(x,1), beta, y, stride(y,1))
