@@ -70,6 +70,9 @@ function report_allocations(file_to_run; depotpaths=true, cleanup=true)
       println("No allocations found")
     end
   else
+    # cleanup if error
+    alines = show_allocations("."; depotpaths, cleanup, pid)
     Base.pipeline_error(ps)
   end 
+  return alines
 end 
