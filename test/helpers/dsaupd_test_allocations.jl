@@ -109,6 +109,7 @@ end
 
 
 ## profiling
+using Revise, ArpackInJulia, LinearAlgebra, BenchmarkTools
 begin
   op = ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:10^3))
   nev = 6
@@ -129,7 +130,7 @@ begin
   iparam[4] = 1
   iparam[7] = mode 
   ipntr = zeros(Int,11)
-  workd = zeros(n,3)
+  workd = zeros(3n)
   lworkl = ncv*ncv + 8*ncv
   workl = zeros(lworkl)
 
