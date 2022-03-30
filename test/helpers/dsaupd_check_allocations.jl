@@ -56,11 +56,13 @@ eigrun(op, ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr
 state = ArpackInJulia.ArpackState{Float64}()
 ido[] = 0 
 
+valbmat = Val(bmat)
+
 # rest profiling after compile
 using Profile
 Profile.clear_malloc_data()
 
-eigrun(op, ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv, state);
+eigrun(op, ido, valbmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv, state);
 
 exit()
 ##
@@ -68,4 +70,4 @@ file = @__FILE__
 procinfo = run(`/Applications/Julia-1.7.app/Contents/Resources/julia/bin/julia --project=$(homedir())/Dropbox/dev/ArpackInJulia --track-allocation=user $file`)
 ##
 include("allocations.jl")
-show_allocations("."; pid=76359)
+println.(show_allocations("."));
