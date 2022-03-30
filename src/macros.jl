@@ -122,7 +122,7 @@ end
 
 #ArpackDebug(;) = ArpackDebug(;logfile=stdout,ndigit=(displaysize(stdout)[2] > 80) ? 1 : -1)
 
-ArpackTime = Float64
+const ArpackTime = Float64
 
 macro jl_arpack_time()
   return esc(:( stats === nothing ? zero(ArpackTime) : time() ))
