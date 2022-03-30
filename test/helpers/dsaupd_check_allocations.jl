@@ -66,8 +66,6 @@ eigrun(op, ido, valbmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, 
 
 exit()
 ##
-file = @__FILE__
-procinfo = run(`/Applications/Julia-1.7.app/Contents/Resources/julia/bin/julia --project=$(homedir())/Dropbox/dev/ArpackInJulia --track-allocation=user $file`)
-##
 include("allocations.jl")
-println.(show_allocations("."));
+lines = report_allocations(@__FILE__)
+println.(lines);

@@ -26,7 +26,7 @@ function _make_filelist!(maindir, allfiles, pidstring)
   end
 end 
 # TODO, add .julia/julia main dir list
-function show_allocations(maindir::AbstractString; pid=nothing, depotpaths=false)
+function show_allocations(maindir::AbstractString; pid=nothing, depotpaths=false, cleanup=true)
   # make a list of all files
   
   allfiles = Vector{String}()
@@ -44,6 +44,29 @@ function show_allocations(maindir::AbstractString; pid=nothing, depotpaths=false
   for afile in allfiles
     check_file_allocation(afile; alines)
   end 
+  if cleanup
+    for afile in allfiles
+      rm(afile)
+    end 
+  end 
   alines 
 end 
 #show_allocations("."; depotpaths=true, pid=76133)
+
+function report_allocations(file_to_run; depotpaths=true, cleanup=true)
+  # check if we are running from the file we are reporting on! 
+  if haskey(ENV, "JULIA_REPORT_ALLOCS")
+    exit(0)
+  end 
+  curenv = dirname(Base.active_project())
+  jlpath = joinpath(Sys.BINDIR, "julia")
+  cmd = Cmd(`$jlpath --project=$(curenv) --track-allocation=user $file`, env=("JULIA_REPORT_ALLOCS"=>"1",))
+  # ripped from run(...) and adaopted
+  ps = Base._spawn(cmd, Base.spawn_opts_inherit())
+  pid = getpid(ps)
+  if success(ps)
+    alines = show_allocations("."; depotpaths, cleanup, pid)
+  else
+    Base.pipeline_error(ps)
+  end 
+end 
