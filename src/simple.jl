@@ -38,7 +38,7 @@ function dsconv(
             n::Int,
             ritz::AbstractVector{T},
             bounds::AbstractVector{T},
-            tol::Float64;
+            tol::T;
             stats=nothing,
             debug=nothing
   ) where T
@@ -258,7 +258,7 @@ function dsortr(
   n::Int, # Input
   x1::AbstractVector{T}, # Input/Output
   x2::AbstractVector{T}, # Input/Output
-) where T
+) where {T <: AbstractFloat}
 
   @jl_arpack_check_length(x1, n)
   if apply
@@ -268,13 +268,13 @@ function dsortr(
   # the ARPACK sorting routine is all the same, just changes the
   # comparison, Julia gives us a way of stating that very easily.
   if which == :SA    
-    _dsortr_loop((x::Float64, y::Float64) -> (x < y), apply, n, x1, x2)
+    _dsortr_loop((x::T, y::T) -> (x < y), apply, n, x1, x2)
   elseif which == :SM
-    _dsortr_loop((x::Float64, y::Float64) -> (abs(x) < abs(y)), apply, n, x1, x2)
+    _dsortr_loop((x::T, y::T) -> (abs(x) < abs(y)), apply, n, x1, x2)
   elseif which == :LA
-    _dsortr_loop((x::Float64, y::Float64) -> (x > y), apply, n, x1, x2)
+    _dsortr_loop((x::T, y::T) -> (x > y), apply, n, x1, x2)
   elseif which == :LM
-    _dsortr_loop((x::Float64, y::Float64) -> (abs(x) > abs(y)), apply, n, x1, x2)
+    _dsortr_loop((x::T, y::T) -> (abs(x) > abs(y)), apply, n, x1, x2)
   end
 end
 
@@ -596,12 +596,12 @@ function dsgets(
     which::Symbol,
     kev::Int,
     np::Int,
-    ritz::AbstractVecOrMat{Float64},
-    bounds::AbstractVecOrMat{Float64},
-    shifts::AbstractVecOrMat{Float64};
+    ritz::AbstractVecOrMat{T},
+    bounds::AbstractVecOrMat{T},
+    shifts::AbstractVecOrMat{T};
     stats::Union{ArpackStats,Nothing}=nothing,
     debug::Union{ArpackDebug,Nothing}=nothing
-    )
+    ) where T 
 
   @jl_arpack_check_length(ritz, kev+np)
   @jl_arpack_check_length(bounds, kev+np)
