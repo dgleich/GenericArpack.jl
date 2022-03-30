@@ -349,10 +349,10 @@ Base.@kwdef mutable struct ArpackState{T} <: AbstractArpackState{T}
   aitr::AitrState{T} = AitrState{T}()
   getv0::Getv0State{T} = Getv0State{T}()
   saup2::Saup2State{T} = Saup2State{T}()
-  aupd_nev0 = Ref{Int}(0)
-  aupd_np = Ref{Int}(0)
-  aupd_mxiter = Ref{Int}(0)
-  aup2_rnorm = Ref{T}(zero(T))
+  aupd_nev0::Base.RefValue{Int} = Ref{Int}(0)
+  aupd_np::Base.RefValue{Int} = Ref{Int}(0)
+  aupd_mxiter::Base.RefValue{Int} = Ref{Int}(0)
+  aup2_rnorm::Base.RefValue{T} = Ref{T}(zero(T))
 end
 
 
