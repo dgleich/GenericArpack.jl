@@ -265,20 +265,21 @@ function dsortr(
     @jl_arpack_check_length(x2, n)
   end
 
-  igap = div(n,2) # integer division
-
   # the ARPACK sorting routine is all the same, just changes the
   # comparison, Julia gives us a way of stating that very easily.
-  if which == :SA
-    cmp = (x::Float64, y::Float64) -> (x < y)
+  if which == :SA    
+    _dsortr_loop((x::Float64, y::Float64) -> (x < y), apply, n, x1, x2)
   elseif which == :SM
-    cmp = (x::Float64, y::Float64) -> (abs(x) < abs(y))
+    _dsortr_loop((x::Float64, y::Float64) -> (abs(x) < abs(y)), apply, n, x1, x2)
   elseif which == :LA
-    cmp = (x::Float64, y::Float64) -> (x > y)
+    _dsortr_loop((x::Float64, y::Float64) -> (x > y), apply, n, x1, x2)
   elseif which == :LM
-    cmp = (x::Float64, y::Float64) -> (abs(x) > abs(y))
+    _dsortr_loop((x::Float64, y::Float64) -> (abs(x) > abs(y)), apply, n, x1, x2)
   end
+end
 
+function _dsortr_loop(cmp, apply, n::Int, x1, x2)
+  igap = div(n,2) # integer division
   @inbounds while igap != 0
     for i=igap:n-1
       j = i-igap

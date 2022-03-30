@@ -66,6 +66,9 @@ function report_allocations(file_to_run; depotpaths=true, cleanup=true)
   pid = getpid(ps)
   if success(ps)
     alines = show_allocations("."; depotpaths, cleanup, pid)
+    if length(alines) == 0
+      println("No allocations found")
+    end
   else
     Base.pipeline_error(ps)
   end 
