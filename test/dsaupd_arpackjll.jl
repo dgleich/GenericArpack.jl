@@ -1,6 +1,7 @@
 @testset "dsaupd compare against arpackjll" begin 
   function _check_dsaupd_sequence!(M;
     B=1.0LinearAlgebra.I,
+    invBop=B, 
     nev=min(size(M,1)-2,6),
     ncv=min(2nev,size(M,1)-1),
     mode::Int=1,
@@ -76,7 +77,8 @@
           # crazy interface, see remark 5 
           mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),M,@view(workd[ipntr[1]:ipntr[1]+n-1]))
           copyto!(@view(workd[ipntr[1]:ipntr[1]+n-1]),@view(workd[ipntr[2]:ipntr[2]+n-1]))
-          ldiv!(@view(workd[ipntr[2]:ipntr[2]+n-1]),B,@view(workd[ipntr[1]:ipntr[1]+n-1]))
+          #ldiv!(@view(workd[ipntr[2]:ipntr[2]+n-1]),B,@view(workd[ipntr[1]:ipntr[1]+n-1]))
+          ldiv!(invBop, @view(workd[ipntr[2]:ipntr[2]+n-1]))
         else
           #mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),M,@view(workd[ipntr[1]:ipntr[1]+n-1]))
           ArpackInJulia._i_do_now_opx_1!(ArpackInJulia.ArpackSimpleOp(M), ipntr, workd, n)
@@ -147,7 +149,7 @@
     _reset_libarpack_dgetv0_iseed()
 
     @testset "run 1" begin 
-      seqdata = _check_dsaupd_sequence!(M;B, bmat,nev,initv=resid, mode)
+      seqdata = _check_dsaupd_sequence!(M;B,invBop=B, bmat,nev,initv=resid, mode)
     end 
 
     # this one does need a random getv0
@@ -155,7 +157,7 @@
 
     @testset "run 2" begin 
       # make sure there aren't any weird duplicate scenarios. 
-      seqdata = _check_dsaupd_sequence!(M;B, bmat, nev,initv=resid, mode)
+      seqdata = _check_dsaupd_sequence!(M;B,invBop=B, bmat, nev,initv=resid, mode)
     end 
   end
 
@@ -172,7 +174,7 @@
     B = Diagonal(collect(range(0.1, 1.0, length=n)))
 
     _reset_libarpack_dgetv0_iseed()
-    _check_dsaupd_sequence!(A; B, mode, ncv, nev, bmat)
+    _check_dsaupd_sequence!(A; B,invBop=B, mode, ncv, nev, bmat)
   end
 
   @testset "Generalized Eigenproblem with Diagonal that is too long" begin 
@@ -188,7 +190,24 @@
     B = Diagonal(collect(range(0.1, 1.0, length=n)))
 
     _reset_libarpack_dgetv0_iseed()
-    _check_dsaupd_sequence!(A; B, mode, ncv, nev, bmat)
+    _check_dsaupd_sequence!(A; B,invBop=B, mode, ncv, nev, bmat)
+  end
+
+  @testset "Generalized Eigenproblem from dsdrv3" begin 
+
+    n = 100
+    ncv = 10
+    nev = 4
+    A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*((n+1))
+    B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1)).*(1/(6*(n+1)))
+    F = lu(B)
+    mode = 2
+    bmat = :G
+    ncv = 10
+    nev = 4
+    _reset_libarpack_dgetv0_iseed()
+    _check_dsaupd_sequence!(A; B,invBop=F, mode, ncv, nev, bmat)
+    
   end
 end
 
