@@ -213,3 +213,100 @@ function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
   rdd = mul_dddd_dd(rdd, (1/scale, zero(T)))
   return rdd[1]
 end  
+
+  # based on ... 
+  # https://github.com/rfourquet/BitFloats.jl/blob/master/src/BitFloats.jl
+module Float80
+  if Sys.ARCH==:x86_64 || Sys.ARCH == :x86
+    primitive type _Float80 <: AbstractFloat 80 end
+
+    using Base: llvmcall
+    import Base: *, +, -, /, rem, abs, log2, exp2, sqrt, sin, cos, exp, log, log10
+    import Base: Float64
+
+    (::Type{_Float80})(x::Float64) = llvmcall(
+                    """
+                    %y = fpext double %0 to x86_fp80
+                    %yi = bitcast x86_fp80 %y to i80
+                    ret i80 %yi
+                    """,
+                    _Float80, Tuple{Float64}, x)
+    (::Type{Float64})(x::_Float80) = llvmcall("""
+                    %x = bitcast i80 %0 to x86_fp80
+                    %y = fptrunc x86_fp80 %x to double
+                    ret double %y
+                    """, Float64, Tuple{_Float80}, x)
+
+    const llvmvars = ((_Float80, "x86_fp80", "i80", "f80"),)
+    for (F, f, i, fn) = llvmvars
+      for (op, fop) = ((:*, :fmul), (:/, :fdiv), (:+, :fadd), (:-, :fsub), (:rem, :frem))
+          @eval $op(x::$F, y::$F) = llvmcall(
+            ($"""define $i @entry($i,$i) #0 {
+                      %x = bitcast $i %0 to $f
+                      %y = bitcast $i %1 to $f
+                      %m = $fop $f %x, %y
+                      %mi = bitcast $f %m to $i
+                      ret $i %mi
+                  }
+                  attributes #0 = { alwaysinline }
+                  """, "entry")
+              , $F, Tuple{$F,$F}, x, y)
+      end
+      for (op, fop) = (:abs => :fabs, :log2 => :log2, :exp2 => :exp2, :sqrt => :sqrt,
+                        :sin => :sin, :cos => :cos, :exp => :exp, :log => :log, :log10 => :log10)
+              @eval $op(x::$F) = llvmcall(
+                  ($"""declare $f  @llvm.$fop.$fn($f %Val)
+                  define $i @entry($i) #0 {
+                    1: 
+                      %x = bitcast $i %0 to $f
+                      %y = call $f @llvm.$fop.$fn($f %x)
+                      %z = bitcast $f %y to $i
+                      ret $i %z
+                  }
+                  attributes #0 = { alwaysinline }
+                  """, "entry")
+                    , $F, Tuple{$F}, x)
+      end
+    end
+
+    function mynorm(a::AbstractVector{Float64})
+      ss1::_Float80 = 0.0 
+      ss2::_Float80 = 0.0
+      ss3::_Float80 = 0.0
+      ss4::_Float80 = 0.0
+
+      len = length(a) 
+      offset = 1
+      @inbounds while offset+8 <= len
+        ss1 += _Float80(a[offset+0])*_Float80(a[offset+0])
+        ss2 += _Float80(a[offset+1])*_Float80(a[offset+1])
+        ss3 += _Float80(a[offset+2])*_Float80(a[offset+2])
+        ss4 += _Float80(a[offset+3])*_Float80(a[offset+3])
+        ss1 += _Float80(a[offset+4])*_Float80(a[offset+4])
+        ss2 += _Float80(a[offset+5])*_Float80(a[offset+5])
+        ss3 += _Float80(a[offset+6])*_Float80(a[offset+6])
+        ss4 += _Float80(a[offset+7])*_Float80(a[offset+7])
+        offset += 8 
+      end
+      @inbounds for i=offset:len
+        ss1 += _Float80(a[i])*_Float80(a[i])
+      end
+      ss1 += ss3
+      ss1 += ss2
+      ss1 += ss4 
+      ss1 = sqrt(ss1)
+      return Float64(ss1)
+    end 
+  end
+end
+  
+# here we have other floating point operations we can use to make things go faster. 
+# this overrides the one above using the 80-bit extended precision
+# this has additional exponent bits, so it's easier! 
+  
+if Sys.ARCH==:x86_64 || Sys.ARCH == :x86
+  function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
+    Float80.mynorm(a)
+  end 
+end 
+

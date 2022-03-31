@@ -7,6 +7,7 @@ end
 
 ##
 using BenchmarkTools
+using LinearAlgebra
 @btime begin 
   norm(x)
 end setup=begin 
