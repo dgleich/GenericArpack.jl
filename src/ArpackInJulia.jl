@@ -5,7 +5,7 @@ import LinearAlgebra
 include("macros.jl")
 export ArpackDebug, ArpackStats, ArpackTime
 include("idonow_ops.jl")
-export ArpackOp
+export ArpackOp, ArpackSimpleOp, ArpackSymmetricGeneralizedOp
 
 
 

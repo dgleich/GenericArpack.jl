@@ -572,7 +572,7 @@ function dgetv0!(
       if idonow === nothing
         mainloop = false # this will skip the while loop below and essentially return
       else
-        # TODO run the op now!
+        _i_do_now_opx_neg1!(idonow, ipntr, workd, n)
       end
     end
   end
@@ -606,7 +606,7 @@ function dgetv0!(
         if idonow === nothing
           break # this will break out of the main loop
         else
-          # TODO
+          _i_do_now_bx!(idonow, ipntr, workd, n)
         end
       elseif BMAT == :I
         copyto!(@view(workd[1:n]), @view(resid[1:n])) # dcopy (n, resid, 1, workd, 1)
@@ -674,7 +674,7 @@ function dgetv0!(
         if idonow === nothing
           break # break out of the while loop
         else
-          # TODO
+          _i_do_now_bx!(idonow, ipntr, workd, n)
         end
       else
         copyto!(@view(workd[1:n]), @view(resid[1:n])) # dcopy (n, resid, 1, workd, 1)

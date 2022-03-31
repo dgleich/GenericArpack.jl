@@ -105,13 +105,14 @@ function _allocate_symproblem(op, ncv::Int)
   return _reset!(prob)
 end 
 
-function _eigrun!(prob,nev; which=:LM, bmat=Val(:I), mode=1, 
+function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op), 
+    mode=ArpackInJulia.arpack_mode(prob.op), 
     iterfunc=nothing, state=nothing, ncv=size(prob.V,2), tol=0, initv=nothing,
     stats=nothing, debug=nothing, maxiter=300, idonow::Bool=false)
 
   V = prob.V
   _reset!(prob)
-  prob.iparam[4] = maxiter 
+  prob.iparam[3] = maxiter 
   prob.iparam[7] = mode 
 
   @assert(nev < size(V,2))
@@ -129,11 +130,12 @@ function _eigrun!(prob,nev; which=:LM, bmat=Val(:I), mode=1,
   lworkl = length(prob.workl)
 
   info_initv = 0
-  if initv !==nothing
+  if initv !== nothing
     info_initv = 1
     copyto!(prob.resid, initv)
   end 
-  
+
+  ierr = 0 
   niter = 0 
   if idonow == false 
     op = prob.op
@@ -148,15 +150,21 @@ function _eigrun!(prob,nev; which=:LM, bmat=Val(:I), mode=1,
         iterfunc(prob, ierr, state)
       end 
 
-      if ido[] == 1 
+      if ido[] == 1 && mode == 1
         ArpackInJulia._i_do_now_opx_1!(op, prob.ipntr, prob.workd, n)
+      elseif ido[] == 1 && mode == 2
+        ArpackInJulia._i_do_now_opx_mode2_1!(op, prob.ipntr, prob.workd, n)
+      elseif ido[] == 1 # mode 3, 4, 5
+        ArpackInJulia._i_do_now_opx_shiftinvert_1!(op, prob.ipntr, prob.workd, n)
       elseif ido[] == -1 
         ArpackInJulia._i_do_now_opx_neg1!(op, prob.ipntr, prob.workd, n)
       elseif ido[] == 2
         ArpackInJulia._i_do_now_bx!(op, prob.ipntr, prob.workd, n)
+      elseif ido[] == 3
+        ArpackInJulia._i_do_now_shifts!(op, prob.iparam[8], prob.ipntr, prob.workl, n)
       end 
     end
-    return niter 
+    return niter, ierr  
   else
     ierr = ArpackInJulia.dsaupd!(ido, bmat, n, which, nev, tol, prob.resid, ncv, V, size(V,1), 
         prob.iparam,
@@ -166,7 +174,6 @@ function _eigrun!(prob,nev; which=:LM, bmat=Val(:I), mode=1,
 
     # with idonow, everything should be handled in-place! 
     @assert ido[] == 99 
-    return niter+1
+    return niter+1, ierr
   end 
 end 
-

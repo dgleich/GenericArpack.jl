@@ -1122,7 +1122,14 @@ function dsaitr!(
           break # goto 9000, this will save the current state before return
         else
           # we do it right away in Julia...
-          _i_do_now_opx_1!(idonow, ipntr, workd, n) # handle the operation
+          if mode == 1
+            _i_do_now_opx_1!(idonow, ipntr, workd, n) # handle the operation
+          elseif mode == 2
+            _i_do_now_opx_mode2_1!(idonow, ipntr, workd, n) # handle the operation
+          else # this means we are mode 3, 4, 5
+            # so bx is available in ipntr[3]
+            _i_do_now_opx_shiftinvert_1!(idonow, ipntr, workd, n) # handle the operation
+          end 
         end
         # if we get here, step3 = true, step2 = false, so we will restart in step3
       elseif step3
