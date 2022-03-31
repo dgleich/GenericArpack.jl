@@ -1,3 +1,42 @@
+#=
+usage:
+
+write the code you want to track allocations for into a single file, say "myfile.jl"
+
+    using LinearAlgebra
+    using Profile # to allow reseting allocation to get your target function 
+
+    function myfun(n::Int)
+      return  randn(n,n)
+    end 
+    Z = myfun(100)
+    Profile.clear_malloc_data()
+    Z = myfun(100)
+
+then run 
+
+    include("allocations.jl")
+    lines = report_allocations("myfile.jl")
+    println.(lines); 
+
+Or the code is smart enough to be able to run from the same file.
+
+    using LinearAlgebra
+    using Profile # to allow reseting allocation to get your target function 
+
+    function myfun(n::Int)
+      return  randn(n,n)
+    end 
+    Z = myfun(100)
+    Profile.clear_malloc_data()
+    Z = myfun(100)
+
+    ## 
+    include("allocations.jl")
+    lines = report_allocations(@__FILE__) # this will auto-exit 
+    println.(lines);
+=#  
+
 function check_file_allocation(filename::AbstractString; alines=Vector{Pair{String, String}}())
   lines = readlines(filename)
   for line in lines
@@ -51,7 +90,6 @@ function show_allocations(maindir::AbstractString; pid=nothing, depotpaths=false
   end 
   alines 
 end 
-#show_allocations("."; depotpaths=true, pid=76133)
 
 function report_allocations(file_to_run; depotpaths=true, cleanup=true)
   # check if we are running from the file we are reporting on! 
@@ -60,7 +98,7 @@ function report_allocations(file_to_run; depotpaths=true, cleanup=true)
   end 
   curenv = dirname(Base.active_project())
   jlpath = joinpath(Sys.BINDIR, "julia")
-  cmd = Cmd(`$jlpath --project=$(curenv) --track-allocation=user $file`, env=("JULIA_REPORT_ALLOCS"=>"1",))
+  cmd = Cmd(`$jlpath --project=$(curenv) --track-allocation=user $file_to_run`, env=("JULIA_REPORT_ALLOCS"=>"1",))
   # ripped from run(...) and adaopted
   ps = Base._spawn(cmd, Base.spawn_opts_inherit())
   pid = getpid(ps)
