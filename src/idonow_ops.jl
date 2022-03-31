@@ -16,6 +16,8 @@ abstract type ArpackOp end
 struct ArpackSimpleOp{MatT} <: ArpackOp
   A::MatT
 end
+Base.size(op::ArpackSimpleOp) = Base.size(op.A, 1)
+
 opx!(y,OP::ArpackSimpleOp,x) = mul!(y,OP.A,x)      
 is_arpack_mode_valid_for_op(mode::Int, ::ArpackSimpleOp) = mode == 1 
 

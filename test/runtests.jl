@@ -23,10 +23,11 @@ if "debug" in ARGS
   ENV["JULIA_DEBUG"] = "ArpackInJulia,Main"
 end
 
-include("utility.jl")
-
 using Test
 using ArpackInJulia
+
+# utility can depend on test... 
+include("utility.jl")
 
 # want to run these first... 
 # Generally, the strategy is to write "method_simple" and "method_arpackjll" here...
@@ -49,6 +50,7 @@ include("macros.jl")
 
   @testset "dsaupd" begin 
     include("dsaupd_simple.jl")
+    include("dsaupd_idonow.jl")
   end 
 
   include("dsgets_simple.jl")
