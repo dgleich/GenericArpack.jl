@@ -5,28 +5,40 @@ import Arpack_jll, LinearAlgebra, SHA
 
 function _reset_libarpack_dgetv0_iseed()
   # we need hardcoded offsets because we can't get these from cglobal :( )
-  sha = open(SHA.sha256, Arpack_jll.libarpack)
+  sha = open(SHA.sha256, Arpack_jll.libarpack_path)
   if bytes2hex(sha) == "5c1e951fad68bd7b180b83f2d821324efbdda7e00f5926698fad720249d6ac3f"
-    iseedoffset = 0x0000000000059fc0
+    # iseedoffsets = (0x0000000000059fc0, ) # this is for just dgetv0 
+    # this is for all of them! 
+    iseedoffsets = (0x0000000000059fc0, 0x0000000000059fe0, 0x0000000000059fa0, 0x000000000005a000)
     dgetv0offset = 0x000000000001f940
+  elseif bytes2hex(sha) == "84b5fde039119bd1f80489900b57f7fcf272af081bb37fae7d3a90e6ca673569"
+    dgetv0offset = 0x000000000001c570
+    iseedoffsets = (0x00000000000538c0, 0x0000000000053d20, 0x0000000000053680, 0x0000000000054120)
+  elseif bytes2hex(sha) == "88d0208af594702e43049e01e813d6ca5e15cc4974a9db782fbf74fe7cb93613"
+    dgetv0offset = 0x000000000001cb60
+    iseedoffsets = (0x00000000000538c0, 0x0000000000053d20, 0x0000000000053680, 0x0000000000054120)
   else
-    errmsg = """Unknown libarpack sha $sha for $(Arpack_jll.libarpack)
+    errmsg = """Unknown libarpack sha $(bytes2hex(sha)) for $(Arpack_jll.libarpack_path)
 
     Please post a new issue on the github page for ArpackInJulia."""
     @error(errmsg)
   end
-  libar = Base.Libc.dlopen(Arpack_jll.libarpack)
+  libar = Base.Libc.dlopen(Arpack_jll.libarpack_path)
   dgetv0_real_offset = Base.Libc.dlsym(libar, "dgetv0_")
   base_offset = dgetv0_real_offset-dgetv0offset # this comes from the command above
-  piseedoffset = Ptr{LinearAlgebra.BlasInt}(base_offset + iseedoffset)
-  previseed = unsafe_load.(piseedoffset, (1,2,3,4))
+
+  for iseedoffset in iseedoffsets 
+    piseedoffset = Ptr{LinearAlgebra.BlasInt}(base_offset + iseedoffset)
+    #previseed = unsafe_load.(piseedoffset, (1,2,3,4))
 
 
-  # store the values 1,3,5,6 at indices 1,2,3,4... which resets to the initial Arpack config.
-  unsafe_store!.(piseedoffset, (1,3,5,7), (1,2,3,4))
-  newiseed = unsafe_load.(piseedoffset, (1,2,3,4))
+    # store the values 1,3,5,7 at indices 1,2,3,4... which resets to the initial Arpack config.
+    unsafe_store!.(piseedoffset, (1,3,5,7), (1,2,3,4))
+    #newiseed = unsafe_load.(piseedoffset, (1,2,3,4))
+  end 
 
-  return previseed, newiseed
+  #return previseed, newiseed
+  return true
 end 
 
 function arpack_set_debug_high()

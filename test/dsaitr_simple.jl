@@ -208,7 +208,7 @@ end
     @test stats.taitr > 0 
     @test stats.tmvopx > 0 
     @test V'*V ≈ Matrix(1.0I,np,np)
-    @test norm(V'*resid) ≈ 0 atol=eps(1.0)
+    @test norm(V'*resid) ≈ 0 atol=2*eps(1.0)
   end
 
   @testset "Simple Generalized Eigenproblem with Identity" begin 
