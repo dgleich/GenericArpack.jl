@@ -736,7 +736,7 @@ function dgetv0!(
     # it's equivalent to a line 50 in the FORTRAN code
     if msglvl > 0
       println(debug.logfile,
-        "_getv0: B-norm of initial / restarted starting vector", rnorm[])
+        "_getv0: B-norm of initial / restarted starting vector ", rnorm[])
     end
     if msglvl > 3
       _arpack_vout(debug,

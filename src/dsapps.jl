@@ -662,9 +662,9 @@ function dsapps!(
         big = abs(H[i,2]) + abs(H[i+1,2])
         if (H[i+1,1] <= epsmch*big) 
           if msglvl > 0
-            println(debug.logfile, "_sapps: deflation at row/column no.", i)
-            println(debug.logfile, "_sapps: occurred before shift number.", jj)
-            println(debug.logfile, "_sapps: the corresponding off diagonal element", H[i+1,1])
+            println(debug.logfile, "_sapps: deflation at row/column no. ", i)
+            println(debug.logfile, "_sapps: occurred before shift number. ", jj)
+            println(debug.logfile, "_sapps: the corresponding off diagonal element ", H[i+1,1])
           end
           H[i+1,1] = 0
           iend=i
@@ -797,8 +797,8 @@ function dsapps!(
     big = abs(H[i,2]) + abs(H[i+1,2])
     if (H[i+1,1] <= epsmch*big) 
       if msglvl > 0
-        println(debug.logfile, "_sapps: deflation at row/column no.", i)
-        println(debug.logfile, "_sapps: the corresponding off diagonal element", H[i+1,1])
+        println(debug.logfile, "_sapps: deflation at row/column no. ", i)
+        println(debug.logfile, "_sapps: the corresponding off diagonal element ", H[i+1,1])
       end
       H[i+1,1] = 0
     end
@@ -854,8 +854,8 @@ function dsapps!(
   end 
 
   if msglvl > 0 
-    println(debug.logfile, "_sapps: sigmak of the updated residual vector", Q[kplusp,kev])
-    println(debug.logfile, "_sapps: betak of the updated residual vector", H[kev+1,1])
+    println(debug.logfile, "_sapps: sigmak of the updated residual vector ", Q[kplusp,kev])
+    println(debug.logfile, "_sapps: betak of the updated residual vector ", H[kev+1,1])
     _arpack_vout(debug, "_sapps: updated main diagonal of H for next iteration", 
       @view(H[1:kev,2]))
     if kev > 1

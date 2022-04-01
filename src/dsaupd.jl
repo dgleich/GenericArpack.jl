@@ -1091,7 +1091,7 @@ function dsaupd!(
       println(debug.logfile,
         "_saupd: number of update iterations taken ",  state.aupd_mxiter[])
       println(debug.logfile,
-        "_saupd: number of \"converged\" Ritz values", finalnp)
+        "_saupd: number of \"converged\" Ritz values ", finalnp)
       _arpack_vout(debug, "_saupd: final Ritz values", 
         @view workl[ritz:ritz+finalnp-1])
       _arpack_vout(debug, "_saupd: corresponding error bounds", 
