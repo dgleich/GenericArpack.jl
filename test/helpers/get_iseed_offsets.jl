@@ -1,21 +1,20 @@
 ## This code is helpful to find the offsets to iseed
 # so that we can reset the Arpack random number generator.
 ## get the offsets
-import Arpack_jll, SHA
-run(pipeline(`nm $(Arpack_jll.libarpack)`,`grep dgetv0`))
-run(pipeline(`nm $(Arpack_jll.libarpack)`,`grep iseed`))
-@show bytes2hex(open(SHA.sha256, Arpack_jll.libarpack))
 
 ## Try and automatically get them... 
-iseed_offsets_str = readchomp(pipeline(`nm $(Arpack_jll.libarpack)`,`grep iseed`))
-##
+import Arpack_jll, SHA
+run(pipeline(`nm $(Arpack_jll.libarpack_path)`,`grep dgetv0`))
+run(pipeline(`nm $(Arpack_jll.libarpack_path)`,`grep iseed`))
+@show bytes2hex(open(SHA.sha256, Arpack_jll.libarpack_path))
+iseed_offsets_str = readchomp(pipeline(`nm $(Arpack_jll.libarpack_path)`,`grep iseed`))
 iseed_offsets = iseed_offsets_str |> 
           x->split(x,"\n") |>
           x->map(y->y[1:16],x) |>
           x->parse.(UInt64, x;base=16)
-## 
-dgetv0_offset = readchomp(pipeline(`nm $(Arpack_jll.libarpack)`,`grep dgetv0`)) |> x->parse(UInt64, x[1:16];base=16)
-##
+dgetv0_offset = readchomp(pipeline(`nm $(Arpack_jll.libarpack_path)`,`grep dgetv0`)) |> x->parse(UInt64, x[1:16];base=16)
+
+
 ## This code will update iseed, and allow you to check if you get it right/wrong...
 import Arpack_jll, LinearAlgebra
 function arpack_dgetv0!(ido::Ref{LinearAlgebra.BlasInt}, bmat::Symbol, itry::Int, initv::Bool,
