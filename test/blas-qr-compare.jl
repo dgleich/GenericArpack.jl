@@ -2,6 +2,14 @@
   include("../src/arpack-blas-direct.jl")
   using LinearAlgebra
 
+  function _simple_dgeqr2(A)
+    tau = zeros(minimum(size(A)))
+    work = zeros(size(A,2))
+    cA = copy(A)
+    ArpackInJulia._dgeqr2!(cA, tau, work)
+    return cA, tau
+  end 
+
   function compare_qr(A)
 
     B, tauB = _dgeqr2_blas!(copy(A))
