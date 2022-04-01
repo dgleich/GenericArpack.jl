@@ -595,7 +595,7 @@ c
       end
 =#
 
-using LinearAlgebra: SymTridiagonal, norm
+using LinearAlgebra: SymTridiagonal, norm, UniformScaling
 
 """
   Computes all eigenvalues and the last component of the eigenvectors
@@ -621,6 +621,22 @@ function dstqrb!(
     z, work)
 end
 
+function simple_dsteqr!(
+  d::AbstractVector{T},
+  e::AbstractVector{T},
+  Z::AbstractMatrix{T};
+  work=Vector{T}(undef,max(1,2*size(A,1)-2))
+) where T
+  n = length(d) 
+  @jl_arpack_check_length(d,n)
+  @jl_arpack_check_length(e,n-1)
+  @jl_arpack_check_size(Z, n, n)
+  @jl_arpack_check_length(work, max(2*n-2,1))
+
+  flexible_dsteqr!(SymTridiagonal(@view(d[1:n]), @view(e[1:n-1]));
+    Z, work)
+end 
+
 function opnorm1(A::SymTridiagonal{T}) where T
   m, n = size(A)
   d, e = A.dv, A.ev
@@ -645,17 +661,31 @@ _dstqrb_maxit(::Type{Float32}) = 30
 _dstqrb_maxit(::Type{T}) where T = max(30, 30*ceil(Int, sqrt(log(eps(T))/log(2^-52))))
 
 function conceptual_dstqrb!(A::SymTridiagonal{T};
-    z=Vector{T}(undef,size(A,1)),
-    work=Vector{T}(undef,max(1,2*size(A,1)-2))) where T
+  z=Vector{T}(undef,size(A,1)),
+  work=Vector{T}(undef,max(1,2*size(A,1)-2))) where T
+
+  flexible_dsteqr!(A, z; work)
+end 
+
+function flexible_dsteqr!(A::SymTridiagonal{T},
+    z::AbstractVecOrMat{T};
+    work=Vector{T}(undef,max(1,2*size(A,1)-2)),initz=true) where T
   d = A.dv # same variables at dstqrb
   e = A.ev
 
+  isvector = ndims(z) == 1 
   n = size(A,1)
   #println()
   #println("Starting dstqrb")
   #display(A)
-  fill!(z, zero(T))
-  z[n] = one(T)
+  if initz 
+    if isvector 
+      fill!(z, zero(T))
+      z[n] = one(T)
+    else
+      copyto!(z, UniformScaling(one(T)))
+    end 
+  end 
 
   jtot = 0
   nmaxit = _dstqrb_maxit(T)*n
@@ -668,8 +698,13 @@ function conceptual_dstqrb!(A::SymTridiagonal{T};
     if lend > l # so there is actually work to do!
       #println("Working on block $(l:lend)")
       #display(A)
-      info, niter = _process_block(@view(d[l:lend]), @view(e[l:lend-1]),
-          @view(z[l:lend]), work, nmaxit - jtot)
+      if isvector 
+        info, niter = _process_block(@view(d[l:lend]), @view(e[l:lend-1]),
+            @view(z[l:lend]), work, nmaxit - jtot)
+      else
+        info, niter = _process_block(@view(d[l:lend]), @view(e[l:lend-1]),
+            @view(z[1:n,l:lend]), work, nmaxit - jtot)
+      end 
 
       jtot += niter
       # note, we are going to throw an error in the inner-most function
@@ -692,9 +727,18 @@ function conceptual_dstqrb!(A::SymTridiagonal{T};
     if k != i # swap if need be.
       d[k] = d[i]
       d[i] = p
-      p = z[k]
-      z[k] = z[i]
-      z[i] = p
+      if isvector 
+        p = z[k]
+        z[k] = z[i]
+        z[i] = p
+      else
+        # swap the columns... 
+        for r=1:n
+          p = z[r,k]
+          z[r,k] = z[r,i]
+          z[r,i] = p 
+        end 
+      end 
     end
   end
   return A,z
@@ -757,6 +801,8 @@ function _ql_iteration(d::AbstractVecOrMat{T},
   ssfmin = sqrt(safmin)/eps2
   two = 2*one(T)
 
+  isvector = ndims(z) == 1 
+
   n = length(d)
   iend = length(d)
   is = 1
@@ -786,12 +832,21 @@ function _ql_iteration(d::AbstractVecOrMat{T},
       rt1,rt2,c,s = _dlaev2(d[is], e[is], d[is+1])
       #rt1,rt2,c,s = _dlaev2_blas(d[is], e[is], d[is+1])
       #rt1,rt2,c,s = _checked_dlaev2(d[is], e[is], d[is+1])
+      # note that these are here in dstqrb 
       work[is] = c
       work[is+n-1] = s
-      tst = z[is+1]
-      # apply transformation to eigenvector
-      z[is+1] = c*tst - s*z[is]
-      z[is] = s*tst + c*z[is]
+      if isvector 
+        tst = z[is+1]
+        # apply transformation to eigenvector
+        z[is+1] = c*tst - s*z[is]
+        z[is] = s*tst + c*z[is]
+      else
+        #println("Split piece")
+        _dlasr_right_side_variable_pivot_backward!(n, 2, 
+          @view(work[is:is]), 
+          @view(work[is+n-1:is+n-1]), 
+          @view(z[1:n,is:is+1]))
+      end 
       # save eigenvalue info
       d[is] = rt1
       d[is+1] = rt2
@@ -843,9 +898,13 @@ function _ql_iteration(d::AbstractVecOrMat{T},
       #  @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]),
       #  @view(z[is:lastm])') # note don't need "1" here...
        #  @view(z[is:lastm]), 1)
-      _apply_plane_rotations_right!(adjoint(@view(z[is:lastm])),
-         @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]); rev=true)
-        # backwards in ql
+      if isvector
+        _apply_plane_rotations_right!(adjoint(@view(z[is:lastm])),
+           @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]); rev=true)
+      else
+        _apply_plane_rotations_right!(@view(z[1:n,is:lastm]),
+          @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]); rev=true)
+      end
       d[is] -= p
       e[is] = g
     end
@@ -874,6 +933,8 @@ function _qr_iteration(d::AbstractVecOrMat{T},
   ssfmax = sqrt(safmax)/3
   ssfmin = sqrt(safmin)/eps2
   two = 2*one(T)
+
+  isvector = ndims(z) == 1 
 
   n = length(d)
   is = length(d) # we work backwards here... so many loops are reversed...
@@ -904,11 +965,21 @@ function _qr_iteration(d::AbstractVecOrMat{T},
       rt1,rt2,c,s = _dlaev2(d[is-1], e[is-1], d[is])
       #rt1,rt2,c,s = _dlaev2_blas(d[is-1], e[is-1], d[is])
       #rt1,rt2,c,s = _checked_dlaev2(d[is-1], e[is-1], d[is])
-      # no need to save work info as this is now irrelevant...
-      tst = z[is]
       # apply transformation to eigenvector
-      z[is] = c*tst - s*z[is-1]
-      z[is-1] = s*tst + c*z[is-1]
+      if isvector 
+        # no need to save work info as this is now irrelevant...
+        tst = z[is]
+        # apply transformation to eigenvector
+        z[is] = c*tst - s*z[is-1]
+        z[is-1] = s*tst + c*z[is-1]
+      else
+        work[is] = c
+        work[is+n-1] = s
+        _dlasr_right_side_variable_pivot_forward!(n, 2, 
+          @view(work[is:is]), 
+          @view(work[is+n-1:is+n-1]), 
+          @view(z[1:n,is:is-1]))
+      end 
       # save eigenvalue info
       d[is-1] = rt1
       d[is] = rt2
@@ -953,9 +1024,15 @@ function _qr_iteration(d::AbstractVecOrMat{T},
       #  @view(work[lastm:is-1]), @view(work[(n-1).+(lastm:is-1)]),
       #  @view(z[lastm:is]), 1)
       #@show z
-      _apply_plane_rotations_right!(adjoint(@view(z[lastm:is])),
-        @view(work[lastm:is-1]),
-        @view(work[(n-1).+(lastm:is-1)]);rev=false) # forwards in qr
+      if isvector
+        _apply_plane_rotations_right!(adjoint(@view(z[lastm:is])),
+          @view(work[lastm:is-1]),
+          @view(work[(n-1).+(lastm:is-1)]);rev=false) # forwards in qr
+      else
+        _apply_plane_rotations_right!(@view(z[1:n,lastm:is]),
+          @view(work[lastm:is-1]),
+          @view(work[(n-1).+(lastm:is-1)]);rev=false) # forwards in qr
+      end 
       d[is] -= p
       e[is-1] = g
     end
