@@ -154,7 +154,7 @@ end
 # going to use Kahan summation to simulation that...
 # (using the 80-bit registers was a neat trick
 # to )
-function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
+function _dnrm2_unroll_ext_dd(a::AbstractVector{T}) where {T <: Float64}
   max = maximum(abs, a)
   #min,max = extrema(abs, a)
   # here's the question, do we have enough precision in strict double-double,
@@ -307,6 +307,10 @@ end
 if Sys.ARCH==:x86_64 || Sys.ARCH == :x86
   function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
     Float80.mynorm(a)
+  end 
+else 
+  function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
+    _dnrm2_unroll_ext_dd(a)
   end 
 end 
 
