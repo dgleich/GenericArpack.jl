@@ -91,14 +91,18 @@ function show_allocations(maindir::AbstractString; pid=nothing, depotpaths=false
   alines 
 end 
 
-function report_allocations(file_to_run; depotpaths=true, cleanup=true)
+function report_allocations(file_to_run; depotpaths=true, cleanup=true, system=false)
   # check if we are running from the file we are reporting on! 
   if haskey(ENV, "JULIA_REPORT_ALLOCS")
     exit(0)
   end 
   curenv = dirname(Base.active_project())
   jlpath = joinpath(Sys.BINDIR, "julia")
-  cmd = Cmd(`$jlpath --project=$(curenv) --track-allocation=user $file_to_run`, env=("JULIA_REPORT_ALLOCS"=>"1",))
+  trackopt = "--track-allocation=user"
+  if system 
+    trackopt = "--track-allocation=all"
+  end
+  cmd = Cmd(`$jlpath --project=$(curenv) $trackopt $file_to_run`, env=("JULIA_REPORT_ALLOCS"=>"1",))
   # ripped from run(...) and adaopted
   ps = Base._spawn(cmd, Base.spawn_opts_inherit())
   pid = getpid(ps)

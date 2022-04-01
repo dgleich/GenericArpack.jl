@@ -1,10 +1,28 @@
 # https://discourse.julialang.org/t/memory-allocation-and-profile/47573/5
 using ArpackInJulia
 using LinearAlgebra
+
+#=
+We used this to track down where copyto! was making copies with 
+what were actually  non-aliased arrays Julia couldn't detect.
+
+function Base.mightalias(A::AbstractArray, B::AbstractArray) 
+  if !Base._isdisjoint(Base.dataids(A), Base.dataids(B))
+
+    println(Base.dataids(A))
+    println(Base.dataids(B))
+    error("Non disjoint copyto")
+  end 
+
+  !isbits(A) && !isbits(B) && !Base._isdisjoint(Base.dataids(A), Base.dataids(B))
+end 
+=#
+
 function eigrun(op,ido, ::Val{BMAT}, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv, state) where BMAT 
   niter = 0 
+  nbytes = 0 
   while ido[] != 99
-    ArpackInJulia.dsaupd!(ido, Val(BMAT), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+    nbytes += @allocated ArpackInJulia.dsaupd!(ido, Val(BMAT), n, which, nev, tol, resid, ncv, V, ldv, iparam,
       ipntr, workd, workl, lworkl, info_initv;
       state 
     )
@@ -17,7 +35,7 @@ function eigrun(op,ido, ::Val{BMAT}, n, which, nev, tol, resid, ncv, V, ldv, ipa
       @error("this only supports standard eigenvalue problems")
     end 
   end
-  return niter
+  return niter, nbytes
 end 
 
 op = ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:10^3))
@@ -62,10 +80,12 @@ valbmat = Val(bmat)
 using Profile
 Profile.clear_malloc_data()
 
-eigrun(op, ido, valbmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv, state);
+niter = eigrun(op, ido, valbmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv, state);
+println(niter)
 
 exit()
 ##
 include("allocations.jl")
+#lines = report_allocations(@__FILE__; system=false)
 lines = report_allocations(@__FILE__)
 println.(lines);

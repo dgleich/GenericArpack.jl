@@ -988,8 +988,14 @@ function dseigt!(
     end 
   end
 
-  copyto!(@view(eig[1:n]), @view(H[1:n,2]))
-  copyto!(@view(workl[1:n-1]), @view(H[2:n,1]))
+  # copyto!(@view(eig[1:n]), @view(H[1:n,2]))
+  # copyto!(@view(workl[1:n-1]), @view(H[2:n,1]))
+  # Julia's conservative nature detects that these arrays may 
+  # overlap because H is a reshaped version of a view into workl
+  _copyn!(n, @view(eig[1:n]), @view(H[1:n,2]))
+  _copyn!(n-1, @view(workl[1:n-1]), @view(H[2:n,1]))
+  # 
+  
   dstqrb!(
     n, @view(eig[1:n]), @view(workl[1:n-1]), @view(bounds[1:n]), @view(workl[n+1:3n]), state
   )
