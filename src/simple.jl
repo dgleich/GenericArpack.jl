@@ -257,7 +257,7 @@ function dsortr(
   apply::Bool, # Input
   n::Int, # Input
   x1::AbstractVector{T}, # Input/Output
-  x2::AbstractVector{T}, # Input/Output
+  x2::AbstractVecOrMat{T}, # Input/Output
 ) where {T <: AbstractFloat}
 
   @jl_arpack_check_length(x1, n)
@@ -288,7 +288,7 @@ function _dsortr_loop(cmp, apply, n::Int, x1, x2)
         if cmp(x1[j+1],x1[j+igap+1])
           x1[j+1],x1[j+igap+1] = x1[j+igap+1],x1[j+1]
           if apply
-            x2[j+1],x2[j+igap+1] = x2[j+igap+1],x2[j+1]
+            _sort_swap(x2, j+1, j+igap+1)
           end
         else
           break # go to 30, means go to continue branch
@@ -300,6 +300,15 @@ function _dsortr_loop(cmp, apply, n::Int, x1, x2)
   end
 end
 
+function _sort_swap(x2::AbstractVector, i1::Integer, i2::Integer) 
+  x2[i1],x2[i2] = x2[i2],x2[i1]
+end 
+function _sort_swap(x2::AbstractMatrix, i1::Integer, i2::Integer)  # swap columns
+  @simd for i in 1:size(x2,1)
+    x2[i,i1],x2[i,i2] = x2[i,i2],x2[i,i1]
+  end 
+end 
+    
 ##
 #=
 c-----------------------------------------------------------------------
