@@ -151,6 +151,29 @@ _dgeqr2_blas!(A::StridedMatrix{Float64}) = begin
 end
 
 ##
+_dorm2r_blas!(side::Char, trans::Char,
+m::Int, n::Int, k::Int, A::StridedArray{Float64}, 
+tau::StridedVector{Float64}, C::StridedMatrix{Float64},
+) = begin
+  work = zeros(size(A,2))
+  info = Ref{LinearAlgebra.BlasInt}(0) 
+  ccall((LinearAlgebra.BLAS.@blasfunc("dorm2r_"), LinearAlgebra.BLAS.libblas), 
+    Cvoid, 
+    (Ref{UInt8}, Ref{UInt8}, 
+    Ref{LinearAlgebra.BlasInt},Ref{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, # m n k 
+    Ptr{Float64}, # A, 
+    Ref{LinearAlgebra.BlasInt},  # lda 
+    Ptr{Float64}, # tau 
+    Ptr{Float64}, # C
+    Ref{LinearAlgebra.BlasInt},  # ldc 
+    Ptr{Float64}, # work 
+    Ref{LinearAlgebra.BlasInt}), # info, 1, 1 for character sizes
+    side, trans, m, n, k, A, stride(A,2), tau, C, stride(C,2), work, info
+    )
+  return C
+end
+
+##
 using LinearAlgebra: BLAS, BlasInt, LinearAlgebra
 _dlarnv_blas!(idist::Int,
        iseed::Ref{NTuple{4,Int}},

@@ -288,6 +288,35 @@ function _dlarf_left!(
   end 
 end
 
+function _dlarf_right!(
+  v::AbstractVecOrMat{T}, 
+  tau::T, 
+  C::AbstractMatrix{T}, 
+  work::AbstractVecOrMat{T}
+) where T 
+  lastv = 0 
+  lastc = 0 
+  m = length(v)
+  if tau != 0
+    # set up variables for scanning V, lastv begins 
+    lastv = m
+    i = 1 + (lastv-1)
+    while lastv > 0 && v[i] == 0 
+      lastv -= 1
+      i -= 1
+    end 
+    # Scan for the last non-zero row in C(:,1:lastv).
+    lastc = _last_nonzero_column(transpose(@view(C[:, 1:lastv])))
+    # Form  C * H
+    if lastv > 0
+      # w(1:lastc,1) := C(1:lastc,1:lastv) * v(1:lastv,1)
+      mul!(@view(work[1:lastc]), @view(C[1:lastc,1:lastv]), @view(v[1:lastv,1]))
+      # C(1:lastc,1:lastv) := C(...) - w(1:lastc,1) * v(1:lastv,1)**T
+      _dger!(-tau, @view(work[1:lastc]), @view(v[1:lastv]), @view(C[1:lastc,1:lastv]))
+    end
+  end 
+end
+
 function _last_nonzero_column(A::AbstractMatrix{T}) where T
   m,n = size(A)
   if n == 0 
@@ -338,3 +367,88 @@ function _dger!(alpha::T, x::AbstractVecOrMat{T}, y::AbstractVecOrMat{T}, A::Abs
 end
 
 
+"""
+DORM2R overwrites the general real m by n matrix C with
+
+Q * C  if SIDE = 'L' and TRANS = 'N', or
+
+Q**T* C  if SIDE = 'L' and TRANS = 'T', or
+
+C * Q  if SIDE = 'R' and TRANS = 'N', or
+
+C * Q**T if SIDE = 'R' and TRANS = 'T',
+
+where Q is a real orthogonal matrix defined as the product of k
+elementary reflectors
+
+Q = H(1) H(2) . . . H(k)
+
+as returned by DGEQRF. Q is of order m if SIDE = 'L' and of order n
+if SIDE = 'R'.
+"""
+function dorm2r(::Val{SIDE},::Val{TRANS},
+    m::Integer, n::Integer, k::Integer, 
+    A::AbstractMatrix{T}, 
+    tau::AbstractVector{T}, 
+    C::AbstractMatrix{T}, 
+    work::AbstractVector{T}
+) where {SIDE, TRANS, T}
+
+  info = 0 
+  left = SIDE==:L
+  notrans = TRANS==:N
+  if left 
+    nq = m
+  else
+    nq = n
+  end
+  if !left && !(SIDE==:R)
+    throw(ArgumentError("Unknown parameter for side, $(SIDE), use Val(:L) or Val(:R)"))
+  elseif !notrans && !(TRANS==:T)
+    throw(ArgumentError("Unknown parameter for side, $(TRANS), use Val(:N) or Val(:T)"))
+  end
+  @assert(m >= 0)
+  @assert(n >= 0)
+  @assert(0 <= k <= nq)
+
+  if left && !notrans || (!left && notrans)
+    i1 = 1
+    i2 = k
+    i3 = 1
+  else
+    i1 = k
+    i2 = 1
+    i3 = -1
+  end
+
+  if left 
+    ni = n
+    jc = 1
+  else
+    mi = m
+    ic = 1
+  end
+
+  for i in range(start=i1, stop=i2, step=i3)
+    if left 
+      # H(i) is applied to C(i:m,1:n)
+      mi = m - i + 1
+      ic = i
+    else
+      # H(i) is applied to C(1:m,i:n)
+      ni = n - i + 1
+      jc = i 
+    end 
+    aii = A[i,i]
+    A[i,i] = one(T)
+    if left
+      _dlarf_left!(@view(A[i:(i+mi-1),i]), tau[i], 
+        @view(C[ic:ic+mi-1, jc:jc+ni-1]), work)
+    else
+      _dlarf_right!(@view(A[i:(i+ni-1),i]), tau[i], 
+        @view(C[ic:ic+mi-1, jc:jc+ni-1]), work)
+    end
+    A[i,i] = aii
+  end 
+  return C
+end 
