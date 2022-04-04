@@ -155,7 +155,7 @@ _dorm2r_blas!(side::Char, trans::Char,
 m::Int, n::Int, k::Int, A::StridedArray{Float64}, 
 tau::StridedVector{Float64}, C::StridedMatrix{Float64},
 ) = begin
-  work = zeros(size(A,2))
+  work = zeros(maximum(size(A)))
   info = Ref{LinearAlgebra.BlasInt}(0) 
   ccall((LinearAlgebra.BLAS.@blasfunc("dorm2r_"), LinearAlgebra.BLAS.libblas), 
     Cvoid, 
