@@ -208,6 +208,7 @@ if "arpackjll" in ARGS
     
     @testset "dstqrb" begin
       include("dstqrb-compare.jl")
+      include("dsteqr-compare.jl")
     end
     @testset "dgetv0" begin
       include("dgetv0_arpackjll.jl")

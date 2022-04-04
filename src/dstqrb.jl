@@ -973,11 +973,11 @@ function _qr_iteration(d::AbstractVecOrMat{T},
         z[is] = c*tst - s*z[is-1]
         z[is-1] = s*tst + c*z[is-1]
       else
-        work[is] = c
-        work[is+n-1] = s
+        work[lastm] = c
+        work[lastm+n-1] = s
         _dlasr_right_side_variable_pivot_forward!(n, 2, 
-          @view(work[is:is]), 
-          @view(work[is+n-1:is+n-1]), 
+          @view(work[lastm:lastm]), 
+          @view(work[lastm+n-1:lastm+n-1]), 
           @view(z[1:n,is-1:is]))
       end 
       # save eigenvalue info

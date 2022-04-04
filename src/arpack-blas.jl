@@ -242,7 +242,7 @@ function _dlasr_right_side_variable_pivot_backward!(m::Integer, n::Integer,
   @inbounds for j=n-1:-1:1
     ctemp = c[j]
     stemp = s[j]
-    if ctemp != one(T) || stemp != one(T) # there is work to do!
+    if ctemp != one(T) || stemp != zero(T) # there is work to do!
       for i=1:m
         temp = a[i,j+1]
         a[i,j+1] = ctemp*temp - stemp*a[i,j]
@@ -275,11 +275,11 @@ function _dlasr_right_side_variable_pivot_forward!(m::Integer, n::Integer,
   @inbounds for j=1:n-1
     ctemp = c[j]
     stemp = s[j]
-    if ctemp != one(T) || stemp != one(T) # there is work to do!
-      @simd for i=1:m
+    if ctemp != one(T) || stemp != zero(T) # there is work to do!
+      for i=1:m
         temp = a[i,j+1]
         a[i,j+1] = ctemp*temp - stemp*a[i,j]
-        a[i,j] = stemp*temp - ctemp*a[i,j]
+        a[i,j] = stemp*temp + ctemp*a[i,j]
       end
     end
   end

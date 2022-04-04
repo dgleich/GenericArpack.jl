@@ -1,4 +1,19 @@
 using ArpackInJulia
+
+function test_diffs(tagstr, a, b)
+  @assert(size(a) == size(b)) # otherwise, use view to make them the same...
+  first = false 
+  for i in eachindex(a)
+    if a[i] != b[i]
+      if first == false
+        first = true
+        println("Difference between $tagstr")
+      end 
+      println(" ", rpad(a[i], 30), " , ", rpad(b[i], 30), " # ", i)
+    end 
+  end
+end 
+
 """ Return the number of floating point values between two values, including
 one of the endpoints. """
 function floatsbetween(a::T,b::T) where {T <: Float64}
