@@ -184,3 +184,24 @@ _dlarnv_blas!(idist::Int,
     idist, iseed, n, x)#
 
 
+##
+function _dsteqr_blas!(d::StridedVecOrMat{Float64}, e::StridedVecOrMat{Float64}, 
+  Z::StridedVecOrMat{Float64}, work::StridedVecOrMat{Float64})
+  info = Ref{LinearAlgebra.BlasInt}(0) 
+  ccall((LinearAlgebra.BLAS.@blasfunc("dsteqr_"), LinearAlgebra.BLAS.libblas), 
+    Cvoid, 
+    (Ref{UInt8}, # ICOMPZ
+    Ref{LinearAlgebra.BlasInt}, # n 
+    Ptr{Float64}, # d, 
+    Ptr{Float64}, # e, 
+    Ptr{Float64}, # z, 
+    Ref{LinearAlgebra.BlasInt}, # ldz
+    Ptr{Float64}, # work, 
+    Ref{LinearAlgebra.BlasInt}, Int), # info, 1 for character sizes
+    'I', length(d), d, e, Z, stride(Z,2), work, info, 1
+    )
+  if info[] != 0 
+    error("dsteqr gave info $(info[])")
+  end
+  return Z 
+end 

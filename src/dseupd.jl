@@ -1254,14 +1254,14 @@ function simple_dseupd!(
     c        | eigenvectors of the final symmetric tridiagonal matrix H. |
     c        | Initialize the eigenvector matrix Q to the identity.      |
     =#
-    copyto!(@view(workl[ihb:ihb+ncv-1-1]),@view(workl[ih+1:ih+ncv-1-1]))
+    copyto!(@view(workl[ihb:ihb+ncv-1-1]),@view(workl[ih+1:ih+ncv-1]))
     copyto!(@view(workl[ihd .+ ncv0]), @view(workl[ih+ldh .+ ncv0]))
 
-    simple_dsteqr!(
-      @view(workl[ihd:ihd+ncv-1]), 
-      @view(workl[ihb:ihb+ncv-1-1]), 
-      Q;
-      work=@view(workl[iw:iw+2*ncv-1]))
+    #simple_dsteqr!(@view(workl[ihd:ihd+ncv-1]), @view(workl[ihb:ihb+ncv-1-1]), Q;
+    #  work=@view(workl[iw:iw+2*ncv-1]))
+    #_checked_dsteqr_blas!(@view(workl[ihd:ihd+ncv-1]), @view(workl[ihb:ihb+ncv-1-1]), Q, @view(workl[iw:iw+2*ncv-1]))
+    _dsteqr_blas!(@view(workl[ihd:ihd+ncv-1]), @view(workl[ihb:ihb+ncv-1-1]), Q, @view(workl[iw:iw+2*ncv-1]))
+    # we throw a different error if dsteqr doesn't work...
     
     if msglvl > 1
       # very weird copyto dependend on msglvl...
@@ -1412,7 +1412,8 @@ function simple_dseupd!(
     =#
     tau = @view(workl[iw+ncv .+ nconv0])
     work = @view(workl[ihb .+ nconv0])
-    ierr = _dgeqr2!(Q1, tau, work)
+    #ierr = _dgeqr2!(Q1, tau, work)
+    ierr = _dgeqr2_blas!(Q1, tau, work)
     #=
     c        | * Postmultiply V by Q.                                 |   
     c        | * Copy the first NCONV columns of VQ into Z.           |
@@ -1420,8 +1421,9 @@ function simple_dseupd!(
     c        | of the approximate invariant subspace associated with  |
     c        | the Ritz values in workl(ihd).                         |
     =#
-    dorm2r(Val(:R), Val(:N), n, ncv, nconv, 
-      Q1, tau, @view(V[1:n, 1:ncv]), @view(workd[n+1:2n]))
+    #dorm2r(Val(:R), Val(:N), n, ncv, nconv, 
+    #  Q1, tau, @view(V[1:n, 1:ncv]), @view(workd[n+1:2n]))
+    _dorm2r_blas!('R', 'N', n, ncv, nconv, Q1, tau, @view(V[1:n, 1:ncv]), @view(workd[n+1:2n]))
     copyto!(@view(Z[1:n, 1:nconv]), @view(V[1:n, 1:nconv]))
 
     #=
@@ -1520,4 +1522,113 @@ function simple_dseupd!(
   end 
 
   return info
+end 
+
+
+_dorm2r_blas!(side::Char, trans::Char,
+m::Int, n::Int, k::Int, A::StridedMatrix{Float64}, 
+tau::StridedVector{Float64}, C::StridedMatrix{Float64},
+work::StridedVector{Float64} = nothing
+) = begin
+  if work === nothing 
+    work = zeros(size(A,2))
+  end
+  info = Ref{LinearAlgebra.BlasInt}(0) 
+  ccall((LinearAlgebra.BLAS.@blasfunc("dorm2r_"), LinearAlgebra.BLAS.libblas), 
+    Cvoid, 
+    (Ref{UInt8}, Ref{UInt8}, 
+    Ref{LinearAlgebra.BlasInt},Ref{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, # m n k 
+    Ptr{Float64}, # A, 
+    Ref{LinearAlgebra.BlasInt},  # lda 
+    Ptr{Float64}, # tau 
+    Ptr{Float64}, # C
+    Ref{LinearAlgebra.BlasInt},  # ldc 
+    Ptr{Float64}, # work 
+    Ref{LinearAlgebra.BlasInt}), # info, 1, 1 for character sizes
+    side, trans, m, n, k, A, stride(A,2), tau, C, stride(C,2), work, info
+    )
+  return C
+end
+
+_dgeqr2_blas!(A::StridedMatrix{Float64}, tau, work) = begin
+  info = Ref{LinearAlgebra.BlasInt}(0) 
+  ccall((LinearAlgebra.BLAS.@blasfunc("dgeqr2_"), LinearAlgebra.BLAS.libblas), 
+    Cvoid, 
+    (Ref{LinearAlgebra.BlasInt},Ref{LinearAlgebra.BlasInt}, Ptr{Float64}, # m, n, A
+    Ref{LinearAlgebra.BlasInt},  # lda 
+    Ptr{Float64}, # tau 
+    Ptr{Float64}, # work 
+    Ref{LinearAlgebra.BlasInt}), # info
+    size(A,1),size(A,2),A,stride(A,2),
+    tau, work, info
+    )
+  return A, tau
+end
+function compare_diffs(tagstr, a, b)
+  @assert(size(a) == size(b)) # otherwise, use view to make them the same...
+  first = false 
+  for i in eachindex(a)
+    if a[i] != b[i]
+      if first == false
+        first = true
+        println("Difference between $tagstr")
+      end 
+      println(" ", rpad(a[i], 30), " , ", rpad(b[i], 30), " # ", i)
+    end 
+  end
+end 
+function _checked_dsteqr_blas!(d::StridedVecOrMat{Float64}, e::StridedVecOrMat{Float64}, 
+  Z::StridedVecOrMat{Float64}, work::StridedVecOrMat{Float64})
+
+  d1 = copy(d)
+  e1 = copy(e)
+  Z1 = copy(Z)
+  work1 = copy(work)
+
+  simple_dsteqr!(d1, e1, Z1; work=work1)
+  info = Ref{LinearAlgebra.BlasInt}(0) 
+  ccall((LinearAlgebra.BLAS.@blasfunc("dsteqr_"), LinearAlgebra.BLAS.libblas), 
+    Cvoid, 
+    (Ref{UInt8}, # ICOMPZ
+    Ref{LinearAlgebra.BlasInt}, # n 
+    Ptr{Float64}, # d, 
+    Ptr{Float64}, # e, 
+    Ptr{Float64}, # z, 
+    Ref{LinearAlgebra.BlasInt}, # ldz
+    Ptr{Float64}, # work, 
+    Ref{LinearAlgebra.BlasInt}, Int), # info, 1 for character sizes
+    'I', length(d), d, e, Z, stride(Z,2), work, info, 1
+    )
+  if info[] != 0 
+    error("dsteqr gave info $(info[])")
+  end
+
+  compare_diffs("dsteqr: d", d, d1)
+  compare_diffs("dsteqr: e", e, e1)
+  compare_diffs("dsteqr: Z", Z, Z1)
+  compare_diffs("dsteqr: work", work, work1)
+
+  return Z 
+end 
+
+##
+function _dsteqr_blas!(d::StridedVecOrMat{Float64}, e::StridedVecOrMat{Float64}, 
+  Z::StridedVecOrMat{Float64}, work::StridedVecOrMat{Float64})
+  info = Ref{LinearAlgebra.BlasInt}(0) 
+  ccall((LinearAlgebra.BLAS.@blasfunc("dsteqr_"), LinearAlgebra.BLAS.libblas), 
+    Cvoid, 
+    (Ref{UInt8}, # ICOMPZ
+    Ref{LinearAlgebra.BlasInt}, # n 
+    Ptr{Float64}, # d, 
+    Ptr{Float64}, # e, 
+    Ptr{Float64}, # z, 
+    Ref{LinearAlgebra.BlasInt}, # ldz
+    Ptr{Float64}, # work, 
+    Ref{LinearAlgebra.BlasInt}, Int), # info, 1 for character sizes
+    'I', length(d), d, e, Z, stride(Z,2), work, info, 1
+    )
+  if info[] != 0 
+    error("dsteqr gave info $(info[])")
+  end
+  return Z 
 end 
