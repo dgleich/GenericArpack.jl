@@ -23,5 +23,6 @@ include("dsaitr.jl")
 include("dsapps.jl")
 include("dsaup2.jl")
 include("dsaupd.jl")
+include("dseupd.jl")
 
 end # module

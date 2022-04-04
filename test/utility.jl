@@ -105,10 +105,15 @@ function _allocate_symproblem(op, ncv::Int)
   return _reset!(prob)
 end 
 
+function __val2sym(::Val{BMAT}) where BMAT
+  return BMAT
+end 
+
 function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op), 
     mode=ArpackInJulia.arpack_mode(prob.op), 
     iterfunc=nothing, state=nothing, ncv=size(prob.V,2), tol=0, initv=nothing,
-    stats=nothing, debug=nothing, maxiter=300, idonow::Bool=false)
+    stats=nothing, debug=nothing, maxiter=300, idonow::Bool=false, 
+    arpackjllfunc = nothing)
 
   V = prob.V
   _reset!(prob)
@@ -137,18 +142,29 @@ function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op),
 
   ierr = 0 
   niter = 0 
+  if arpackjllfunc !== nothing
+    @assert(idonow == false)
+  end
+
   if idonow == false 
     op = prob.op
-    while ido[] != 99
-      ierr = ArpackInJulia.dsaupd!(ido, bmat, n, which, nev, tol, prob.resid, ncv, V, size(V,1), 
+    aupdfunc = () -> ArpackInJulia.dsaupd!(ido, bmat, n, which, nev, tol, prob.resid, ncv, V, size(V,1), 
         prob.iparam,
         prob.ipntr, prob.workd, prob.workl, lworkl, info_initv;
         state, stats, debug 
       ).ierr 
+    if arpackjllfunc !== nothing
+      aupdfunc = () -> arpackjllfunc(ido, __val2sym(bmat), n, which, nev, tol, prob.resid, ncv, V, size(V,1),
+        prob.iparam, prob.ipntr, prob.workd, prob.workl, lworkl, info_initv )
+    end 
+
+    while ido[] != 99
+      ierr = aupdfunc()
       niter += 1
       if iterfunc !== nothing
         iterfunc(prob, ierr, state)
       end 
+      info_initv = 0 
 
       if ido[] == 1 && mode == 1
         ArpackInJulia._i_do_now_opx_1!(op, prob.ipntr, prob.workd, n)
@@ -176,4 +192,32 @@ function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op),
     @assert ido[] == 99 
     return niter+1, ierr
   end 
+end 
+
+function _eigenvecs(prob,nev;which=:LM, bmat=ArpackInJulia.bmat(prob.op), 
+  iterfunc=nothing, state=nothing, ncv=size(prob.V,2), tol=0, 
+  #stats=nothing, 
+  debug=nothing)
+
+  # make sure we are done! 
+  @assert(prob.ido[] == 99)
+
+  n = size(prob.V, 1)
+  @assert(ncv > nev)
+  Z = zeros(n, nev)
+  d = zeros(nev)
+  select = zeros(Int, ncv)
+
+  rvec = true
+  sigma = shift(eltype(prob.V), prob.op)
+
+  ierr = ArpackInJulia.dseupd!(rvec, select, d, Z, sigma, 
+    bmat, n, which, nev, tol, prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
+    prob.workd, prob.workl; debug)
+
+  if ierr != 0
+    throw(ErrorException("dseupd returns $ierr"))
+  end 
+
+  return d, V
 end 

@@ -45,7 +45,7 @@ function arpack_set_debug_high()
   # [Documentation and structure of debug block here.](https://github.com/opencollab/arpack-ng/blob/master/SRC/debug.h)
   arpack_debug = cglobal((:debug_, Arpack_jll.libarpack), Int64)
   unsafe_store!(arpack_debug, 6, 1) # logfile set logfil to 6, the default stdout
-  unsafe_store!(arpack_debug, -14, 2) # ndigit - use 14 digits of precision (ndigit)
+  unsafe_store!(arpack_debug, -20, 2) # ndigit - use 14 digits of precision (ndigit)
   unsafe_store!.(arpack_debug, 4, 3:24) # turn on most debugging
 end
 
@@ -357,4 +357,60 @@ function arpack_dsapps!(
      ),
     n, kev, np, shift, V, ldv, H, ldh, resid, Q, ldq, workd)
   return nothing 
+end
+
+##
+import Arpack_jll, LinearAlgebra
+function arpack_dseupd!(
+  rvec::Bool, 
+  select::Vector{Int},
+  d::Vector{Float64},
+  Z::Matrix{Float64},
+  ldz::Int, 
+  sigma::Float64, 
+  bmat::Symbol,
+  n::Int,
+  which::Symbol,
+  nev::Int,
+  tol::Float64,
+  resid::StridedVecOrMat{Float64},
+  ncv::Int, 
+  V::StridedMatrix{Float64},
+  ldv::Int,
+  iparam::StridedVecOrMat{Int},
+  ipntr::StridedVecOrMat{Int},
+  workd::StridedVecOrMat{Float64},
+  workl::StridedVecOrMat{Float64},
+  lworkl::Int,   
+)
+  info = Ref{LinearAlgebra.BlasInt}(0)
+  ccall((:dseupd_, Arpack_jll.libarpack), Cvoid,
+    (Ref{LinearAlgebra.BlasInt}, # rvec
+     Ptr{UInt8}, # howmny, 
+     Ptr{LinearAlgebra.BlasInt}, # select, 
+     Ptr{Float64}, # d
+     Ptr{Float64}, # Z
+     Ref{LinearAlgebra.BlasInt}, # ldz
+     Ref{Float64}, # sigma 
+     Ptr{UInt8}, # bmat
+     Ref{LinearAlgebra.BlasInt}, #n
+     Ptr{UInt8}, # which
+     Ref{LinearAlgebra.BlasInt}, # nev
+     Ref{Float64}, # tol
+     Ptr{Float64}, # resid
+     Ref{LinearAlgebra.BlasInt}, # ncv
+     Ptr{Float64}, # V
+     Ref{LinearAlgebra.BlasInt}, # ldv
+     Ptr{LinearAlgebra.BlasInt}, # iparam
+     Ptr{LinearAlgebra.BlasInt}, # ipntr
+     Ptr{Float64}, # workd
+     Ptr{Float64}, # workl
+     Ref{LinearAlgebra.BlasInt}, # lworkl
+     Ref{LinearAlgebra.BlasInt}, # info
+     Int, Int, Int), #info
+    rvec, string(:A), select, d, Z, ldz, sigma, 
+    string(bmat), n, string(which), nev, tol,
+    resid, ncv, 
+    V, ldv, iparam, ipntr, workd, workl, lworkl, info, 1, 1, 2)
+  return info[]
 end

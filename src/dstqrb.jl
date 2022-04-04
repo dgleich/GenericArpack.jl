@@ -633,8 +633,8 @@ function simple_dsteqr!(
   @jl_arpack_check_size(Z, n, n)
   @jl_arpack_check_length(work, max(2*n-2,1))
 
-  flexible_dsteqr!(SymTridiagonal(@view(d[1:n]), @view(e[1:n-1]));
-    Z, work)
+  flexible_dsteqr!(SymTridiagonal(@view(d[1:n]), @view(e[1:n-1])), Z; 
+    work)
 end 
 
 function opnorm1(A::SymTridiagonal{T}) where T
@@ -978,7 +978,7 @@ function _qr_iteration(d::AbstractVecOrMat{T},
         _dlasr_right_side_variable_pivot_forward!(n, 2, 
           @view(work[is:is]), 
           @view(work[is+n-1:is+n-1]), 
-          @view(z[1:n,is:is-1]))
+          @view(z[1:n,is-1:is]))
       end 
       # save eigenvalue info
       d[is-1] = rt1
