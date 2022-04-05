@@ -281,7 +281,7 @@ function _dlarf_left!(
     # form H*c
     if lastv > 0
       # w(1:lastc,1) := C(1:lastv,1:lastc)**T * v(1:lastv,1)
-      mul!(@view(work[1:lastc]), adjoint(@view(C[1:lastv,1:lastc])), @view(v[1:lastv,1]))
+      mul!(@view(work[1:lastc]), adjoint(@view(C[1:lastv,1:lastc])), @view(v[1:lastv]))
       # C(1:lastv,1:lastc) := C(...) - v(1:lastv,1) * w(1:lastc,1)**T
       _dger!(-tau, @view(v[1:lastv]), @view(work[1:lastc]), @view(C[1:lastv,1:lastc]))
     end
@@ -310,7 +310,7 @@ function _dlarf_right!(
     # Form  C * H
     if lastv > 0
       # w(1:lastc,1) := C(1:lastc,1:lastv) * v(1:lastv,1)
-      mul!(@view(work[1:lastc]), @view(C[1:lastc,1:lastv]), @view(v[1:lastv,1]))
+      mul!(@view(work[1:lastc]), @view(C[1:lastc,1:lastv]), @view(v[1:lastv]))
       # C(1:lastc,1:lastv) := C(...) - w(1:lastc,1) * v(1:lastv,1)**T
       _dger!(-tau, @view(work[1:lastc]), @view(v[1:lastv]), @view(C[1:lastc,1:lastv]))
     end
