@@ -133,9 +133,9 @@ _iladlc_blas(A::StridedMatrix) = begin
 end
 
 ##
-_dgeqr2_blas!(A::StridedMatrix{Float64}) = begin
-  tau = zeros(minimum(size(A)))
-  work = zeros(size(A,2))
+function _dgeqr2_blas!(A::StridedMatrix{Float64}, 
+  tau::StridedVector{Float64}=zeros(minimum(size(A))), 
+  work::StridedVector{Float64}=zeros(size(A,2))) 
   info = Ref{LinearAlgebra.BlasInt}(0) 
   ccall((LinearAlgebra.BLAS.@blasfunc("dgeqr2_"), LinearAlgebra.BLAS.libblas), 
     Cvoid, 
@@ -154,8 +154,8 @@ end
 _dorm2r_blas!(side::Char, trans::Char,
 m::Int, n::Int, k::Int, A::StridedArray{Float64}, 
 tau::StridedVector{Float64}, C::StridedMatrix{Float64},
+work = zeros(maximum(size(A)))
 ) = begin
-  work = zeros(maximum(size(A)))
   info = Ref{LinearAlgebra.BlasInt}(0) 
   ccall((LinearAlgebra.BLAS.@blasfunc("dorm2r_"), LinearAlgebra.BLAS.libblas), 
     Cvoid, 

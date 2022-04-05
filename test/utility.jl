@@ -9,7 +9,7 @@ function test_diffs(tagstr, a, b)
         first = true
         println("Difference between $tagstr")
       end 
-      println(" ", rpad(a[i], 30), " , ", rpad(b[i], 30), " # ", i)
+      println(" ", rpad(a[i], 30), " , ", rpad(b[i], 30), " # diff=", relfloatsbetween(a[i], b[i]), " index=", i)
     end 
   end
 end 
