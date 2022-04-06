@@ -26,13 +26,14 @@
     arselect = copy(select)
 
     debug = ArpackInJulia.ArpackDebug()
+    #ArpackInJulia.set_debug_high!(debug)
     ierr = ArpackInJulia.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
       tol, 
       prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
       prob.workd, prob.workl; debug
     )
 
-
+    #arpack_set_debug_high()
     arierr = arpack_dseupd!(true, arselect, ard, arZ, 
       stride(arZ,2), sigma, bmat, n, which, nev, tol, 
       arprob.resid, ncv, arprob.V, stride(arprob.V,2), arprob.iparam, arprob.ipntr, 

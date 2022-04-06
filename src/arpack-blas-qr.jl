@@ -65,7 +65,7 @@ function _dgeqr2!(
       aii = A[i,i]
       A[i,i] = one(T)
       #_dlarf_left()
-      _dlarf_left!(@view(A[i:m,i]), tau[i], @view(A[i:m,i+1:end]), work)
+      _dlarf_left!(@view(A[i:m,i]), tau[i], @view(A[i:m,i+1:n]), work)
       A[i,i] = aii
     end 
   end
@@ -313,6 +313,8 @@ function _dlarf_right!(
       mul!(@view(work[1:lastc]), @view(C[1:lastc,1:lastv]), @view(v[1:lastv]))
       # C(1:lastc,1:lastv) := C(...) - w(1:lastc,1) * v(1:lastv,1)**T
       _dger!(-tau, @view(work[1:lastc]), @view(v[1:lastv]), @view(C[1:lastc,1:lastv]))
+      #_dger_axpy!(-tau, @view(work[1:lastc]), @view(v[1:lastv]), @view(C[1:lastc,1:lastv]))
+      #_dger_blas!(-tau, @view(work[1:lastc]), @view(v[1:lastv]), @view(C[1:lastc,1:lastv]))
     end
   end 
 end
@@ -354,6 +356,7 @@ A := alpha*x*y**T + A,
 where alpha is a scalar, x is an m element vector, y is an n element
 vector and A is an m by n matrix.
 """
+#=
 function _dger!(alpha::T, x::AbstractVecOrMat{T}, y::AbstractVecOrMat{T}, A::AbstractMatrix{T}) where T
   m,n = size(A)
   for j=1:n
@@ -361,7 +364,22 @@ function _dger!(alpha::T, x::AbstractVecOrMat{T}, y::AbstractVecOrMat{T}, A::Abs
       temp = alpha*y[j]
       for i=1:m
         A[i,j] += x[i]*temp
+        #A[i,j] = muladd(x[i],temp,A[i,j])
       end
+    end
+  end
+end
+=#
+function _dger!(alpha::T, x::AbstractVecOrMat{T}, y::AbstractVecOrMat{T}, A::AbstractMatrix{T}) where T
+  m,n = size(A)
+  for j=1:n
+    if y[j] != 0 
+      temp = alpha*y[j]
+      LinearAlgebra.BLAS.axpy!(temp, x, @view(A[:,j]))
+      #for i=1:m
+        #A[i,j] += x[i]*temp
+        #A[i,j] = muladd(x[i],temp,A[i,j])
+      #end
     end
   end
 end
@@ -386,7 +404,7 @@ Q = H(1) H(2) . . . H(k)
 as returned by DGEQRF. Q is of order m if SIDE = 'L' and of order n
 if SIDE = 'R'.
 """
-function dorm2r(::Val{SIDE},::Val{TRANS},
+function dorm2r!(::Val{SIDE},::Val{TRANS},
     m::Integer, n::Integer, k::Integer, 
     A::AbstractMatrix{T}, 
     tau::AbstractVector{T}, 
@@ -411,7 +429,7 @@ function dorm2r(::Val{SIDE},::Val{TRANS},
   @assert(n >= 0)
   @assert(0 <= k <= nq)
 
-  if left && !notrans || (!left && notrans)
+  if left && !notrans || (!left && notrans) # left and transposed or right and not-transposed (:N)
     i1 = 1
     i2 = k
     i3 = 1
@@ -447,8 +465,11 @@ function dorm2r(::Val{SIDE},::Val{TRANS},
     else
       _dlarf_right!(@view(A[i:(i+ni-1),i]), tau[i], 
         @view(C[ic:ic+mi-1, jc:jc+ni-1]), work)
+      #_dlarf_blas!('R', @view(A[i:(i+ni-1),i]), tau[i], 
+      #  @view(C[ic:ic+mi-1, jc:jc+ni-1]), work)
     end
     A[i,i] = aii
   end 
   return C
 end 
+

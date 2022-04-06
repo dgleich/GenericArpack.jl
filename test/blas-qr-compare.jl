@@ -21,6 +21,8 @@
     @test tau == tauB 
   end 
 
+
+
   compare_qr(zeros(10,8))
   compare_qr(zeros(8,10))
   compare_qr(Matrix(1.0I, 5,8))
@@ -39,22 +41,25 @@
 
   @testset "qr apply with dorm2r" begin 
     function compare_qr_apply(A::StridedMatrix)
-      mn = maximum(size(A))
+      mn  = maximum(size(A))
+      m,n = size(A)
       QH1, tau1 = _simple_dgeqr2(copy(A))
       QH2, tau2 = _dgeqr2_blas!(copy(A))
 
       @test QH1 == QH2
       @test tau1 == tau2
-      Q1b = _dorm2r_blas!('L', 'N', mn, mn, length(tau1), QH1, tau1, Matrix(1.0I, mn, mn))
-      Q2b = _dorm2r_blas!('R', 'N', mn, mn, length(tau1), QH1, tau1, Matrix(1.0I, mn, mn))
-      Q3b = _dorm2r_blas!('L', 'T', mn, mn, length(tau1), QH1, tau1, Matrix(1.0I, mn, mn))
-      Q4b = _dorm2r_blas!('R', 'T', mn, mn, length(tau1), QH1, tau1, Matrix(1.0I, mn, mn))
+      Q1b = _dorm2r_blas!('L', 'N', m, n, length(tau1), QH1, tau1, Matrix(1.0I, m, n))
+      Q2b = _dorm2r_blas!('R', 'N', m, m, length(tau1), QH1, tau1, Matrix(1.0I, m, m))
+      Q3b = _dorm2r_blas!('L', 'T', n, n, length(tau1), QH1, tau1, Matrix(1.0I, n, n))
+      Q4b = _dorm2r_blas!('R', 'T', m, m, length(tau1), QH1, tau1, Matrix(1.0I, m, m))
+
+
 
       work = zeros(mn)
-      Q1j = ArpackInJulia.dorm2r(Val(:L), Val(:N), mn, mn, length(tau1), QH1, tau1, Matrix(1.0I, mn, mn), work)
-      Q2j = ArpackInJulia.dorm2r(Val(:R), Val(:N), mn, mn, length(tau1), QH1, tau1, Matrix(1.0I, mn, mn), work)
-      Q3j = ArpackInJulia.dorm2r(Val(:L), Val(:T), mn, mn, length(tau1), QH1, tau1, Matrix(1.0I, mn, mn), work)
-      Q4j = ArpackInJulia.dorm2r(Val(:R), Val(:T), mn, mn, length(tau1), QH1, tau1, Matrix(1.0I, mn, mn), work)
+      Q1j = ArpackInJulia.dorm2r!(Val(:L), Val(:N), m, n, length(tau1), QH1, tau1, Matrix(1.0I, m, n), work)
+      Q2j = ArpackInJulia.dorm2r!(Val(:R), Val(:N), m, m, length(tau1), QH1, tau1, Matrix(1.0I, m, m), work)
+      Q3j = ArpackInJulia.dorm2r!(Val(:L), Val(:T), n, n, length(tau1), QH1, tau1, Matrix(1.0I, n, n), work)
+      Q4j = ArpackInJulia.dorm2r!(Val(:R), Val(:T), m, m, length(tau1), QH1, tau1, Matrix(1.0I, m, m), work)
 
       @test Q1b == Q1j
       @test Q2b == Q2j
@@ -71,6 +76,8 @@
     compare_qr_apply(Q2)
     Q3 = reinterpret(Float64, UInt64[0xbaaf126611decddc 0x3c20e909625f8160 0xbd31b4f90d9567aa 0x3e5045b0c942a3fb 0x3f2407dd0bfbb616 0xbfeffffff9bb14e2; 0x3b9f0633622dea91 0xbd0b03d644bd8ecb 0x3e153739d4475678 0xbf29fee24d604783 0xbfefffffef2bfcfb 0xbf2407dd0bfbb617; 0xbc831853e8b15e7d 0x3de8f0eb8ab1844a 0xbeea1db4e8e2f8fe 0x3feffffff5663fe7 0xbf29fee24d604780 0xbe5045b0c7160444; 0x3da18c40c0eb6240 0xbefe8f722b184dec 0x3fefffffffbaf8dc 0x3eea1db4e8e2f8fd 0xbe153739d9ea9f67 0xbd31b4f91117bb2c; 0xbea25fe0cabb9429 0x3fefffffffc59bc7 0x3efe8f722b184dee 0x3de8f0eb87ce0c70 0xbd0b03d64ad0d3f9 0xbc20e9096590c5de; 0x3feffffffffffab9 0x3ea25fe0cabb9428 0x3da18c40c10971cc 0x3c831853e5913990 0xbb9f063368c4fd33 0xbaaf126617f52b15; 0x3cbb18c0e3440a36 0x3b6d017d0e85f204 0x3a69eefe6c09a3d9 0x394a85ac373b6398 0xb86451c205cba689 0xb773407d3dd19a98; 0x3ca5b48d837c5bb0 0x3b56317a476f9016 0x3a52fdd19cb8f127 0x39329fa92acbd4e1 0xb84b68af2b637a50 0xb758fb6bfffa949b; 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x8000000000000000; 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x8000000000000000; 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x8000000000000000; 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x8000000000000000])
     compare_qr_apply(Q3)
+
+
   end 
 
   @testset "qr with views" begin 
@@ -114,5 +121,32 @@
     @test Q1 == Q2
     @test tau1 == tau2
     @test work1 == work2
+
+    # now test applying this...
+    longn = 100
+    ncv = m
+    nconv = n 
+    Vfull = randn(longn, ncv)
+    #Vfull = Matrix(1.0I, longn, ncv)
+    V = copy(Vfull)
+    V1 = copy(Vfull) 
+    V2 = copy(Vfull)
+    longwork = zeros(longn) 
+    longwork1 = copy(longwork)
+    longwork2 = copy(longwork)
+  
+    ArpackInJulia.dorm2r!(Val(:R), Val(:N), longn, ncv, nconv, 
+      Q, tau, @view(V[1:longn, 1:ncv]), @view(longwork[1:longn]))
+
+    _dorm2r_blas!('R', 'N', longn, ncv, nconv, Q, tau, @view(V1[1:longn, 1:ncv]), 
+      @view(longwork1[1:longn]))
+
+    ArpackInJulia.dorm2r!(Val(:R), Val(:N), longn, ncv, nconv, 
+      copy(Q), copy(tau), V2, longwork2)
+
+    test_diffs("V, V1", V, V1)
+    test_diffs("V1, V2", V1, V2)
+    @test V == V1 
+    @test V1 == V2 
   end 
 end 

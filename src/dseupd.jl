@@ -1257,10 +1257,10 @@ function simple_dseupd!(
     copyto!(@view(workl[ihb:ihb+ncv-1-1]),@view(workl[ih+1:ih+ncv-1]))
     copyto!(@view(workl[ihd .+ ncv0]), @view(workl[ih+ldh .+ ncv0]))
 
-    #simple_dsteqr!(@view(workl[ihd:ihd+ncv-1]), @view(workl[ihb:ihb+ncv-1-1]), Q;
-    #  work=@view(workl[iw:iw+2*ncv-1]))
+    simple_dsteqr!(@view(workl[ihd:ihd+ncv-1]), @view(workl[ihb:ihb+ncv-1-1]), Q;
+      work=@view(workl[iw:iw+2*ncv-1]))
     #_checked_dsteqr_blas!(@view(workl[ihd:ihd+ncv-1]), @view(workl[ihb:ihb+ncv-1-1]), Q, @view(workl[iw:iw+2*ncv-1]))
-    _dsteqr_blas!(@view(workl[ihd:ihd+ncv-1]), @view(workl[ihb:ihb+ncv-1-1]), Q, @view(workl[iw:iw+2*ncv-1]))
+    #_dsteqr_blas!(@view(workl[ihd:ihd+ncv-1]), @view(workl[ihb:ihb+ncv-1-1]), Q, @view(workl[iw:iw+2*ncv-1]))
     # we throw a different error if dsteqr doesn't work...
     
     if msglvl > 1
@@ -1412,8 +1412,9 @@ function simple_dseupd!(
     =#
     tau = @view(workl[iw+ncv .+ nconv0])
     work = @view(workl[ihb .+ nconv0])
-    #ierr = _dgeqr2!(Q1, tau, work)
-    ierr = _dgeqr2_blas!(Q1, tau, work)
+    ierr = _dgeqr2!(Q1, tau, work)
+    #ierr = _dgeqr2_blas!(Q2, tau1, work1)
+    
     #=
     c        | * Postmultiply V by Q.                                 |   
     c        | * Copy the first NCONV columns of VQ into Z.           |
@@ -1421,9 +1422,9 @@ function simple_dseupd!(
     c        | of the approximate invariant subspace associated with  |
     c        | the Ritz values in workl(ihd).                         |
     =#
-    #dorm2r(Val(:R), Val(:N), n, ncv, nconv, 
-    #  Q1, tau, @view(V[1:n, 1:ncv]), @view(workd[n+1:2n]))
-    _dorm2r_blas!('R', 'N', n, ncv, nconv, Q1, tau, @view(V[1:n, 1:ncv]), @view(workd[n+1:2n]))
+    dorm2r!(Val(:R), Val(:N), n, ncv, nconv, 
+      Q1, tau, @view(V[1:n, 1:ncv]), @view(workd[n+1:2n]))
+    #_dorm2r_blas!('R', 'N', n, ncv, nconv, Q1, tau, @view(V[1:n, 1:ncv]), @view(workd[n+1:2n]))
     copyto!(@view(Z[1:n, 1:nconv]), @view(V[1:n, 1:nconv]))
 
     #=
@@ -1441,7 +1442,7 @@ function simple_dseupd!(
     # so we just save an element, and use that! Inverse pattern :) 
     temp = workl[ihd]
     # compute ihb = Q1^T * e_ncv 
-    dorm2r(Val(:L), Val(:T), ncv, 1, nconv, 
+    dorm2r!(Val(:L), Val(:T), ncv, 1, nconv, 
       Q1, tau, reshape(@view(workl[ihb .+ ncv0]), ncv, 1), 
       @view(workl[ihd:ihd])) # check on allocations for that last ref line... 
     workl[ihd] = temp
@@ -1524,6 +1525,10 @@ function simple_dseupd!(
   return info
 end 
 
+## Old codes to handle blas overrides. 
+# These can be deleted if they aren't used again 
+# after 2023-04-06
+#=
 
 _dorm2r_blas!(side::Char, trans::Char,
 m::Int, n::Int, k::Int, A::StridedMatrix{Float64}, 
@@ -1632,3 +1637,4 @@ function _dsteqr_blas!(d::StridedVecOrMat{Float64}, e::StridedVecOrMat{Float64},
   end
   return Z 
 end 
+=#

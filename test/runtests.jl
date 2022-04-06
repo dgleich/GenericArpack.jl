@@ -122,6 +122,7 @@ end
 
 @testset "dstqrb" begin
 include("dstqrb.jl")
+include("dsteqr-simple.jl")
 end
 
 ##

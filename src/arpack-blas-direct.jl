@@ -1,4 +1,8 @@
 
+# Note that this code isn't actually used
+# It's included in the test cases and was used
+# at some point in the codes before the switch
+# to writing the Blas codes internally.
 
 _pointer_to_array_offset(a::StridedVector{T}, offset::Int) where T =
   Base.unsafe_convert(Ptr{T}, a) + (offset-1)*sizeof(T)*strides(a)[1]
@@ -172,6 +176,34 @@ work = zeros(maximum(size(A)))
     )
   return C
 end
+
+function _dger_blas!(alpha::Float64, x::StridedVector{Float64}, y::StridedVector{Float64}, A::StridedMatrix{Float64})
+  incx = stride(x,1)
+  incy = stride(y,1)
+  m, n = size(A)
+  lda = stride(A,2)
+  ccall((LinearAlgebra.BLAS.@blasfunc("dger_"), LinearAlgebra.BLAS.libblas), Cvoid,
+    (Ref{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, Ref{Float64}, #m, n, alpha
+    Ptr{Float64}, Ref{LinearAlgebra.BlasInt}, #x, incx
+    Ptr{Float64}, Ref{LinearAlgebra.BlasInt}, # y, incy
+    Ptr{Float64}, Ref{LinearAlgebra.BlasInt}), #a, lda
+    m, n, alpha, x, incx, y, incy, A, lda)
+end
+
+function _dlarf_blas!(side::Char, v::StridedVector{Float64}, tau::Float64, C::StridedMatrix{Float64}, work::StridedVector{Float64})
+  incv = stride(v,1)
+  m,n = size(V)
+  ldc = stride(C,2)
+  
+  ccall((LinearAlgebra.BLAS.@blasfunc("dger_"), LinearAlgebra.BLAS.libblas), Cvoid,
+    (Ref{UInt8}, Ref{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, #side, m, n, 
+    Ptr{Float64}, Ref{LinearAlgebra.BlasInt}, #v, incv
+    Ref{Float64}, # tau
+    Ptr{Float64}, Ref{LinearAlgebra.BlasInt}, #c, ldc
+    Ptr{Float64} # work 
+    ), side, m, n, v, incv, tau, C, ldc, work)
+end 
+
 
 ##
 using LinearAlgebra: BLAS, BlasInt, LinearAlgebra
