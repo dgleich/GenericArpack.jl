@@ -27,6 +27,10 @@ end
   vals, vecs = eigs(Symmetric(A), k; ritzvec=false, which=:LA)
   @test vals ≈ sort(sort(Avals, rev=true)[1:k])
 
+  vals, vecs = eigs(Float32, Symmetric(A), k; ritzvec=false, which=:LA)
+  @test eltype(vals) == Float32
+  @test vals ≈ Float32.(sort(sort(Avals, rev=true)[1:k]))
+
   fop = ArpackSimpleFunctionOp((y,x) -> mul!(y,A,x), n)
   vals, vecs = symeigs(fop, k)
   @test vals ≈ sort(sort(Avals, by=abs,rev=true)[1:k])

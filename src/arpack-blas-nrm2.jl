@@ -305,12 +305,19 @@ end
 # this has additional exponent bits, so it's easier! 
   
 if Sys.ARCH==:x86_64 || Sys.ARCH == :x86
-  function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
-    Float80.mynorm(a)
+  function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: AbstractFloat}
+    return norm(a)
   end 
+  function _dnrm2_unroll_ext(a::AbstractVector{Float64})
+    return Float80.mynorm(a)
+  end 
+  
 else 
-  function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Float64}
-    _dnrm2_unroll_ext_dd(a)
+  function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: AbstractFloat}
+    return norm(a)
+  end 
+  function _dnrm2_unroll_ext(a::AbstractVector{Float64})
+    return _dnrm2_unroll_ext_dd(a)
   end 
 end 
 
