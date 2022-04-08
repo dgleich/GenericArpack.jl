@@ -461,10 +461,21 @@ function _dlaruv!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector{Float64
   iseed[] = tuple(IT1,IT2,IT3,IT4) # update the seed
 end
 
-function _dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector{Float64})
+function _dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector{T}) where {
+  T <: Union{AbstractFloat,Complex{<: AbstractFloat}}}
+
+  iscomplex = eltype(x) <: Complex 
+  if iscomplex
+    RT = typeof(real(one(T)))
+    maxloop = 2n 
+  else
+    RT = T 
+    maxloop = n 
+  end 
+
   # manually inline dlaruv to avoid excess cruft...
   IPW2=4096
-  R = 1/IPW2
+  R = one(RT)/IPW2
   i1 = iseed[][1]
   i2 = iseed[][2]
   i3 = iseed[][3]
@@ -477,7 +488,15 @@ function _dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector
 
   nrv = 0
 
-  @inbounds for i=1:n
+  
+
+  # there is some subpar code here in terms of how 
+  # the loop is handled for mixed complex and floats.
+  # basically, we store the last rv to make sure 
+  # that the complex code path can get two rvs
+  # and we double the loop. 
+  lastrv = zero(T)
+  @inbounds for i=1:maxloop
     rv = 1.0
     nrv += 1
     if nrv > length(_dlaruv_mm)
@@ -503,8 +522,8 @@ function _dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector
       IT1 = mod( IT1, IPW2 )
 
       #        Convert 48-bit integer to a real number in the interval (0,1)
-      rv = R*( Float64( IT1 )+R*( Float64( IT2 )+R*( Float64( IT3 )+R*
-               Float64( IT4 ) ) ) )
+      rv = R*( RT( IT1 )+R*( RT( IT2 )+R*( RT( IT3 )+R*
+               RT( IT4 ) ) ) )
       if rv == 1
         # handle the case where the value is different
         i1 += 2
@@ -516,7 +535,17 @@ function _dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector
       end
     end
     # now, rv is a random value
-    x[i] = 2*rv - 1
+    if iscomplex
+      # we index on 2, 4, 6... -> exact with i div 2
+      ind,off = divrem(i,2)
+      if off == 0 
+        x[ind] = T(2*lastrv-1, 2*rv-1)
+      end
+    else
+      x[i] = 2*rv - 1
+    end 
+
+    lastrv = rv 
   end
   iseed[] = tuple(IT1,IT2,IT3,IT4) # update the seed
 end

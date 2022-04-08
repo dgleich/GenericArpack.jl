@@ -10,6 +10,7 @@ eigs(T::Type, A::Symmetric, B::Symmetric, k::Integer; kwargs...) = symeigs(T, Ar
 symeigs(op::ArpackOp, k::Integer; kwargs...) = symeigs(Float64, op, k; kwargs...)
 
 struct ArpackEigen{TL,TV,OpT,StateT,BMAT}
+  which::Symbol
   ipntr::Vector{Int}
   iparam::Vector{Int}
   V::Matrix{TV}
@@ -100,7 +101,7 @@ function symeigs(::Type{T}, op::ArpackOp, nev::Integer;
     throw(ArpackException("symmetric eupd gave error code ierr=$ierr"))
   end 
 
-  return ArpackEigen(ipntr, iparam, V, workd, workl, resid, values, vectors, bmat, op, state)
+  return ArpackEigen(which, ipntr, iparam, V, workd, workl, resid, values, vectors, bmat, op, state)
 end
 
 #=
