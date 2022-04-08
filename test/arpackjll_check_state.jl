@@ -174,7 +174,7 @@ end
     bmat = :I
     n = size(op.A,1)
     which = :LM
-    tol = 0.0 # just use the default
+    tol = eps(Float64)/2 # just use the default
     resid = zeros(n)
     ncv = min(2nev, n-1)
     V = zeros(n,ncv)

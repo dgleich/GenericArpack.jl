@@ -300,6 +300,10 @@ function arpack_dsaupd!(
   lworkl::Int,   
   info_initv0::Int, # info in Arpack, but we return info... 
 )
+  if tol == 0 && copysign(1.0, tol) > 0 
+    @warn("This is probably a mistake because we aren't passing a ref for tol to get the arpack auto-tol\n"*
+          "if this is really what you want, pass -0.0 to stop this warning")
+  end 
   info = Ref{LinearAlgebra.BlasInt}(info_initv0)
   ccall((:dsaupd_, Arpack_jll.libarpack), Cvoid,
     (Ref{LinearAlgebra.BlasInt}, # ido
