@@ -46,6 +46,8 @@ end
 include("macros.jl")
 
 @testset "simple features" begin
+  include("interface_simple.jl")
+
   include("idonow_ops_simple.jl")
 
   @testset "dsaupd" begin 

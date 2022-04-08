@@ -1003,7 +1003,7 @@ function dsaupd!(
     if nb < 0
       nb = 1
     end
-    if tol < 0 
+    if tol <= 0 
       tol = eps(T)/2 # dlamch ('EpsMach')
     end
     # c        | NP is the number of additional steps to      |

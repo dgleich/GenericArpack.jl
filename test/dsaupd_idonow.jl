@@ -22,7 +22,7 @@ end
   B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1)).*(1/(6*(n+1)))
   op = ArpackSymmetricGeneralizedOp(A, lu!(copy(B)), B)
   prob1 = _allocate_symproblem(op, 10)
-  prob2 = deepcopy(prob1) 
+  prob2 = _allocate_symproblem(op, 10)
 
   stats1 = ArpackInJulia.ArpackStats()
   stats2 = ArpackInJulia.ArpackStats()

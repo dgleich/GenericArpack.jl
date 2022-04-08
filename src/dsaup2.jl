@@ -1157,7 +1157,7 @@ function dsaup2!(
 
       if msglvl > 2
         println(debug.logfile, "_saup2: NEV, NP, NCONV are ", 
-          nev[], ", ",  np[], ", ",  nconv[])
+          nev[], ", ",  np[], ", ",  nconv)
         _arpack_vout(debug, "_saup2: The eigenvalues of H", 
           @view(ritz[1:kplusp]))
         _arpack_vout(debug, "_saup2: Ritz estimates of the current NCV Ritz values", 
@@ -1290,7 +1290,7 @@ function dsaup2!(
         end
 
         # c           | No shifts to apply. | 
-        if (np[] == 0) && (nconv[] < nev0)
+        if (np[] == 0) && (nconv < nev0)
           info = 2
         end
 
@@ -1416,7 +1416,7 @@ function dsaup2!(
 
       @debug "label 130"
       if msglvl > 2
-        println(debug.logfile, "_saup2: B-norm of residual for NEV factorization", rnorm[])
+        println(debug.logfile, "_saup2: B-norm of residual for NEV factorization ", rnorm[])
         _arpack_vout(debug, "_saup2: main diagonal of compressed H matrix", @view(H[1:nev[],2]))
         _arpack_vout(debug, "_saup2: main subdiagonal of compressed H matrix", @view(H[2:nev[],1]))
       end

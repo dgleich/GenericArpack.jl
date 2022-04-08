@@ -1007,6 +1007,7 @@ function simple_dseupd!(
   ; 
   debug::Union{ArpackDebug,Nothing}=nothing, # the only one we can get 
   stats::Union{ArpackStats,Nothing}=nothing, 
+  state::Union{AbstractArpackState,Nothing}=nothing, 
 ) where {T, BMAT}
   # c     | Set default parameters |
   msglvl = @jl_arpack_debug(meupd,0)
@@ -1020,7 +1021,9 @@ function simple_dseupd!(
 
   @jl_arpack_check_length(select, ncv)
   @jl_arpack_check_length(d, nev)
-  @jl_arpack_check_size(Z, n, nev)
+  if rvec
+    @jl_arpack_check_size(Z, n, nev)
+  end 
 
   # c     | Quick return |
   if nconv == 0 

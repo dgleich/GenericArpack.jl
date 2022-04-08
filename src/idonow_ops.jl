@@ -77,6 +77,21 @@ bmat(::ArpackSimpleOp) = Val(:I)
 opx!(y,OP::ArpackSimpleOp,x) = mul!(y,OP.A,x)      
 is_arpack_mode_valid_for_op(mode::Int, ::ArpackSimpleOp) = mode == 1 
 
+"""
+    ArpackSimpleFunctionOp
+
+This corresponds to a simple eigenvalue problem Ax = lambda x, but 
+takes a functional operator that we apply.
+"""
+struct ArpackSimpleFunctionOp <: ArpackOp
+  F::Function 
+  n::Int
+end 
+arpack_mode(::ArpackSimpleFunctionOp) = 1
+Base.size(op::ArpackSimpleFunctionOp) = op.n
+bmat(::ArpackSimpleFunctionOp) = Val(:I)
+opx!(y,op::ArpackSimpleFunctionOp,x) = op.F(y,x)
+is_arpack_mode_valid_for_op(mode::Int, ::ArpackSimpleFunctionOp) = mode == 1 
 
 """
     ArpackSymmetricGeneralizedOp(A,invB,B)    
@@ -124,7 +139,7 @@ struct ArpackShiftInvertOp{MatT, SolveType, BType, FType} <: ArpackOp
 end 
 Base.size(op::ArpackShiftInvertOp) = Base.size(op.A, 1)
 is_arpack_mode_valid_for_op(mode::Int, ::ArpackShiftInvertOp) = mode == 3
-shift(T, op::ArpackShiftInvertOp) = T(sigma) 
+shift(T, op::ArpackShiftInvertOp) = T(op.sigma) 
 
 arpack_mode(::ArpackShiftInvertOp) = 3
 function bmat(::ArpackShiftInvertOp{MatT,SolveT,BType,FType}
