@@ -1453,7 +1453,7 @@ function dsaup2!(
   if successexit || errorexit
     if successexit
       mxiter[] = iter
-      nev = nconv
+      nev[] = nconv
     end
     ido[] = 99
     @jl_update_time(taup2, t0)

@@ -998,6 +998,7 @@ function dsaupd!(
     end
   end
 
+  
   if ido[] != 99 # no errors...
     # c        | Set default parameters |
     if nb < 0
@@ -1006,12 +1007,6 @@ function dsaupd!(
     if tol <= 0 
       tol = eps(T)/2 # dlamch ('EpsMach')
     end
-    # c        | NP is the number of additional steps to      |
-    # c        | extend the length NEV Lanczos factorization. |
-    # c        | NEV0 is the local variable designating the   |
-    # c        | size of the invariant subspace desired.      |
-    state.aupd_np[] = ncv - nev # this need to be saved as it's changed by aupd2
-    state.aupd_nev0[] = nev 
 
     # copied straight from the workspace setup...
     # note that none of these are "output" parameters, only
@@ -1028,6 +1023,14 @@ function dsaupd!(
 
     # here we also make sure ido[] = 0 so this only happens once
     if ido[] == 0 
+      # just once...
+      # c        | NP is the number of additional steps to      |
+      # c        | extend the length NEV Lanczos factorization. |
+      # c        | NEV0 is the local variable designating the   |
+      # c        | size of the invariant subspace desired.      |
+      state.aupd_np[] = ncv - nev # this need to be saved as it's changed by aupd2
+      state.aupd_nev0[] = nev 
+
       # c        | Zero out internal workspace |
       fill!(@view(workl[1:(ncv*ncv + 8*ncv)]), 0)
 
