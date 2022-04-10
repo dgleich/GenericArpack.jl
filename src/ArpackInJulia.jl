@@ -28,4 +28,7 @@ include("dseupd.jl")
 include("interface.jl")
 export eigs, symeigs
 
+include("fixes.jl")
+export @fix_doublefloats, @fix_multifloats
+
 end # module
