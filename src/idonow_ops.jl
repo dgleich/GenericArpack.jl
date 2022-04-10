@@ -77,6 +77,119 @@ bmat(::ArpackSimpleOp) = Val(:I)
 opx!(y,OP::ArpackSimpleOp,x) = mul!(y,OP.A,x)      
 is_arpack_mode_valid_for_op(mode::Int, ::ArpackSimpleOp) = mode == 1 
 
+
+"""
+    ArpackAugmentedOp
+
+This corresponds to a single eigenvalue problem on the augmented matrix [0 A; A' 0]
+to mirror ARPACK's SVD drivers.
+"""
+struct ArpackAugmentedOp{MatT} <: ArpackOp
+  A::MatT    
+end
+arpack_modearpack_mode(::ArpackAugmentedOp) = 1
+Base.size(op::ArpackAugmentedOp) = +(Base.size(op.A))
+bmat(::ArpackAugmentedOp) = Val(:I)
+
+function opx!(y,OP::ArpackAugmentedOp,x)
+  m,n = Base.size(OP.A)
+  x1 = view(x,1:m)
+  x2 = view(x,m+1:m+n)
+  y1 = view(y,1:m)
+  y2 = view(y,m+1:m+n)
+  mul!(y1,OP.A,x2)
+  mul!(y2,adjoint(OP.A),x1)
+end
+is_arpack_mode_valid_for_op(mode::Int, ::ArpackAugmentedOp) = mode == 1 
+
+function eigenvecs_to_singvecs!(U::AbstractMatrix, V::AbstractMatrix, 
+  OP::ArpackAugmentedOp, Z::AbstractMatrix
+)  
+  m,n = Base.size(OP.A)
+  copyto!(U, Z[1:m,:])
+  copyto!(V, Z[m+1:m+n,:])
+  # TODO, check if these are allocating or not... 
+  normalize!.(eachcol(V))
+  normalize!.(eachcol(U))
+end 
+
+"""
+    ArpackNormalOp
+
+This driver maniuplates the matrix AA^T or A^T A 
+depending on which is smaller. Note that this
+function allocates memory to compute the operation,
+so it will not be save to use with multiple threads. 
+"""
+
+struct ArpackNormalOp{MatT,ET} <: ArpackOp
+  A::MatT    
+  n::Int
+  At_side::Symbol 
+  extra::Vector{ET}
+end
+function ArpackNormalOp(T,A)
+  m,n = Base.size(A)
+  if m <= n
+    At_side = :left
+    extradim = n 
+    sz = m 
+  else
+    At_side = :right 
+    extradim = m 
+    sz = n 
+  end 
+  extra = Vector{T}(undef, extradim)
+  return ArpackNormalOp(A, sz, At_side, extra)
+end 
+arpack_modearpack_mode(::ArpackNormalOp) = 1
+Base.size(op::ArpackNormalOp) = +(Base.size(op.A))
+bmat(::ArpackNormalOp) = Val(:I)
+
+function opx!(y,OP::ArpackNormalOp,x)
+  if OP.At_side == :left
+    # AtA
+    mul!(OP.extra, OP.A, x)
+    mul!(OP.y, adjoint(OP.A), OP.extra)
+  else
+    mul!(OP.extra, adjoint(OP.A), x)
+    mul!(y, OP.A, OP.extra)
+  end 
+end
+is_arpack_mode_valid_for_op(mode::Int, ::ArpackNormalOp) = mode == 1 
+
+
+
+function orth!(X::AbstractMatrix)
+  # should really run gram-schmidt?
+  # run QR, then dorgqr
+  #http://www.netlib.org/lapack/explore-html/da/dba/group__double_o_t_h_e_rcomputational_ga14b45f7374dc8654073aa06879c1c459.html#ga14b45f7374dc8654073aa06879c1c459
+  # or dorg2r?
+  F = qr!(X)
+  #copyto!(X, F.Q)
+  Y = Matrix(F.Q)
+  copyto!(X, Y)
+end 
+
+function eigenvecs_to_singvecs!(U::AbstractMatrix, V::AbstractMatrix, 
+  OP::ArpackNormalOp, Z::AbstractMatrix
+)
+  if OP.At_side == :left
+    copyto!(V, Z)
+    for i=1:size(V,2)
+      opx!(@view(U[:,i]), OP.A, @view(V[:,i]))
+    end 
+    orth!(U)
+  else
+    copyto!(U, Z)
+    for i=1:size(V,2)
+      opx!(@view(V[:,i]), adjoint(OP.A), @view(U[:,i]))
+    end 
+    orth!(V)
+  end 
+end 
+
+
 """
     ArpackSimpleFunctionOp
 

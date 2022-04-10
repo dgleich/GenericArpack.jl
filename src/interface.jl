@@ -103,6 +103,14 @@ function symeigs(::Type{T}, op::ArpackOp, nev::Integer;
 
   return ArpackEigen(which, ipntr, iparam, V, workd, workl, resid, values, vectors, bmat, op, state)
 end
+hermeigs = symeigs 
+
+svds(A::AbstractMatrix{T}, k::Integer; kwargs...) where T = svds(T, A, k; kwargs...)
+svds(T::Type, A::AbstractMatrix, k::Integer; kwargs...) = svds(T, ArpackNormalOp(A), k; kwargs...)
+svds(op::ArpackOp, k::Integer; kwargs...) = svds(Float64, op, k; kwargs...)
+function svds(T::Type, op::ArpackOp, k::Integer; kwargs...)
+  einfo = symeigs(T, op, k,; kwargs...) # eigeninfo
+end 
 
 #=
 eigs(A::Symmetric, k; kwargs...)
