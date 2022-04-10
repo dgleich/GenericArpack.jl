@@ -967,18 +967,18 @@ function dsaitr!(
   np::Int,
   mode::Int,
   resid::AbstractVecOrMat{T},
-  rnorm::Ref{T},
+  rnorm::Ref{TR},
   V::AbstractMatrix{T},
   ldv::Int, # TODO, try and remove
-  H::AbstractMatrix{T},
+  H::AbstractMatrix{TR},
   ldh::Int, 
   ipntr::AbstractVecOrMat{Int},
   workd::AbstractVecOrMat{T},
-  state::AbstractArpackState{T};
+  state::AbstractArpackState{TR};
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
-) where {T, BMAT}
+) where {T, TR, BMAT}
 
   @attach_aitr_state(state)
 
@@ -996,7 +996,7 @@ function dsaitr!(
   c        | & message level for debugging |
   =#
   # in Arpack, saved in 'save' variables, but just recomputed here ...
-  safmin = floatmin(T)
+  safmin = floatmin(TR)
   msglvl = @jl_arpack_debug(maitr,0)
 
   info = 0
@@ -1240,7 +1240,7 @@ function dsaitr!(
 
         # c        | Extend H to have j rows and columns. |
 
-        H[j,2] = workd[irj+j-1]
+        H[j,2] = real(workd[irj+j-1])
 
         if j == 1 || rstart
           H[j,1] = 0
@@ -1349,7 +1349,7 @@ function dsaitr!(
         if j == 1 || rstart 
           H[j,1] = 0
         end
-        H[j,2] = H[j,2] + workd[irj+j-1]
+        H[j,2] = H[j,2] + real(workd[irj+j-1])
 
         orth2 = true
 
@@ -1514,6 +1514,6 @@ function dsaitr!(
     end
   end
 
-  state.aitr = AitrState{T}(@aitr_state_vars)
+  state.aitr = AitrState{TR}(@aitr_state_vars)
   return info
 end

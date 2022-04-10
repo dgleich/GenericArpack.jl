@@ -56,7 +56,7 @@ module CheckWithArpackjll
     which::Symbol,
     nev::Ref{Int},
     np::Ref{Int}, 
-    tol::T,
+    tol::TR,
     resid::AbstractVecOrMat{T},
     mode::Int, 
     iupd::Int,
@@ -64,26 +64,26 @@ module CheckWithArpackjll
     mxiter::Ref{Int},
     V::AbstractMatrix{T},
     ldv::Int, 
-    H::AbstractMatrix{T}, 
+    H::AbstractMatrix{TR}, 
     ldh::Int,
-    ritz::AbstractVecOrMat{T},
-    bounds::AbstractVecOrMat{T},
-    Q::AbstractMatrix{T},
+    ritz::AbstractVecOrMat{TR},
+    bounds::AbstractVecOrMat{TR},
+    Q::AbstractMatrix{TR},
     ldq::Int, 
-    workl::AbstractVecOrMat{T},
+    workl::AbstractVecOrMat{TR},
     ipntr::AbstractVecOrMat{Int},
     workd::AbstractVecOrMat{T},
     info_initv0::Int, # info in Arpack, but we return info... 
-    state::ArpackjllState_CheckSaupd{T}
+    state::ArpackjllState_CheckSaupd{TR}
     ;
     stats::Union{ArpackStats,Nothing}=nothing,
     debug::Union{ArpackDebug,Nothing}=nothing,
     idonow::Union{ArpackOp,Nothing}=nothing
-  ) where {T, BMAT}
+  ) where {T, TR, BMAT}
     @debug "In override dsaup2"
     # these codes won't work with idonow. 
     @assert idonow === nothing 
-    normalstate = ArpackInJulia.ArpackState{T}()
+    normalstate = ArpackInJulia.ArpackState{TR}()
     normalstate.aitr = state.aitr
     normalstate.getv0 = state.getv0
     normalstate.saup2 = state.saup2
@@ -114,13 +114,13 @@ module CheckWithArpackjll
     rnorm::Ref{T}, # output
     ipntr::AbstractVector{Int}, # output
     workd::AbstractVector{T}, # output
-    state::ArpackjllState_CheckSaupd{T};
+    state::ArpackjllState_CheckSaupd{TR};
     stats::Union{ArpackInJulia.ArpackStats,Nothing}=nothing,
     debug::Union{ArpackInJulia.ArpackDebug,Nothing}=nothing,
     idonow::Union{ArpackInJulia.ArpackOp,Nothing}=nothing
-    ) where {T, BMAT}
+    ) where {T, TR, BMAT}
 
-    normalstate = ArpackInJulia.ArpackState{T}()
+    normalstate = ArpackInJulia.ArpackState{TR}()
     normalstate.getv0 = state.getv0
 
     if state.handle_getv0 == :use

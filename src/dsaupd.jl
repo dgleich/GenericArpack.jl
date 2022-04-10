@@ -924,7 +924,7 @@ function dsaupd!(
   n::Int,
   which::Symbol,
   nev::Int,
-  tol::T,
+  tol::TR,
   resid::AbstractVecOrMat{T},
   ncv::Int,
   V::AbstractMatrix{T},
@@ -932,15 +932,15 @@ function dsaupd!(
   iparam::AbstractVector{Int}, # output
   ipntr::AbstractVector{Int}, # output
   workd::AbstractVecOrMat{T}, # output
-  workl::AbstractVecOrMat{T}, # output
+  workl::AbstractVecOrMat{TR}, # output
   lworkl::Int, 
   info_initv::Int # input
   ;
-  state::Union{AbstractArpackState{T},Nothing}=nothing, 
+  state::Union{AbstractArpackState{TR},Nothing}=nothing, 
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
-  ) where {T, BMAT}
+  ) where {T, TR, BMAT}
 
   msglvl = @jl_arpack_debug(maupd,0) # msaupd in Fortran
   t0 = @jl_arpack_time()
@@ -997,7 +997,6 @@ function dsaupd!(
       ido[] = 99
     end
   end
-
   
   if ido[] != 99 # no errors...
     # c        | Set default parameters |
@@ -1005,7 +1004,7 @@ function dsaupd!(
       nb = 1
     end
     if tol <= 0 
-      tol = eps(T)/2 # dlamch ('EpsMach')
+      tol = eps(TR)/2 # dlamch ('EpsMach')
     end
 
     # copied straight from the workspace setup...
@@ -1019,7 +1018,6 @@ function dsaupd!(
     iq     = bounds + ncv
     iw     = iq     + ncv*ncv
     next   = iw     + 3*ncv
-
 
     # here we also make sure ido[] = 0 so this only happens once
     if ido[] == 0 
@@ -1057,10 +1055,14 @@ function dsaupd!(
       state.aupd_np, # this is the only output variable
       tol, resid, mode,
       iupd, ishift, state.aupd_mxiter, V, ldv,
-       reshape(@view(workl[ih:ritz-1]), ldh, 2), ldh,
-       @view(workl[ritz:bounds-1]),
-       @view(workl[bounds:iq-1]),
-       reshape(@view(workl[iq:iw-1]), ldq, ncv), ldq,
+       #reinterpret(TR, reshape(@view(workl[ih:ritz-1]), ldh, 2)), ldh,
+       #reinterpret(TR, @view(workl[ritz:bounds-1])),
+       #reinterpret(TR, @view(workl[bounds:iq-1])),
+       #reinterpret(TR, reshape(@view(workl[iq:iw-1]), ldq, ncv)), ldq,
+      reshape(@view(workl[ih:ritz-1]), ldh, 2), ldh,
+      @view(workl[ritz:bounds-1]),
+      @view(workl[bounds:iq-1]),
+      reshape(@view(workl[iq:iw-1]), ldq, ncv), ldq,
        @view(workl[iw:next-1]),
       ipntr, workd, info_initv, 
       state;

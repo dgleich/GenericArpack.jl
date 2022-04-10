@@ -578,20 +578,20 @@ function dsapps!(
   n::Int,
   kev::Int,
   np::Int,
-  shift::AbstractVecOrMat{T},
+  shift::AbstractVecOrMat{TR},
   V::AbstractMatrix{T},
   ldv::Int,
-  H::AbstractMatrix{T},
+  H::AbstractMatrix{TR},
   ldh::Int,
   resid::AbstractVecOrMat{T},
-  Q::AbstractMatrix{T},
+  Q::AbstractMatrix{TR},
   ldq::Int,
   workd::AbstractVecOrMat{T},
-  state::Union{AbstractArpackState{T},Nothing}
+  state::Union{AbstractArpackState{TR},Nothing}
   ;
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
-) where T
+) where {T,TR}
 
   @jl_arpack_check_size(V, n, kev+np) # needs to be this long
   @jl_arpack_check_size(H, kev+np, 2)
@@ -606,7 +606,7 @@ function dsapps!(
   @jl_arpack_check_size(Q, kev+np, kev+np) # needs to be this size 
   @jl_arpack_check_length(Q, ldq*(kev+np-1) + (kev+np)) # should be this long...
 
-  epsmch = eps(T)/2
+  epsmch = eps(TR)/2
   itop = 1
 
   # c     | Initialize timing statistics  |

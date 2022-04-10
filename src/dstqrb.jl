@@ -611,7 +611,7 @@ function dstqrb!(
   z::AbstractVector{T},
   work::AbstractVector{T},
   ::Union{AbstractArpackState{T},Nothing} # we have state for dispatch
-) where T
+) where {TC,T}
   @jl_arpack_check_length(d,n)
   @jl_arpack_check_length(e,n-1)
   @jl_arpack_check_length(z,n)

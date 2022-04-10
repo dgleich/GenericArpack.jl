@@ -541,7 +541,7 @@ function _swap_within_array(n::Int, v::AbstractVector{T}, offset::Int, ioffset::
   end
 end
 
-function _copyn!(n::Int, dst::AbstractVecOrMat{T}, src::AbstractVecOrMat{T}) where T
+function _copyn!(n::Int, dst::AbstractVecOrMat, src::AbstractVecOrMat)
   #@assert n <= length(dst) && n <= length(src)
   @jl_arpack_check_length(dst, n)
   @jl_arpack_check_length(src, n)
@@ -977,7 +977,7 @@ function dseigt!(
   ; 
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
-) where T 
+) where {T}
   
   @jl_arpack_check_length(eig, n)
   @jl_arpack_check_length(bounds, n)
@@ -1006,7 +1006,8 @@ function dseigt!(
   # 
   
   dstqrb!(
-    n, @view(eig[1:n]), @view(workl[1:n-1]), @view(bounds[1:n]), @view(workl[n+1:3n]), state
+    n, @view(eig[1:n]), @view(workl[1:n-1]), @view(bounds[1:n]), 
+      @view(workl[n+1:3n]), state
   )
   # Julia note:
   # We have dstqrb! throw a hard error if the eigenvalue 

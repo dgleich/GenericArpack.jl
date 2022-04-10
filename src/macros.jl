@@ -1,3 +1,13 @@
+function _eps(::Type{Complex{T}}) where {T <: AbstractFloat}
+  return eps(T)
+end 
+function _realtype(::Type{T}) where {T <: AbstractFloat}
+  return T
+end 
+function _realtype(::Type{Complex{T}}) where {T <: AbstractFloat}
+  return T
+end 
+
 function _eps23(::Type{T}) where {T <: AbstractFloat}
   return (eps(T)/2)^((2one(T))/(3one(T)))
 end
@@ -354,6 +364,4 @@ Base.@kwdef mutable struct ArpackState{T} <: AbstractArpackState{T}
   aupd_mxiter::Base.RefValue{Int} = Ref{Int}(0)
   aup2_rnorm::Base.RefValue{T} = Ref{T}(zero(T))
 end
-
-
 

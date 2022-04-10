@@ -53,6 +53,7 @@ include("macros.jl")
   @testset "dsaupd" begin 
     include("dsaupd_simple.jl")
     include("dsaupd_idonow.jl")
+    include("dsaupd_complex.jl")
   end 
 
   include("dsgets_simple.jl")

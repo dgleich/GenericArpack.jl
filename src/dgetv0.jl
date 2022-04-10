@@ -511,14 +511,14 @@ function dgetv0!(
   V::AbstractMatrix{T},
   ldv::Int, # TODO, try and remove
   resid::AbstractVecOrMat{T},
-  rnorm::Ref{T}, # output
+  rnorm::Ref{TR}, # output
   ipntr::AbstractVector{Int}, # output
   workd::AbstractVecOrMat{T}, # output
-  state::AbstractArpackState{T};
+  state::AbstractArpackState{TR};
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
-  ) where {T, BMAT}
+  ) where {T, TR, BMAT}
 
   @attach_getv0_state(state)
   ierr::Int = 0
@@ -746,7 +746,7 @@ function dgetv0!(
     @jl_update_time(tgetv0, t0)
   end
   # this is the only return
-  state.getv0 = Getv0State{T}(@getv0_state_vars)
+  state.getv0 = Getv0State{TR}(@getv0_state_vars)
   return ierr
 end
 

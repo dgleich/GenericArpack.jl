@@ -311,7 +311,10 @@ if Sys.ARCH==:x86_64 || Sys.ARCH == :x86
   function _dnrm2_unroll_ext(a::AbstractVector{Float64})
     return Float80.mynorm(a)
   end 
-  
+  function _dnrm2_unroll_ext(a::AbstractVector{Complex{Float64}})
+    # just the 2-norm of the expanded vector.
+    return Float80.mynorm(reinterpret(Float64, a))
+  end 
 else 
   function _dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: AbstractFloat}
     return norm(a)
@@ -319,5 +322,9 @@ else
   function _dnrm2_unroll_ext(a::AbstractVector{Float64})
     return _dnrm2_unroll_ext_dd(a)
   end 
+end 
+
+function _dnrm2_unroll_ext(a::AbstractVector{Complex{T}}) where {T <: AbstractFloat}
+  return norm(a)
 end 
 

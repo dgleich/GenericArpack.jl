@@ -966,7 +966,7 @@ function dsaup2!(
   which::Symbol,
   nev::Ref{Int},
   np::Ref{Int}, 
-  tol::T,
+  tol::TR,
   resid::AbstractVecOrMat{T},
   mode::Int, 
   iupd::Int,
@@ -974,22 +974,22 @@ function dsaup2!(
   mxiter::Ref{Int},
   V::AbstractMatrix{T},
   ldv::Int, 
-  H::AbstractMatrix{T}, 
+  H::AbstractMatrix{TR}, 
   ldh::Int,
-  ritz::AbstractVecOrMat{T},
-  bounds::AbstractVecOrMat{T},
-  Q::AbstractMatrix{T},
+  ritz::AbstractVecOrMat{TR},
+  bounds::AbstractVecOrMat{TR},
+  Q::AbstractMatrix{TR},
   ldq::Int, 
-  workl::AbstractVecOrMat{T},
+  workl::AbstractVecOrMat{TR},
   ipntr::AbstractVecOrMat{Int},
   workd::AbstractVecOrMat{T},
   info_initv0::Int, # info in Arpack, but we return info... 
-  state::AbstractArpackState{T}
+  state::AbstractArpackState{TR}
   ;
   stats::Union{ArpackStats,Nothing}=nothing,
   debug::Union{ArpackDebug,Nothing}=nothing,
   idonow::Union{ArpackOp,Nothing}=nothing
-) where {T, BMAT}
+) where {T, TR, BMAT}
 
   @attach_saup2_state(state)
   rnorm = state.aup2_rnorm
@@ -1010,7 +1010,7 @@ function dsaup2!(
   @jl_arpack_check_bmat(BMAT)
 
   # c        | Set machine dependent constant. |
-  eps23 = _eps23(T)
+  eps23 = _eps23(TR)
 
   # c        | & message level for debugging |
   msglvl = @jl_arpack_debug(maup2,0)
@@ -1459,6 +1459,6 @@ function dsaup2!(
     @jl_update_time(taup2, t0)
   end
   
-  state.saup2 = Saup2State{T}(@saup2_state_vars)
+  state.saup2 = Saup2State{TR}(@saup2_state_vars)
   return info
 end
