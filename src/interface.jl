@@ -24,7 +24,9 @@ eigs(A::HermOrSym, B::HermOrSym, k::Integer; kwargs...) = symeigs(
 eigs(A::Symmetric, B::Symmetric, k::Integer; kwargs...) = symeigs(T, ArpackSymmetricGeneralizedOp(A), k; kwargs...)
 eigs(T::Type, A::Symmetric, B::Symmetric, k::Integer; kwargs...) = symeigs(T, ArpackSymmetricGeneralizedOp(A), k; kwargs...)
 
-symeigs(A::AbstractMatrix,k::Integer; kwargs...) = symeigs(ArpackSimpleOp(A),k; kwargs...)
+symeigs(A::AbstractMatrix{T},k::Integer; kwargs...) where {T <: Complex} = symeigs(ComplexF64, ArpackSimpleOp(A),k; kwargs...)
+symeigs(A::AbstractMatrix{T},k::Integer; kwargs...) where {T <: Real} = symeigs(Float64, ArpackSimpleOp(A),k; kwargs...)
+
 symeigs(TV::Type, A::AbstractMatrix,k::Integer; kwargs...) = symeigs(TV, ArpackSimpleOp(A),k; kwargs...)
 symeigs(A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = symeigs(ArpackSymmetricGeneralizedOp(A,B),k; kwargs...)
 symeigs(TV::Type, A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = symeigs(
