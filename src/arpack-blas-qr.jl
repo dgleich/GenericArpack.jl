@@ -260,11 +260,11 @@ Julia Arguments
 - tau, 
 """
 function _dlarf_left!(
-  v::AbstractVecOrMat{T}, 
-  tau::T, 
-  C::AbstractMatrix{T}, 
-  work::AbstractVecOrMat{T}
-) where T 
+  v::AbstractVecOrMat{TR}, 
+  tau::TR, 
+  C::AbstractMatrix{TM}, 
+  work::AbstractVecOrMat{TM}
+) where {TR, TM}
   lastv = 0 
   lastc = 0 
   m = length(v)
@@ -289,11 +289,11 @@ function _dlarf_left!(
 end
 
 function _dlarf_right!(
-  v::AbstractVecOrMat{T}, 
-  tau::T, 
-  C::AbstractMatrix{T}, 
-  work::AbstractVecOrMat{T}
-) where T 
+  v::AbstractVecOrMat{TR}, 
+  tau::TR, 
+  C::AbstractMatrix{TM}, 
+  work::AbstractVecOrMat{TM}
+) where {TR,TM} 
   lastv = 0 
   lastc = 0 
   m = length(v)
@@ -370,11 +370,11 @@ function _dger!(alpha::T, x::AbstractVecOrMat{T}, y::AbstractVecOrMat{T}, A::Abs
   end
 end
 =#
-function _dger!(alpha::T, x::AbstractVecOrMat{T}, y::AbstractVecOrMat{T}, A::AbstractMatrix{T}) where T
+function _dger!(alpha, x::AbstractVecOrMat, y::AbstractVecOrMat, A::AbstractMatrix)
   m,n = size(A)
   for j=1:n
     if y[j] != 0 
-      temp = alpha*y[j]
+      temp = alpha*conj(y[j])
       LinearAlgebra.BLAS.axpy!(temp, x, @view(A[:,j]))
       #for i=1:m
         #A[i,j] += x[i]*temp
@@ -406,11 +406,11 @@ if SIDE = 'R'.
 """
 function dorm2r!(::Val{SIDE},::Val{TRANS},
     m::Integer, n::Integer, k::Integer, 
-    A::AbstractMatrix{T}, 
-    tau::AbstractVector{T}, 
-    C::AbstractMatrix{T}, 
-    work::AbstractVector{T}
-) where {SIDE, TRANS, T}
+    A::AbstractMatrix{TR}, 
+    tau::AbstractVector{TR}, 
+    C::AbstractMatrix{TM}, 
+    work::AbstractVector{TM}
+) where {SIDE, TRANS, TR, TM}
 
   info = 0 
   left = SIDE==:L
@@ -458,7 +458,7 @@ function dorm2r!(::Val{SIDE},::Val{TRANS},
       jc = i 
     end 
     aii = A[i,i]
-    A[i,i] = one(T)
+    A[i,i] = one(eltype(A))
     if left
       _dlarf_left!(@view(A[i:(i+mi-1),i]), tau[i], 
         @view(C[ic:ic+mi-1, jc:jc+ni-1]), work)

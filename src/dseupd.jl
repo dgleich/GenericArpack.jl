@@ -986,14 +986,14 @@ Notes on Julia interface
 function simple_dseupd!(
   rvec::Bool,
   select::AbstractVector{Int}, # not really used 
-  d::AbstractVector{T},
+  d::AbstractVector{TR},
   Z::AbstractMatrix{T},
-  sigma::T, 
+  sigma::TR, 
   ::Val{BMAT}, 
   n::Int, 
   which::Symbol,
   nev::Int,
-  tol::T,
+  tol::TR,
   resid::AbstractVector{T},
   ncv::Int, 
   V::AbstractMatrix{T}, 
@@ -1001,21 +1001,21 @@ function simple_dseupd!(
   iparam::AbstractVector{Int}, 
   ipntr::AbstractVector{Int}, 
   workd::AbstractVector{T}, 
-  workl::AbstractVector{T}
+  workl::AbstractVector{TR}
   # lworkl is omitted as Julia doesn't need it
   # info is only used for return 
   ; 
   debug::Union{ArpackDebug,Nothing}=nothing, # the only one we can get 
   stats::Union{ArpackStats,Nothing}=nothing, 
   state::Union{AbstractArpackState,Nothing}=nothing, 
-) where {T, BMAT}
+) where {T, TR, BMAT}
   # c     | Set default parameters |
   msglvl = @jl_arpack_debug(meupd,0)
   mode = iparam[7]
   nconv = iparam[5]
   info = 0 
   if tol <= 0 # Julia doesn't keep a reference to Tol like ARPACK does
-    tol = eps(T)/2
+    tol = eps(TR)/2
   end 
   lworkl = length(workl)
 
@@ -1164,7 +1164,7 @@ function simple_dseupd!(
   ibd = irz+ncv 
 
   # c     | Set machine dependent constant. |
-  eps23 = _eps23(T)
+  eps23 = _eps23(TR)
 
   #=
   c     | RNORM is B-norm of the RESID(1:N).    |

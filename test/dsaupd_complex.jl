@@ -19,7 +19,7 @@
     iparam[4] = 1
     iparam[7] = mode 
     ipntr = zeros(Int,11)
-    workd = zeros(T,n,3)
+    workd = zeros(T,3n)
     lworkl = ncv*ncv + 8*ncv
     workl = zeros(Float64,lworkl)
 
@@ -28,7 +28,7 @@
 
     histdata = Vector{
       NamedTuple{(:ido, :resid, :V, :iparam, :ipntr, :workd, :workl, :ierr), 
-        Tuple{Int,Vector{T}, Matrix{T}, Vector{Int}, Vector{Int}, Matrix{T}, Vector{T}, Int}}
+        Tuple{Int,Vector{T}, Matrix{T}, Vector{Int}, Vector{Int}, Vector{T}, Vector{T}, Int}}
     }()
 
     # Note that we cannot run two sequences at once and check them where we start a whole
@@ -58,6 +58,21 @@
     end
     # make sure we got the ritz values right...
     @test sort(eigvals(Matrix(op.A)), by=abs, rev=true)[1:nev] ≈ sort(workl[2*ncv+1:2*ncv+nev], by=abs, rev=true)
+
+    # now test to make sure we get dseupd okay too
+    Z = zeros(ComplexF64, n, nev)
+    d = zeros(Float64, nev)
+    select = zeros(Int, ncv)
+
+    ierr = ArpackInJulia.simple_dseupd!(true, select, d, Z, 0.0, Val(bmat), n, which, nev, tol, resid, ncv, V, iparam, ipntr, workd, workl)
+
+    @test sort(eigvals(Matrix(op.A)), by=abs, rev=true)[1:nev] ≈ sort(d, by=abs, rev=true)
+    for i in 1:size(Z,2)
+      lam = Z[:,i]'*op.A*Z[:,i]
+      @test lam ≈ d[i]
+      @test norm(Z[:,i]) ≈ 1
+    end
+    @test Z'*Z ≈ I
   end
 
   n = 20 
