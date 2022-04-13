@@ -97,6 +97,7 @@
       end
       iter += 1
     end
+    #@show iparam[5], workl[2*ncv+1:2*ncv+nev], stats.nopx
     return iter
   end
 
@@ -212,6 +213,11 @@
     nev = 4
     _reset_libarpack_dgetv0_iseed()
     _check_dsaupd_sequence!(A; B,invBop=F, mode, ncv, nev, bmat)
+
+    _reset_libarpack_dgetv0_iseed()
+    _check_dsaupd_sequence!(A; B,invBop=F, mode, ncv, nev, bmat, which=:SA)
+
+
     
   end
 
