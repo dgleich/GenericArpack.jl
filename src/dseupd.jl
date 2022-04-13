@@ -1334,6 +1334,8 @@ function simple_dseupd!(
   c     | (and corresponding data) are returned in ascending order.        |
   =#
   if type == :REGULR
+    # c        | Ascending sort of wanted Ritz values, vectors and error |
+    # c        | bounds. Not necessary if only Ritz values are desired.  |
     if rvec
       # handle all the sorting... 
       # we wrote dsortr to handle vectors and matrices, so we can use that one..
@@ -1342,7 +1344,7 @@ function simple_dseupd!(
       # in Julia, this is the leading matrix Q1 
       dsortr(:LA, true, nconv, @view(d[1 .+ nconv0]), Q1)
     else
-      copyto!(workl[ihb .+ ncv0], workl[bounds .+ ncv0])
+      copyto!(@view(workl[ihb .+ ncv0]), @view(workl[bounds .+ ncv0]))
     end
   else
     #= 
