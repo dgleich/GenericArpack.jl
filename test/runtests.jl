@@ -23,6 +23,13 @@ if "debug" in ARGS
   ENV["JULIA_DEBUG"] = "ArpackInJulia,Main"
 end
 
+if "multithread" in ARGS
+else
+  # no multithreading to avoid annoying issues in comparing against ARPACK
+  using LinearAlgebra
+  LinearAlgebra.BLAS.set_num_threads(1)
+end 
+
 using Test
 using ArpackInJulia
 

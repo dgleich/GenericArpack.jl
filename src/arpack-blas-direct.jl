@@ -80,8 +80,16 @@ _dlaev2_blas(a::Float64, b::Float64, c::Float64) = begin
   return rt1[], rt2[], cs[], sn[]
 end
 
-_dlaev2_blas(1.0, 1.0, 1.0)
-_dlaev2_blas(5.0, 0.0, 2.0)
+##
+
+function _dscal_blas!(alpha::Float64, x::StridedVector{Float64}, n=length(x))
+  incx = stride(x,1)
+  ccall((LinearAlgebra.BLAS.@blasfunc("dscal_"), LinearAlgebra.BLAS.libblas), Cvoid,
+    (Ref{LinearAlgebra.BlasInt}, Ref{Float64}, # n, alpha
+    Ptr{Float64}, Ref{LinearAlgebra.BlasInt}), #x, incx
+    n, alpha, x, incx)
+end
+
 
 ##
 _dlasr_rvb_blas!(m::LinearAlgebra.BlasInt,
