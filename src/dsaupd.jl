@@ -969,6 +969,9 @@ function dsaupd!(
       ierr = -3
     end
     np = ncv - nev
+    # NOTE, arpack uses <= 0 here. 
+    # HOWEVER, it is sometimes useful to actually run with zero iterations
+    # BECAUSE aup2 uses iter > mxiter to terminate, so mxiter=0 => 1 iteration
     if state.aupd_mxiter[] < 0
       ierr = -4
     end

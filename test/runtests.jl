@@ -62,6 +62,7 @@ include("macros.jl")
     include("dsaupd_simple.jl")
     include("dsaupd_idonow.jl")
     include("dsaupd_complex.jl")
+    include("dsaupd_errors.jl")
   end 
 
   include("dsgets_simple.jl")
