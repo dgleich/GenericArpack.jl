@@ -17,26 +17,28 @@ eigs(TV::Type, A::Symmetric, k::Integer; kwargs...) = eigs(TV, _real_type(TV), A
 eigs(TV::Type, TF::Type, A::HermOrSym, k::Integer; kwargs...) = symeigs(TV, TF, ArpackSimpleOp(A), k; kwargs...)
 
 _gen_eigs_vtype(A, B) = promote_type(_float_type(eltype(A)), _float_type(eltype(B)))
-_gen_eigs_ftype(A, B) = promote_type(_real_type(eltype(A)), _real_type(eltype(B)))
+#_gen_eigs_ftype(A, B) = promote_type(_real_type(eltype(A)), _real_type(eltype(B)))
 eigs(A::HermOrSym, B::HermOrSym, k::Integer; kwargs...) = symeigs(
-  _gen_eigs_vtype(A,B), _gen_eigs_ftype(A,B), ArpackSymmetricGeneralizedOp(A,B), k; kwargs...)
+  _gen_eigs_vtype(A,B), ArpackSymmetricGeneralizedOp(A,factorize(B),B), k; kwargs...)
   
-eigs(A::Symmetric, B::Symmetric, k::Integer; kwargs...) = symeigs(T, ArpackSymmetricGeneralizedOp(A), k; kwargs...)
-eigs(T::Type, A::Symmetric, B::Symmetric, k::Integer; kwargs...) = symeigs(T, ArpackSymmetricGeneralizedOp(A), k; kwargs...)
+eigs(T::Type, A::Symmetric, B::Symmetric, k::Integer; kwargs...) = symeigs(
+    T, ArpackSymmetricGeneralizedOp(A,factorize(B),B), k; kwargs...)
 
 symeigs(A::AbstractMatrix{T},k::Integer; kwargs...) where {T <: Complex} = symeigs(ComplexF64, ArpackSimpleOp(A),k; kwargs...)
 symeigs(A::AbstractMatrix{T},k::Integer; kwargs...) where {T <: Real} = symeigs(Float64, ArpackSimpleOp(A),k; kwargs...)
 
 symeigs(TV::Type, A::AbstractMatrix,k::Integer; kwargs...) = symeigs(TV, ArpackSimpleOp(A),k; kwargs...)
-symeigs(A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = symeigs(ArpackSymmetricGeneralizedOp(A,B),k; kwargs...)
-symeigs(TV::Type, A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = symeigs(
-    TV, ArpackSymmetricGeneralizedOp(A,B),k; kwargs...)
+symeigs(A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = symeigs(
+    ArpackSymmetricGeneralizedOp(A,factorize(B),B),k; kwargs...)
+symeigs(TV::Type, A::AbstractMatrix, B::AbstractMatrix,k::Integer; kwargs...) = symeigs(
+    TV, ArpackSymmetricGeneralizedOp(A,factorize(B),B),k; kwargs...)
 
 hermeigs(A::AbstractMatrix,k::Integer; kwargs...) = hermeigs(ArpackSimpleOp(A),k; kwargs...)
 hermeigs(TV::Type, A::AbstractMatrix,k::Integer; kwargs...) = hermeigs(TV, ArpackSimpleOp(A),k; kwargs...)
-hermeigs(A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = hermeigs(ArpackSymmetricGeneralizedOp(A,B),k; kwargs...)
+hermeigs(A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = hermeigs(
+    ArpackSymmetricGeneralizedOp(A,factorize(B),B),k; kwargs...)
 hermeigs(TV::Type, A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = hermeigs(
-    TV, ArpackSymmetricGeneralizedOp(A,B),k; kwargs...)
+    TV, ArpackSymmetricGeneralizedOp(A,factorize(B),B),k; kwargs...)
 
 symeigs(op::ArpackOp, k::Integer; kwargs...) = symeigs(Float64, op, k; kwargs...)
 hermeigs(op::ArpackOp, k::Integer; kwargs...) = symeigs(ComplexF64, op, k; kwargs...)
@@ -120,7 +122,9 @@ function symeigs(::Type{TV}, ::Type{TF}, op::ArpackOp, nev::Integer;
     iparam, ipntr, workd, workl, lworkl, info_initv;
     state, stats, debug, idonow=op)[1]
 
-  if (info == 1 && failonmaxiter) || (info != 0 || ido[] != 99)
+  if (info == 1 && failonmaxiter)
+    throw(ArpackException("symmetric aupd hit maxiter=$maxiter with $(iparam[5]) < $nev eigenvalues converged"))
+  elseif ((info != 0 && info != 1)|| ido[] != 99) 
     throw(ArpackException("symmetric aupd gave error code info=$info with ido=$(ido[])"))
   end 
 

@@ -232,7 +232,19 @@ bmat(::ArpackSymmetricGeneralizedOp) = Val(:G)
 function genopx!(y, OP::ArpackSymmetricGeneralizedOp, x)
   mul!(y, OP.A, x) # compute A*x
   x[:] = y         # save A*x in x per remark 5 in
-  ldiv!(OP.S, y)   # overwrite y with inv(B)*y 
+  try 
+    ldiv!(OP.S, y)   # overwrite y with inv(B)*y 
+  catch e
+    #throw(e)
+    if e isa MethodError
+      # try one more time...
+      # this fixes an issue with Cholmod factorizations. 
+      y[:] = OP.S \ x
+    else
+      rethrow(e)
+    end
+  end 
+  #ldiv!(y, OP.S, x) # overwrite y with inv(B)*y = inv(B)*x = inv(B)*A*x
 end 
 opx!(y, OP::ArpackSymmetricGeneralizedOp, x) = genopx!(y, OP, x) # we can use that same one 
 Base.size(op::ArpackSymmetricGeneralizedOp) = Base.size(op.A, 1)

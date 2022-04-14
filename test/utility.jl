@@ -103,22 +103,25 @@ function _reset!(prob)
   return prob 
 end 
 
-function _allocate_symproblem(op, ncv::Int)
+function _allocate_symproblem(TV, TF, op, ncv::Int)
   n = size(op)
   @assert(ncv <= n)
-  resid = zeros(n)
-  V = zeros(n,ncv)
+  resid = zeros(TV, n)
+  V = zeros(TV, n,ncv)
   iparam = zeros(Int,11)
 
   ipntr = zeros(Int,11)
-  workd = zeros(3n)
+  workd = zeros(TV, 3n)
   lworkl = ncv*ncv + 8*ncv
-  workl = zeros(lworkl)
+  workl = zeros(TF, lworkl)
 
   ido = Ref{Int}(0)
   prob = ArpackSymProblem(op, V, resid, workd, workl, iparam, ipntr, ido)
   return _reset!(prob)
 end 
+
+_allocate_symproblem(op, ncv::Int) = _allocate_symproblem(Float64, Float64, op, ncv)
+  
 
 function __val2sym(::Val{BMAT}) where BMAT
   return BMAT
@@ -137,13 +140,13 @@ function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op),
 
   @assert(nev < size(V,2))
   @assert(ncv <= size(V,2))
-  T = eltype(V)
+  TF = eltype(prob.workl)
   n = size(V, 1)
-  tol = tol*one(T)
+  tol = tol*one(TF)
   
   
   if state === nothing 
-    state = ArpackInJulia.ArpackState{T}()
+    state = ArpackInJulia.ArpackState{TF}()
   end 
   ido = prob.ido
 
@@ -169,6 +172,7 @@ function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op),
         state, stats, debug 
       ).ierr 
     if arpackjllfunc !== nothing
+      assert(TF == Float64)
       aupdfunc = () -> arpackjllfunc(ido, __val2sym(bmat), n, which, nev, tol, prob.resid, ncv, V, size(V,1),
         prob.iparam, prob.ipntr, prob.workd, prob.workl, lworkl, info_initv )
     end 

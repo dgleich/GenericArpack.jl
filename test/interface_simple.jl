@@ -31,12 +31,75 @@ end
   @test eltype(vals) == Float32
   @test vals ≈ Float32.(sort(sort(Avals, rev=true)[1:k]))
 
+  vals, vecs = eigs(Float32, Float64, Symmetric(A), k; ritzvec=false, which=:LA)
+  @test eltype(vals) == Float64
+  @test eltype(vecs) == Float32
+  @test vals ≈ Float32.(sort(sort(Avals, rev=true)[1:k])) # not too much accuracy
+
   fop = ArpackSimpleFunctionOp((y,x) -> mul!(y,A,x), n)
   vals, vecs = symeigs(fop, k)
   @test vals ≈ sort(sort(Avals, by=abs,rev=true)[1:k])
+end 
+
+@testset "generalized interface with tridiag" begin
+  n = 100
+  A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*(n+1)
+  #B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1)).*(1/(6*(n+1)))
+  B = SymTridiagonal(4*ones(n),ones(n-1)).*(1/(6*(n+1)))
+  ABvals,ABvecs = eigen(Matrix(A),Matrix(B))
+  k = 4 
+  #vals, vecs = eigs(Symmetric(A), k; debug=set_debug_high!(ArpackDebug()))
+  vals, vecs = eigs(Symmetric(A), Symmetric(B), k; debug=(ArpackDebug()))
+  @test vals ≈ sort(sort(ABvals, by=abs,rev=true)[1:k])
+
+  # needs more iterations...
+  vals, vecs = eigs(Symmetric(A), Symmetric(B), k; debug=(ArpackDebug()), which=:SA, maxiter=400, ncv=10)
+  @test vals ≈ sort(sort(ABvals)[1:k])
+end
+
+@testset "generalized interface" begin 
+  using SparseArrays, LinearAlgebra, StableRNGs
+  n = 15 
+  rng = StableRNG(1234)
+  A = sprandn(rng, n, n, 0.25) |> A -> A + A' 
+  B = sprandn(rng, n, n, 0.25) |> A -> A*A' 
+  ABvals,ABvecs = eigen(Matrix(A),Matrix(B))
+  #@show A.colptr, A.rowval, A.nzval
+
+  k = 3 
+  #vals, vecs = eigs(Symmetric(A), k; debug=set_debug_high!(ArpackDebug()))
+  vals, vecs = eigs(Symmetric(A), Symmetric(B), k; debug=(ArpackDebug()))
+  @test vals ≈ sort(sort(ABvals, by=abs,rev=true)[1:k])
+  vals, vecs = eigs(Symmetric(A), Symmetric(B), k; ritzvec=false, which=:LA)
+  @test vals ≈ sort(sort(ABvals, rev=true)[1:k])
+
+  vals, vecs = eigs(Float32, Symmetric(A), Symmetric(B), k; ritzvec=false, which=:SA)
+  @test eltype(vals) == Float32
+  @test vals ≈ Float32.(sort(sort(ABvals)[1:k], rev=true))
+
   #vals, vecs = eigs(Float64, Symmetric(A), k; which=:SM)
   #@test vals ≈ sort(sort(Avals, by=abs)[1:k])
   
   #vals, vecs = eigs(Symmetric(A), k; which=:LA)
   
 end 
+
+@testset "generalized interface with tridiag" begin
+  n = 100
+  A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*(n+1)
+  #B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1)).*(1/(6*(n+1)))
+  B = SymTridiagonal(4*ones(n),ones(n-1)).*(1/(6*(n+1)))
+  ABvals,ABvecs = eigen(Matrix(A),Matrix(B))
+  k = 4 
+  #vals, vecs = eigs(Symmetric(A), k; debug=set_debug_high!(ArpackDebug()))
+  vals, vecs = eigs(Symmetric(A), Symmetric(B), k; debug=(ArpackDebug()))
+  @test vals ≈ sort(sort(ABvals, by=abs,rev=true)[1:k])
+  vals, vecs = eigs(Symmetric(A), Symmetric(B), k; ritzvec=false, which=:LA)
+  @test vals ≈ sort(sort(ABvals, rev=true)[1:k])
+
+  vals, vecs = eigs(Float32, Symmetric(A), Symmetric(B), k; ritzvec=false, which=:SA)
+  @test eltype(vals) == Float32
+  @test_broken vals ≈ Float32.(sort(sort(ABvals, rev=true)[1:k]))
+
+  vals, vecs = symeigs(Float32, Symmetric(A), Symmetric(B), k; ritzvec=false, which=:LM)
+end
