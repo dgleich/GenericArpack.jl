@@ -63,6 +63,30 @@ Base.iterate(S::ArpackEigen) = (S.values, Val(:vectors))
 Base.iterate(S::ArpackEigen, ::Val{:vectors}) = (S.vectors, Val(:done))
 Base.iterate(S::ArpackEigen, ::Val{:done}) = nothing
 
+function Base.getproperty(S::ArpackEigen, d::Symbol)
+  if d === :bounds
+    ncv = size(S.V,2)
+    nconv = length(S.values) 
+    return @view(S.workl[5ncv .+ (1:nconv)])
+  else
+    return getfield(S, d)
+  end
+end
+
+Base.propertynames(F::ArpackEigen, private::Bool=false) =
+  private ? (:bounds, fieldnames(typeof(F))...) : (:values, :vectors, :bounds)
+
+function show(io::IO, mime::MIME{Symbol("text/plain")}, F::ArpackEigen)
+  summary(io, F); println(io)
+  println("eigenspace: ", F.which, )
+  println(io, "values:")
+  show(io, mime, F.values)
+  if size(F.vectors,2) > 0
+    println(io, "\nvectors:")
+    show(io, mime, F.vectors)
+  end 
+end
+
 function symeigs(::Type{TV}, ::Type{TF}, op::ArpackOp, nev::Integer; 
   which::Symbol=:LM, 
   maxiter::Int=max(300, ceil(Int,sqrt(size(op)))),
