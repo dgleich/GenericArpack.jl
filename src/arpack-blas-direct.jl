@@ -185,6 +185,22 @@ work = zeros(maximum(size(A)))
   return C
 end
 
+_dorg2r_blas!(m::Int, n::Int, k::Int, A::StridedMatrix{Float64}, lda::Int, tau::StridedVector{Float64},
+  work::StridedVector{Float64}=zeros(n)) = begin
+  info = Ref{LinearAlgebra.BlasInt}(0) 
+  ccall((LinearAlgebra.BLAS.@blasfunc("dorg2r_"), LinearAlgebra.BLAS.libblas), 
+    Cvoid, 
+    (Ref{LinearAlgebra.BlasInt},Ref{LinearAlgebra.BlasInt}, Ref{LinearAlgebra.BlasInt}, # m n k 
+    Ptr{Float64}, # A, 
+    Ref{LinearAlgebra.BlasInt},  # lda 
+    Ptr{Float64}, # tau 
+    Ptr{Float64}, # work 
+    Ref{LinearAlgebra.BlasInt}), # info
+    m, n, k, A, stride(A,2), tau, work, info
+    )
+  return A
+end
+
 function _dger_blas!(alpha::Float64, x::StridedVector{Float64}, y::StridedVector{Float64}, A::StridedMatrix{Float64})
   incx = stride(x,1)
   incy = stride(y,1)

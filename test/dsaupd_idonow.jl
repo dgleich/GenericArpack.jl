@@ -114,6 +114,9 @@ end
   nev = 4
   A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*((n+1))
   B = SymTridiagonal(4*ones(n),ones(n-1)).*(1/(6*(n+1)))
+  # TODO, this would ideally work with factorize
+  # factorize(Symmetric(B)) 
+  # but that hits issue https://github.com/JuliaLang/julia/issues/44973
   op = ArpackSymmetricGeneralizedOp(Symmetric(A), lu!(copy(B)), Symmetric(B)) # TODO, note 
   prob1 = _allocate_symproblem(Float32, Float32, op, 10)
   prob2 = _allocate_symproblem(Float32, Float32, op, 10)

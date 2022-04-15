@@ -240,3 +240,22 @@ function _eigenvecs(prob,nev;which=:LM, bmat=ArpackInJulia.bmat(prob.op),
 
   return d, V
 end 
+
+function check_svd(A, U, s, V; tol=2)
+  @test U'*U ≈ I 
+  @test V'*V ≈ I 
+  r = ArpackInJulia.svd_residuals(A, U, s, V)
+  @test maximum(r) <= eps(real(eltype(U)))*tol
+end 
+##
+# use something inspired by the lauchli matrix from the test matrix toolkit from Higham
+# http://www.ma.man.ac.uk/~higham/mctoolbox/toolbox.pdf
+# this has eigenvalues
+# I'm sure we can work out a closed form solution for the singular values here...
+function mytestmat(m,n,minval=1/m, maxdiagval=2)
+  # the matrix is
+  # [v, B]
+  # where B is n-1 cols, m rows... 
+  B = sparse(1:n-1, 1:n-1, range(1, maxdiagval, length=n-1), m, n-1)
+  return [collect(range(1, minval, length=m)) B]
+end 

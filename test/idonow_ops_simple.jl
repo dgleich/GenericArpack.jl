@@ -60,6 +60,25 @@
     x = copy(x1)
     ArpackInJulia.bx!(y,op2,x)
     @test y ≈ B*x1
-    
+  end 
+
+  @testset "ArpackNormalOp" begin 
+    A = randn(20,8)
+    op = ArpackNormalOp(Float64, A)
+    B = Matrix(Float64, op) 
+    @test size(op) == 8 
+    @test ArpackInJulia._uv_size(op) == (20,8)
+    @test A'*A ≈ B 
+  end 
+
+  @testset "ArpackNormalFunctionOp" begin 
+    A = randn(20,8)
+    myav = (y,x) -> mul!(y, A, x)
+    myatv = (y,x) -> mul!(y, adjoint(A), x)
+    op = ArpackNormalFunctionOp(myav, myatv, size(A)...)
+    B = Matrix(Float64, op) 
+    @test size(op) == 8 
+    @test ArpackInJulia._uv_size(op) == (20,8)
+    @test A'*A ≈ B 
   end 
 end 

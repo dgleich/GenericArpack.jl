@@ -41,6 +41,34 @@ end
   @test vals ≈ sort(sort(Avals, by=abs,rev=true)[1:k])
 end 
 
+
+
+@testset "svd interface" begin
+  @testset "all ones" begin 
+    A = ones(5,5)
+    U, s, V = svds(A, 1)
+    check_svd(A, U, s, V; tol=10) # not quite as accurate on this one...
+    @test s ≈ [5.0]
+  end 
+  
+  @testset "singular case" begin 
+    A = ones(10,4)
+    @test_throws ArpackInJulia.ArpackException svds(A, 1; which=:SA)
+    
+    U,s,V = svds(A, 2; which=:SA, ritzvec=false )
+    @test s ≈ [0.0; 0.0] atol=eps(Float64)
+    @test size(U,2) == 0
+    @test size(V,2) == 0
+  end 
+
+  @testset "mytestmat(10,8)" begin 
+    A = mytestmat(10,8)
+    U, s, V = svds(A, 2; which=:BE)
+    check_svd(A, U, s, V; tol=25) # not quite as accurate on this one...
+    @test s ≈ [0.20022491452411176, 2.424417285164735]
+  end 
+end
+
 @testset "generalized interface with tridiag" begin
   n = 100
   A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*(n+1)
@@ -81,7 +109,6 @@ end
   #@test vals ≈ sort(sort(Avals, by=abs)[1:k])
   
   #vals, vecs = eigs(Symmetric(A), k; which=:LA)
-  
 end 
 
 @testset "generalized interface with tridiag" begin
@@ -102,4 +129,60 @@ end
   @test_broken vals ≈ Float32.(sort(sort(ABvals, rev=true)[1:k]))
 
   vals, vecs = symeigs(Float32, Symmetric(A), Symmetric(B), k; ritzvec=false, which=:LM)
+end
+
+@testset "arpack svd example prob" begin
+  m = 500 
+  n = 100 
+  function arpack_svd_example_av!(w,x)
+    # computes w = A*x 
+    h = 1/(m+1)
+    k = 1/(n+1)
+    for i=1:m 
+      w[i] = 0
+    end 
+    t = 0.0
+    for j=1:n
+      t += k
+      s = 0.0 
+      for i=1:j
+        s += h
+        w[i] = w[i] + k*s*(t-1)*x[j]
+      end
+      for i=j+1:m 
+        s += h
+        w[i] = w[i] + k*t*(s-1)*x[j]
+      end
+    end
+  end
+  function arpack_svd_example_atv!(y,w)
+    # computes y = A*w
+    h = 1/(m+1)
+    k = 1/(n+1)
+    for i=1:n
+      y[i] = 0
+    end 
+    t = 0.0
+    for j=1:n
+      t += k 
+      s = 0.0
+      for i=1:j
+        s += h
+        y[j] = y[j] + k*s*(t-1)*w[i]
+      end 
+      for i=j+1:m
+        s += h
+        y[j] = y[j] + k*t*(s-1)*w[i]
+      end 
+    end 
+  end
+  op = ArpackNormalFunctionOp(arpack_svd_example_av!, arpack_svd_example_atv!, m, n)
+  einfo = symeigs(op, 4)
+  # these are the results from arpack...
+  info = svds(op, 4; ncv=10) 
+  check_svd(arpack_svd_example_av!, info...)
+  @test info.S ≈ sort([4.1012320445852E-02, 6.0488061100249E-02, 1.1784357891005E-01, 5.5723400180223E-01], rev=true)
+  info = svds(Float32, op, 4; ncv=10)
+  @test info.S ≈ sort([4.10123E-02, 6.04880E-02, 1.17844E-01, 5.57234E-01], rev=true)
+  check_svd(arpack_svd_example_av!, info...)
 end

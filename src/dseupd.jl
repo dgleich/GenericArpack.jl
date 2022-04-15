@@ -1020,9 +1020,9 @@ function simple_dseupd!(
   lworkl = length(workl)
 
   @jl_arpack_check_length(select, ncv)
-  @jl_arpack_check_length(d, nev)
+  @jl_arpack_check_length(d, nconv)
   if rvec
-    @jl_arpack_check_size(Z, n, nev)
+    @jl_arpack_check_size(Z, n, nconv)
   end 
 
   # c     | Quick return |

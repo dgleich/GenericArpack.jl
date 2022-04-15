@@ -149,4 +149,22 @@
     @test V == V1 
     @test V1 == V2 
   end 
+
+  @testset "dorg2r inplace orthogonalize" begin 
+    function compare_qr_orth(A::StridedMatrix)
+      m, n = size(A)
+      @assert(m >= n)
+      work = zeros(n) 
+      work2 = zeros(n) 
+      Qinfo, tau = _simple_dgeqr2(A)
+      Q2 = copy(Qinfo) # copy for blas
+      Q = ArpackInJulia.dorg2r!(Qinfo, tau, work)
+      Q2 = _dorg2r_blas!(m, n, length(tau), Q2, stride(Q2,2), tau, work2)
+      @test Q == Q2
+      @test work == work2 
+    end 
+    n = 7 
+    compare_qr_orth(Matrix(SymTridiagonal(zeros(n), ones(n-1))))    
+  end 
+
 end 

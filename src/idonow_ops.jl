@@ -26,11 +26,26 @@ ido[] ==  2 --> idonow_bx -> bx!(y, OP, x)
 ido[] ==  3 --> idonow_shifts -> shifts!(lams, OP))
 =#
 
+import Base: Matrix
+
 abstract type ArpackOp end
+abstract type ArpackSVDOp <: ArpackOp end
+
 # general abstract cases... 
 shift(T::Type, ::ArpackOp) = zero(T) # default shift is none!
 opx!(y,OP::ArpackOp,x,Bx) = opx!(y,OP,x) # default shift-invert operator. 
 shifts!(lams, OP::ArpackOp) = nothing # this is just a no-op unless you implement it yourself! 
+function Matrix(T::Type, op::ArpackOp) 
+  n = size(op)
+  v = Vector{T}(undef, n) 
+  A = Matrix{T}(undef, n, n)
+  for i=1:n 
+    fill!(v, 0) # in some cases, opx! can overwrite v... 
+    v[i] = one(T) 
+    opx!(@view(A[:,i]), op, v)
+  end 
+  return A
+end 
 
 ## These map from the raw codes to more user-friendly functions. 
 function _i_do_now_opx_neg1!(idonow::OpT, ipntr, workd, n) where {OpT <: ArpackOp} # handle the operation
@@ -52,7 +67,6 @@ end
 function _i_do_now_bx!(idonow::OpT, ipntr, workd, n) where {OpT <: ArpackOp} # handle the operation
   bx!(@view(workd[ipntr[2]:ipntr[2]+n-1]),idonow,@view(workd[ipntr[1]:ipntr[1]+n-1]))
 end 
-
 
 using LinearAlgebra: mul!, ldiv!
 
@@ -84,12 +98,44 @@ is_arpack_mode_valid_for_op(mode::Int, ::ArpackSimpleOp) = mode == 1
 This corresponds to a single eigenvalue problem on the augmented matrix [0 A; A' 0]
 to mirror ARPACK's SVD drivers.
 """
-struct ArpackAugmentedOp{MatT} <: ArpackOp
+struct ArpackAugmentedOp{MatT} <: ArpackSVDOp
   A::MatT    
 end
-arpack_modearpack_mode(::ArpackAugmentedOp) = 1
-Base.size(op::ArpackAugmentedOp) = +(Base.size(op.A))
+arpack_mode(::ArpackAugmentedOp) = 1
+Base.size(op::ArpackAugmentedOp) = +(Base.size(op.A)...)
 bmat(::ArpackAugmentedOp) = Val(:I)
+
+function _adjust_nev_which_for_svd(op::ArpackAugmentedOp, nev::Integer, svdwhich::Symbol)
+  if svdwhich==:LM || svdwhich == :LA
+    return nev, :LA 
+  elseif which == :SM || svdwhich == :SA 
+    # need to offset for all the zero eigenvalues... 
+    # m+n eigenvalues, with 2*min(m,n) sing. pairs
+    # so m+n-2*min(m,n)
+    return size(op)-2*minimum(Base.size(op.A)) + 2*nev, :SM
+  else
+    throw(ArgumentError("which = $svdwhich is not valid for SVD of ArpackAugmentedOp"))
+  end 
+end 
+
+function _adjust_eigenvalues_to_singular_values!(svdvals, op::ArpackAugmentedOp, which::Symbol, eigenvals)
+  if which == :LA
+    length(svdvals) >= length(eigenvals) || throw(
+        ArgumentError("incompatible lengths of svdvals and eigenvals for which=$which"))
+
+    for i in eachindex(eigenvals)
+      svdvals[i] = max(eigenvals[i],0) # truncate negative values to zero 
+    end 
+
+  elseif which == :SM
+    for i in eachindex(eigenvals)
+      svdvals[i] = max(eigenvals[i],0) # truncate negative values to zero 
+    end 
+
+  else
+    throw(ArgumentError("which = $svdwhich is not valid for SVD of ArpackAugmentedOp"))
+  end 
+end
 
 function opx!(y,OP::ArpackAugmentedOp,x)
   m,n = Base.size(OP.A)
@@ -119,10 +165,11 @@ end
 This driver maniuplates the matrix AA^T or A^T A 
 depending on which is smaller. Note that this
 function allocates memory to compute the operation,
-so it will not be save to use with multiple threads. 
+so it will not be safe to use with multiple threads. 
 """
+abstract type ArpackNormalSVDOp <: ArpackSVDOp end 
 
-struct ArpackNormalOp{MatT,ET} <: ArpackOp
+struct ArpackNormalOp{MatT,ET} <: ArpackNormalSVDOp
   A::MatT    
   n::Int
   At_side::Symbol 
@@ -131,64 +178,115 @@ end
 function ArpackNormalOp(T,A)
   m,n = Base.size(A)
   if m <= n
-    At_side = :left
+    At_side = :right
     extradim = n 
     sz = m 
   else
-    At_side = :right 
+    At_side = :left 
     extradim = m 
     sz = n 
   end 
   extra = Vector{T}(undef, extradim)
   return ArpackNormalOp(A, sz, At_side, extra)
 end 
-arpack_modearpack_mode(::ArpackNormalOp) = 1
-Base.size(op::ArpackNormalOp) = +(Base.size(op.A))
+arpack_mode(::ArpackNormalOp) = 1
+Base.size(op::ArpackNormalOp) = op.n
 bmat(::ArpackNormalOp) = Val(:I)
+
+function _adjust_nev_which_for_svd(op::ArpackNormalSVDOp, nev::Integer, svdwhich::Symbol)
+  if svdwhich==:LM || svdwhich==:LA
+    return nev, :LM
+  elseif svdwhich == :SM || svdwhich == :SA
+    # need to offset for all the zero eigenvalues... 
+    # m+n eigenvalues, with 2*min(m,n) sing. pairs
+    # so m+n-2*min(m,n)
+    return nev, :SA 
+  elseif svdwhich == :BE 
+    return nev, :BE 
+  else
+    throw(ArgumentError("which = $svdwhich is not valid for SVD of ArpackNormalOp "))
+  end 
+end 
+
+function _adjust_eigenvalues_to_singular_values!(svdvals, op::ArpackNormalSVDOp, which::Symbol, eigenvals)
+  length(svdvals) >= length(eigenvals) || throw(ArgumentError("incompatible lengths of svdvals and eigenvals"))
+  for i in eachindex(eigenvals)
+    svdvals[i] = sqrt(max(eigenvals[i], 0))
+  end 
+end
+
+function _uv_size(op::ArpackNormalOp)
+  return size(op.A)
+end 
+
 
 function opx!(y,OP::ArpackNormalOp,x)
   if OP.At_side == :left
     # AtA
     mul!(OP.extra, OP.A, x)
-    mul!(OP.y, adjoint(OP.A), OP.extra)
+    mul!(y, adjoint(OP.A), OP.extra)
   else
     mul!(OP.extra, adjoint(OP.A), x)
     mul!(y, OP.A, OP.extra)
   end 
 end
-is_arpack_mode_valid_for_op(mode::Int, ::ArpackNormalOp) = mode == 1 
-
-
+is_arpack_mode_valid_for_op(mode::Int, ::ArpackNormalSVDOp) = mode == 1 
 
 function orth!(X::AbstractMatrix)
   # should really run gram-schmidt?
   # run QR, then dorgqr
   #http://www.netlib.org/lapack/explore-html/da/dba/group__double_o_t_h_e_rcomputational_ga14b45f7374dc8654073aa06879c1c459.html#ga14b45f7374dc8654073aa06879c1c459
   # or dorg2r?
-  F = qr!(X)
-  #copyto!(X, F.Q)
-  Y = Matrix(F.Q)
-  copyto!(X, Y)
+
+  # Qinfo = LinearAlgebra.qr!(X)
+  # copyto!(X, Matrix(Qinfo))
+
+  #signinfo = Vector{eltype(X)}(undef, size(X,2))
+  tau = Vector{eltype(X)}(undef, size(X,2))
+  work = Vector{eltype(X)}(undef, size(X,2))
+  _dgeqr2!(X, tau, work)
+  _sign(x) = iszero(x) ? one(x) : sign(x)
+  rsign = [_sign(X[i,i]) for i in 1:size(X,2)]
+  dorg2r!(X, tau, work)
+  # scale the columns... can be done ourselves too
+  LinearAlgebra.rmul!(X, LinearAlgebra.Diagonal(rsign))
 end 
 
 function eigenvecs_to_singvecs!(U::AbstractMatrix, V::AbstractMatrix, 
   OP::ArpackNormalOp, Z::AbstractMatrix
 )
+  # TODO, better handling for singular subspace... 
+  warnthresh = _eps23(real(promote_type(eltype(U),eltype(V))))
+  errorthresh = eps(real(promote_type(eltype(U),eltype(V))))/2
+  check_norm(nrm, var) = begin
+    if nrm <= errorthresh
+      throw(ArpackException("encountered σ ≈ $(nrm) when computing $var subspace"))
+    elseif nrm <= warnthresh
+      @warn "$var subspace may be inaccurate due to small singular value (σ ≈ $(nrm)) ≤ ε^(2/3) = $warnthresh"
+    end 
+  end
   if OP.At_side == :left
     copyto!(V, Z)
     for i=1:size(V,2)
-      opx!(@view(U[:,i]), OP.A, @view(V[:,i]))
+      mul!(@view(U[:,i]), OP.A, @view(V[:,i]))
+      #LinearAlgebra.normalize!(@view(U[:,i]))
+      nrm = norm(@view(U[:,i]))
+      check_norm(nrm, "U")
+      _scale_from_to(nrm, one(eltype(nrm)),@view(U[:,i]))
     end 
     orth!(U)
   else
     copyto!(U, Z)
     for i=1:size(V,2)
-      opx!(@view(V[:,i]), adjoint(OP.A), @view(U[:,i]))
+      mul!(@view(V[:,i]), adjoint(OP.A), @view(U[:,i]))
+      #LinearAlgebra.normalize!(@view(V[:,i]))
+      nrm = norm(@view(V[:,i]))
+      check_norm(nrm, "V")
+      _scale_from_to(nrm, one(eltype(nrm)),@view(V[:,i]))
     end 
     orth!(V)
   end 
 end 
-
 
 """
     ArpackSimpleFunctionOp
@@ -205,6 +303,73 @@ Base.size(op::ArpackSimpleFunctionOp) = op.n
 bmat(::ArpackSimpleFunctionOp) = Val(:I)
 opx!(y,op::ArpackSimpleFunctionOp,x) = op.F(y,x)
 is_arpack_mode_valid_for_op(mode::Int, ::ArpackSimpleFunctionOp) = mode == 1 
+
+
+# This will try and determine if your matvec function is real or complex
+# valued... 
+function _autotype_function(T::Type, F::Function, m, n)
+  y = Vector{T}(undef, m)
+  x = ones(T, n) 
+  try
+    F(y,x) 
+    return T
+  catch e
+    if e isa InexactError
+      # see if we can get this to work with a ComplexT type...
+      try
+        y = Vector{Complex{T}}(undef, m)
+        x = ones(Complex{T}, n)
+        F(y,x) 
+        return Complex{T}
+      catch
+        throw(ArgumentError("unable to auto-type the function as real or complex, please specify an explicit type"))
+      end
+    else
+      rethrow(e) 
+    end 
+  end
+end 
+"""
+    ArpackNormalFunctionOp
+"""
+struct ArpackNormalFunctionOp{T} <: ArpackNormalSVDOp
+  av::Function
+  atv::Function
+  m::Int
+  n::Int 
+  extra::Vector{T}
+end 
+
+ArpackNormalFunctionOp(av::Function, atv::Function, m::Int, n::Int) = ArpackNormalFunctionOp(
+  _autotype_function(Float64, av, m, n), av, atv, m, n)
+
+ArpackNormalFunctionOp(T::Type, av::Function, atv::Function, m::Int, n::Int) = ArpackNormalFunctionOp{T}(
+  av, atv, m, n, Vector{T}(undef, m))
+
+arpack_mode(::ArpackNormalFunctionOp) = 1
+Base.size(op::ArpackNormalFunctionOp) = op.n
+bmat(::ArpackNormalFunctionOp) = Val(:I)
+
+function _uv_size(op::ArpackNormalFunctionOp)
+  return op.m, op.n 
+end 
+function opx!(y,OP::ArpackNormalFunctionOp,x)
+  OP.av(OP.extra, x)
+  OP.atv(y, OP.extra) 
+end
+is_arpack_mode_valid_for_op(mode::Int, ::ArpackNormalFunctionOp) = mode == 1 
+
+function eigenvecs_to_singvecs!(U::AbstractMatrix, V::AbstractMatrix, 
+  OP::ArpackNormalFunctionOp, Z::AbstractMatrix
+)
+  copyto!(V, Z)
+  for i=1:size(V,2)
+    OP.av(@view(U[:,i]), @view(V[:,i]))
+    LinearAlgebra.normalize!(@view(U[:,i]))
+  end 
+  orth!(U)
+end 
+
 
 """
     ArpackSymmetricGeneralizedOp(A,invB,B)    
@@ -277,8 +442,7 @@ function bmat(::ArpackShiftInvertOp{MatT,SolveT,BType,FType}
 end
 
 function shiftinvert_op(A,B,sigma)
-  opM = A-sigma*B
-  S = lu!(opM)
+  S = factorize(A-sigma*B)
   return ArpackShiftInvertOp(A, S, B, sigma)
 end 
 

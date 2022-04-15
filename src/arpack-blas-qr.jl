@@ -473,3 +473,46 @@ function dorm2r!(::Val{SIDE},::Val{TRANS},
   return C
 end 
 
+##
+"""
+DORG2R generates an m by n real matrix Q with orthonormal columns,
+which is defined as the first n columns of a product of k elementary
+reflectors of order m
+
+      Q  =  H(1) H(2) . . . H(k)
+
+as returned by DGEQRF.
+
+This routine assumes that A and tau are the result of dgeqrf
+
+# Lapack parameters:
+m,n = size(A)
+lda = stride(A,2)
+k = length(tau) 
+# if you need subsets of an input, use view. 
+"""
+function dorg2r!(A::AbstractMatrix{T}, tau::AbstractVector{TT}, work::AbstractVector{T}) where {T,TT}
+  m,n = size(A)
+  k = length(tau)
+  m >= n || throw(ArgumentError("the matrix A of size $(size(A,1)) x $(size(A,2)) must have more rows than columns"))
+  # initialize trailing columns to columns of the unit matrix
+  for j=k+1:n # 
+    fill!(@view(A[:,k]), zero(T))
+    A[j,j] = one(T)
+  end 
+  for i=k:-1:1
+    # Apply H(i) to A(i:m,i:n) from the left
+    if i < n 
+      A[i,i] = one(T)
+      _dlarf_left!(@view(A[i:m, i]), tau[i], @view(A[i:m, i+1:n]), work)
+    end
+    if i < m
+      # CALL dscal( m-i, -tau( i ), a( i+1, i ), 1 )
+      _dscal!(-tau[i], @view(A[i+1:m, i]))
+    end 
+    A[i,i] = one(T) - tau[i]
+    # Set A(1:i-1,i) to zero
+    fill!(@view(A[1:i-1,i]), zero(T))
+  end 
+  return A
+end 

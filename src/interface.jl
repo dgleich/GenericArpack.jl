@@ -1,4 +1,5 @@
-using LinearAlgebra: Symmetric, Hermitian, HermOrSym
+using LinearAlgebra: Symmetric, Hermitian, HermOrSym, factorize, SVD
+import Base: show
 
 struct ArpackException <: Exception
   msg::String
@@ -117,11 +118,6 @@ function symeigs(::Type{TV}, ::Type{TF}, op::ArpackOp, nev::Integer;
 
   TL = TF 
 
-  nvectors = ritzvec ? nev : 0 
-
-  # allocate workspace... 
-  vectors = Matrix{TV}(undef, n, nvectors)
-  values = Vector{TL}(undef, nev)
   V = Matrix{TV}(undef, n, ncv)
   resid = Vector{TV}(undef, n)
   iparam = zeros(Int, 11)
@@ -152,6 +148,11 @@ function symeigs(::Type{TV}, ::Type{TF}, op::ArpackOp, nev::Integer;
     throw(ArpackException("symmetric aupd gave error code info=$info with ido=$(ido[])"))
   end 
 
+  # allocate output... 
+  nconv = iparam[5]
+  nvectors = ritzvec ? min(nev,nconv) : 0
+  vectors = Matrix{TV}(undef, n, nvectors)
+  values = Vector{TL}(undef, nconv)
   select = Vector{Int}(undef, ncv)
   ierr = simple_dseupd!(ritzvec, select, values, vectors, shift(TF, op), 
     bmat, n, which, nev, tol, resid, ncv, V, iparam, ipntr, 
@@ -164,11 +165,39 @@ function symeigs(::Type{TV}, ::Type{TF}, op::ArpackOp, nev::Integer;
   return ArpackEigen(which, ipntr, iparam, V, workd, workl, resid, values, vectors, bmat, op, state)
 end
 
-svds(A::AbstractMatrix{T}, k::Integer; kwargs...) where T = svds(T, A, k; kwargs...)
-svds(T::Type, A::AbstractMatrix, k::Integer; kwargs...) = svds(T, ArpackNormalOp(A), k; kwargs...)
-svds(op::ArpackOp, k::Integer; kwargs...) = svds(Float64, op, k; kwargs...)
-function svds(T::Type, op::ArpackOp, k::Integer; kwargs...)
-  einfo = symeigs(T, op, k; kwargs...) # eigeninfo
+svds(A::AbstractMatrix{T}, k::Integer; kwargs...) where T = svds(_float_type(T), A, k; kwargs...)
+svds(T::Type, A::AbstractMatrix, k::Integer; kwargs...) = svds(T, ArpackNormalOp(T,A), k; kwargs...)
+svds(TV::Type, TF::Type, A::AbstractMatrix, k::Integer; kwargs...) = svds(TV, TF, ArpackNormalOp(TV, A), k; kwargs...)
+
+svds(op::ArpackSVDOp, k::Integer; kwargs...) = svds(Float64, op, k; kwargs...)
+complexsvds(op::ArpackSVDOp, k::Integer; kwargs...) = svds(ComplexF64, op, k; kwargs...)
+svds(T::Type, op::ArpackSVDOp, k::Integer; kwargs...) = svds(T, _real_type(T), op, k; kwargs...)
+
+function svds(TV::Type, TF::Type, op::ArpackSVDOp, k::Integer; which::Symbol=:LM, kwargs...)
+  # this translates into the appropriate arpack parameters for the svd computation
+  arnev, arwhich = _adjust_nev_which_for_svd(op, k, which)
+  m, n = _uv_size(op)
+  einfo = symeigs(TV, TF, op, arnev; kwargs..., which=arwhich) # eigeninfo
+  _adjust_eigenvalues_to_singular_values!(einfo.values, op, arwhich, einfo.values)
+  # re-sort the info... 
+  nconv = length(einfo.values)
+  nvecs = size(einfo.vectors,2)
+  applysort = nvecs > 0 # I guess  
+  if which==:LM || which==:LA # they want largest first, so we sort arpack info by smallest to reverse
+    dsortr(:SM, applysort, nconv, einfo.values, einfo.vectors)
+  elseif which == :SA || which == :LM # they want smallest first, so sort arpack info by largest
+    dsortr(:LM, applysort, nconv, einfo.values, einfo.vectors)
+  elseif which == :BE # ugh... this is annoying
+    # don't sort here, arpack sorted them 
+    # in smallest-to-largest for us. 
+  end 
+  
+  U = Matrix{TV}(undef, m, nvecs)
+  V = Matrix{TV}(undef, n, nvecs)
+  if size(einfo.vectors,2) > 0 # then we have eigenvector info...
+    eigenvecs_to_singvecs!(U, V, op, einfo.vectors)
+  end
+  return SVD(U, einfo.values, V')
 end 
 
 #=
@@ -203,3 +232,41 @@ eigs(A::Hermitian, k; kwargs...)
 eigs(T, A::Hermitian, k; kwargs...) # force Arpack to use type T. 
 svds()
 =#
+
+"""
+    svd_residuals(A, U, s, V)
+    svd_residuals(A, SVD)
+    svd_residuals(A, U, s, V, k) # compute for only the top k 
+    svd_residuals!(r, A, U, s, V) # write result in place
+
+Compute the residuals of an SVD computation \$||A*V[:,i] - U[:,i]*sigma[i]||\$,
+and return the result in a vector. 
+
+Using a matvec function 
+-----------------------
+Note that A can also be a function A(y,x), where y = A*x is updated 
+in place. e.g. `svd(A,U,s,V) == svd((y,x)->mul!(y,A,x), U,s,V)`
+are equivalent.
+"""
+:svd_residuals, :svd_residuals!
+
+function svd_residuals!(r, A, U, s, V)
+  k = length(r) 
+  @assert(k <= size(U,2))
+  @assert(k <= size(V,2))
+  @assert(k <= length(s))
+  m = size(U,1)
+  av = Vector{eltype(U)}(undef, m) 
+  for i in eachindex(r) 
+    if A isa Function 
+      A(av, @view(V[:,i]))
+    else
+      mul!(av, A, @view(V[:,i]))
+    end 
+    LinearAlgebra.BLAS.axpy!(-s[i], @view(U[:,i]), av)
+    r[i] = norm(av)
+  end 
+  return r
+end 
+svd_residuals(A, U, s, V, k=length(s)) = svd_residuals!(Vector{eltype(U)}(undef, k), A, U, s, V)
+svd_residuals(A, info::SVD, k=length(info.S)) = svd_residuals(A, info..., k)

@@ -7,6 +7,7 @@ export ArpackDebug, ArpackStats, ArpackTime, ArpackState, set_debug_high!
 
 include("idonow_ops.jl")
 export ArpackOp, ArpackSimpleOp, ArpackSimpleFunctionOp, ArpackSymmetricGeneralizedOp
+export ArpackNormalOp, ArpackNormalFunctionOp
 
 include("output.jl")
 include("simple.jl")
@@ -26,7 +27,7 @@ include("dseupd.jl")
 
 #include("arpack_jl_interface.jl")
 include("interface.jl")
-export eigs, symeigs, hermeigs
+export eigs, symeigs, hermeigs, svds
 
 include("fixes.jl")
 export @fix_doublefloats, @fix_multifloats
