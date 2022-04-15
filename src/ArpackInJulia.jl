@@ -27,7 +27,7 @@ include("dseupd.jl")
 
 #include("arpack_jl_interface.jl")
 include("interface.jl")
-export eigs, symeigs, hermeigs, svds
+export eigs, symeigs, hermeigs, svds, complexsvds
 
 include("fixes.jl")
 export @fix_doublefloats, @fix_multifloats

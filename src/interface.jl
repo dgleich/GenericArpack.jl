@@ -242,8 +242,7 @@ svds()
 Compute the residuals of an SVD computation \$||A*V[:,i] - U[:,i]*sigma[i]||\$,
 and return the result in a vector. 
 
-Using a matvec function 
------------------------
+## Using a matvec function 
 Note that A can also be a function A(y,x), where y = A*x is updated 
 in place. e.g. `svd(A,U,s,V) == svd((y,x)->mul!(y,A,x), U,s,V)`
 are equivalent.
@@ -268,5 +267,5 @@ function svd_residuals!(r, A, U, s, V)
   end 
   return r
 end 
-svd_residuals(A, U, s, V, k=length(s)) = svd_residuals!(Vector{eltype(U)}(undef, k), A, U, s, V)
+svd_residuals(A, U, s, V, k=length(s)) = svd_residuals!(Vector{real(eltype(U))}(undef, k), A, U, s, V)
 svd_residuals(A, info::SVD, k=length(info.S)) = svd_residuals(A, info..., k)

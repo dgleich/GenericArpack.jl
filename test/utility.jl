@@ -245,7 +245,11 @@ function check_svd(A, U, s, V; tol=2)
   @test U'*U ≈ I 
   @test V'*V ≈ I 
   r = ArpackInJulia.svd_residuals(A, U, s, V)
-  @test maximum(r) <= eps(real(eltype(U)))*tol
+  if tol <= 0
+    @test_broken maximum(r) <= eps(real(eltype(U)))*abs(tol)
+  else 
+    @test maximum(r) <= eps(real(eltype(U)))*tol
+  end 
 end 
 ##
 # use something inspired by the lauchli matrix from the test matrix toolkit from Higham

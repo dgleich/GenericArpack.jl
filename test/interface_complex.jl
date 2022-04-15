@@ -24,5 +24,21 @@
   #@test vals ≈ sort(sort(Avals, by=abs)[1:k])
   
   #vals, vecs = eigs(Symmetric(A), k; which=:LA)
-  
+end 
+
+@testset "complex svd" begin 
+  @testset "using matrix" begin 
+    A = mytestmat(10,8,-3.0im)
+    U,s,V = svds(A, 2; which=:BE)
+    @test s ≈ [0.9640220546797924, 6.0316491543925785]
+    check_svd(A,U,s,V;tol=-100) # this will get flagged as broken
+  end 
+
+  @testset "using ArpackNormalFunctionOp" begin 
+    A = mytestmat(10,8,-3.0im)
+    fop = ArpackNormalFunctionOp((y,x) -> mul!(y, A, x), (y,x) -> mul!(y, adjoint(A), x), size(A)...)
+    U,s,V = complexsvds(fop, 2; which=:LM)
+    @test s ≈ [6.0316491543925785, 1.9374903374733126]
+    check_svd(A,U,s,V;tol=30) # this will get flagged as broken
+  end 
 end 

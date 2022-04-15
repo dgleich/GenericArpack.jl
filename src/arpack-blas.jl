@@ -199,6 +199,27 @@ function _dlapy2_julia(x::T, y::T) where T
   end
 end
 
+# this is really the function _dlapy3 in Fortran... 
+function _dlapy2_julia(x::Complex{T}, y::T) where T
+  _dlapy3_julia(real(x), imag(x), y)
+end 
+
+function _dlapy3_julia(x::T, y::T, z::T) where T
+  xabs = abs(x)
+  yabs = abs(y)
+  zabs = abs(z)
+  w = max(xabs, yabs, zabs)
+  if w == 0 || w > floatmax(T)
+    #  *     W can be zero for max(0,nan,0)
+    # *     adding all three entries together will make sure
+    # *     NaN will not disappear.
+    return xabs + yabs + zabs
+  else
+    return w*sqrt( ( xabs / w )^2+( yabs / w )^2+ ( zabs / w )^2 )
+  end 
+end 
+
+
 ##
 function _apply_plane_rotations_right!(a::AbstractVecOrMat{T},
     c::AbstractVector{T}, s::AbstractVector{T};

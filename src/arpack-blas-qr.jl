@@ -49,7 +49,7 @@ function _dgeqr2!(
     A::AbstractMatrix{T},
     tau::AbstractVecOrMat{T},
     work::AbstractVecOrMat{T},
-) where {T <: AbstractFloat}
+) where {T <: Number}
   info = 0 
   m, n = size(A)
   @assert m >= 0 
@@ -65,7 +65,7 @@ function _dgeqr2!(
       aii = A[i,i]
       A[i,i] = one(T)
       #_dlarf_left()
-      _dlarf_left!(@view(A[i:m,i]), tau[i], @view(A[i:m,i+1:n]), work)
+      _dlarf_left!(@view(A[i:m,i]), conj(tau[i]), @view(A[i:m,i+1:n]), work)
       A[i,i] = aii
     end 
   end
@@ -146,9 +146,9 @@ function _dlarfg!(alpha::T, x::AbstractVector{T}) where T
     # just return 
   else
     # beta = -sign( dlapy2( alpha, xnorm ), alpha )
-    beta = -copysign(_dlapy2_julia(alpha, xnorm), alpha)
+    beta = -copysign(_dlapy2_julia(alpha, xnorm), real(alpha))
     # safmin = dlamch( 'S' ) / dlamch( 'E' )
-    safmin = floatmin(T)/(eps(T)/2) 
+    safmin = floatmin(real(T))/(eps(real(T))/2) 
     knt = 0 
     if abs(beta) < safmin
       # xnorm, beta may be inaccurate, scale X and recompute them

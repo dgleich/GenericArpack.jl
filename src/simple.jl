@@ -257,7 +257,7 @@ function dsortr(
   apply::Bool, # Input
   n::Int, # Input
   x1::AbstractVector{T}, # Input/Output
-  x2::AbstractVecOrMat{T}, # Input/Output
+  x2::AbstractVecOrMat, # Input/Output
 ) where {T <: AbstractFloat}
 
   @jl_arpack_check_length(x1, n)
