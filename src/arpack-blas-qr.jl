@@ -1,4 +1,4 @@
-import ArpackInJulia: _dnrm2_unroll_ext, _dlapy2_julia, _dscal!, @jl_arpack_check_length
+#import GenericArpack: _dnrm2_unroll_ext, _dlapy2_julia, _dscal!, @jl_arpack_check_length
 """
 *> DGEQR2 computes a QR factorization of a real m-by-n matrix A:
 *>
@@ -163,7 +163,7 @@ function _dlarfg!(alpha::T, x::AbstractVector{T}) where T
         end
       end
       # new beta is at most 1, at least safmin
-      xnorm = ArpackInJulia._dnrm2_unroll_ext(x)
+      xnorm = _dnrm2_unroll_ext(x)
       beta = -copysign(_dlapy2_julia(alpha, xnorm), alpha)
     end
     tau = (beta-alpha)/beta

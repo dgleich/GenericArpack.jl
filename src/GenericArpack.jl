@@ -1,4 +1,4 @@
-module ArpackInJulia
+module GenericArpack
 
 import LinearAlgebra
 
