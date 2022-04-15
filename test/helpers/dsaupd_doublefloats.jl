@@ -8,7 +8,7 @@ LinearAlgebra.floatmin2(::Type{Double64}) = Double64(reinterpret(Float64, 0x2350
 
 using Random
 
-function ArpackInJulia._dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector{Double64})
+function GenericArpack._dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector{Double64})
   # just a hacky Implementation
 
   rng = Random.MersenneTwister(UInt32[iseed[][1],iseed[][2],iseed[][3],iseed[][4]])
@@ -16,13 +16,13 @@ function ArpackInJulia._dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::
   iseed[] = tuple(rand(rng, UInt32),rand(rng, UInt32),rand(rng, UInt32),rand(rng, UInt32))
 end 
 
-function ArpackInJulia._dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Double64}
+function GenericArpack._dnrm2_unroll_ext(a::AbstractVector{T}) where {T <: Double64}
   norm(a,2)
 end 
 
 n = 25 
 T = Double64
-op = ArpackInJulia.ArpackSimpleOp(Diagonal(one(T):n))
+op = GenericArpack.ArpackSimpleOp(Diagonal(one(T):n))
 
 ido = Ref{Int}(0)
 bmat = :I
@@ -47,17 +47,17 @@ workl = zeros(T,lworkl)
 iparam0 = copy(iparam)
 info_initv = 0
 
-state = ArpackInJulia.ArpackState{T}()
+state = GenericArpack.ArpackState{T}()
 stats = ArpackStats()
-debug = ArpackInJulia.ArpackDebug()
-ArpackInJulia.set_debug_high!(debug)
+debug = GenericArpack.ArpackDebug()
+GenericArpack.set_debug_high!(debug)
 
 iter = 1
 while ido[] != 99
   if ido[] == 1 || ido[] == -1
-    ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+    GenericArpack._i_do_now_opx_1!(op, ipntr, workd, n)
   end 
-  local ierr = ArpackInJulia.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+  local ierr = GenericArpack.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
     ipntr, workd, workl, lworkl, info_initv;
     state,  debug 
   ).ierr 

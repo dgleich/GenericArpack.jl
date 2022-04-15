@@ -55,10 +55,10 @@ function _run_saitr_sequence!(M;
   }()
 
   if state === nothing
-    state = ArpackInJulia.ArpackState{Float64}()
+    state = GenericArpack.ArpackState{Float64}()
   end 
   while ido[] != 99
-    info = ArpackInJulia.dsaitr!(
+    info = GenericArpack.dsaitr!(
       ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd, state; 
       stats, debug, idonow)
 
@@ -105,8 +105,8 @@ end
 
     M = Diagonal(1.0:n)
 
-    debug = ArpackInJulia.ArpackDebug(logfile=IOBuffer())
-    ArpackInJulia.set_debug_high!(debug)
+    debug = GenericArpack.ArpackDebug(logfile=IOBuffer())
+    GenericArpack.set_debug_high!(debug)
     stats = ArpackStats()
     _run_saitr_sequence!(M; idostart=0,
       n, k, np, mode, resid, rnorm, V, H, ldv, ldh, stats, debug, bmat
@@ -197,7 +197,7 @@ end
 
     M = Diagonal(1.0:n)
 
-    debug = ArpackInJulia.ArpackDebug(logfile=IOBuffer())
+    debug = GenericArpack.ArpackDebug(logfile=IOBuffer())
     stats = ArpackStats()
     _run_saitr_sequence!(M; idostart=0,
       n, k, np, mode, resid, rnorm, V, H, ldv, ldh, stats, bmat
@@ -232,7 +232,7 @@ end
     M = Diagonal(1.0:n)
     B = 1.0*I
 
-    debug = ArpackInJulia.ArpackDebug(logfile=IOBuffer())
+    debug = GenericArpack.ArpackDebug(logfile=IOBuffer())
     stats = ArpackStats()
     _run_saitr_sequence!(M; B, idostart=0,
       n, k, np, mode, resid, rnorm, V, H, ldv, ldh, stats, debug, bmat
@@ -271,9 +271,9 @@ end
 
     rnorm = Ref{Float64}(sqrt(abs(resid'*B*resid)))
 
-    #debug = ArpackInJulia.ArpackDebug(logfile=IOBuffer())
-    debug = ArpackInJulia.ArpackDebug()
-    #ArpackInJulia.set_debug_high!(debug)
+    #debug = GenericArpack.ArpackDebug(logfile=IOBuffer())
+    debug = GenericArpack.ArpackDebug()
+    #GenericArpack.set_debug_high!(debug)
     stats = ArpackStats()
     _run_saitr_sequence!(A; B, idostart=0,
       n, k, np, mode, resid, rnorm, V, H, ldv, ldh, stats, debug, bmat
@@ -313,11 +313,11 @@ end
       ipntr = zeros(Int,3)
       workd = zeros(3n)
 
-      state = ArpackInJulia.ArpackState{Float64}()
+      state = GenericArpack.ArpackState{Float64}()
 
       resid0 = copy(resid)
 
-      info = ArpackInJulia.dsaitr!(
+      info = GenericArpack.dsaitr!(
         ido, Val(bmat), n, k, np, mode, resid, rnorm, 
         V, ldv, H, ldh, ipntr, workd,
         state 
@@ -346,7 +346,7 @@ end
     ldh = n 
 
     M = Diagonal(1.0:n)
-    idonow = ArpackInJulia.ArpackSimpleOp(M)
+    idonow = GenericArpack.ArpackSimpleOp(M)
     stats = ArpackStats()
     hist = _run_saitr_sequence!(M; idostart=0,
       n, k, np, mode, resid, rnorm, V, H, ldv, ldh, stats, bmat, idonow

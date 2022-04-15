@@ -5,7 +5,7 @@ Goal: Compare our _dnrm2_unroll_ext to _drnm2 in OpenBLAS
 #=
 # Codes for standalone testing... 
 using Test
-using ArpackInJulia
+using GenericArpack
 
 """ Return the number of floating point values between two values, including
 one of the endpoints. """
@@ -32,7 +32,7 @@ begin
   Random.seed!(1)
   vals = exp.(exp.(randn(2)))
   n1 = _dnrm2_blas(vals)
-  n2 = ArpackInJulia._dnrm2_unroll_ext(vals)
+  n2 = GenericArpack._dnrm2_unroll_ext(vals)
   @show vals
   @show n1, n2, floatsbetween(n1, n2)
 end
@@ -62,7 +62,7 @@ if Sys.ARCH==:x86_64 || Sys.ARCH==:x86
         vals = exp.(exp.(randn(rng, sz))) # very wide dynamic range... 
         nrand += sz + 1
         n1 = _dnrm2_blas(vals)
-        n2 = ArpackInJulia._dnrm2_unroll_ext(vals)
+        n2 = GenericArpack._dnrm2_unroll_ext(vals)
         ndiff = abs(floatsbetween(n1,n2))
         nfloatsoff += ndiff 
         if !isfinite(n2)
@@ -76,7 +76,7 @@ if Sys.ARCH==:x86_64 || Sys.ARCH==:x86
 
         vals2 = vals ./ maximum(vals)
         n3 = _dnrm2_blas(vals2)
-        n4 = ArpackInJulia._dnrm2_unroll_ext(vals2)
+        n4 = GenericArpack._dnrm2_unroll_ext(vals2)
         ndiff = abs(floatsbetween(n3,n4))
         nfloatsoff += ndiff 
         @test abs(floatsbetween(n3,n4)) <= maxdiff 

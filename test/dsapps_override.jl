@@ -1,7 +1,7 @@
 module CheckDsappsWithArpackjll
   using Test
-  using ArpackInJulia
-  import ArpackInJulia: AitrState, Getv0State, Saup2State, AbstractArpackState
+  using GenericArpack
+  import GenericArpack: AitrState, Getv0State, Saup2State, AbstractArpackState
   using LinearAlgebra
 
   # this 
@@ -15,7 +15,7 @@ module CheckDsappsWithArpackjll
     aup2_rnorm = Ref{T}(zero(T))
   end 
 
-  function ArpackInJulia.dsapps!(
+  function GenericArpack.dsapps!(
     n::Int,
     kev::Int,
     np::Int,
@@ -35,7 +35,7 @@ module CheckDsappsWithArpackjll
   ) where {T, BMAT}
     @debug "In override dsapps"
     # these codes won't work with idonow. 
-    normalstate = ArpackInJulia.ArpackState{T}()
+    normalstate = GenericArpack.ArpackState{T}()
 
     arshift = copy(shift)
     arV = copy(V)
@@ -48,7 +48,7 @@ module CheckDsappsWithArpackjll
     arrval = Main.arpack_dsapps!(n, kev, np, arshift, arV, ldv, arH, ldh, arresid, arQ, ldq, arworkd)
 
     # run ours
-    rval = ArpackInJulia.dsapps!(n, kev, np, shift, V, ldv, H, ldh, resid, Q, ldq, workd, normalstate; stats, debug)
+    rval = GenericArpack.dsapps!(n, kev, np, shift, V, ldv, H, ldh, resid, Q, ldq, workd, normalstate; stats, debug)
 
     @test arrval == rval
     @test arshift == shift 
@@ -102,7 +102,7 @@ function mysimpleeigvals_check_dsapps(op::ArpackOp, nev::Int = 6)
   state = CheckDsappsWithArpackjll.CheckDsappsState{Float64}()
   stats = ArpackStats()
   debug = ArpackDebug()
-  #debug = ArpackInJulia.set_debug_high!(ArpackDebug())
+  #debug = GenericArpack.set_debug_high!(ArpackDebug())
   while ido[] != 99
     # make a copy of state for arpack
     arido = Ref(ido[])
@@ -112,7 +112,7 @@ function mysimpleeigvals_check_dsapps(op::ArpackOp, nev::Int = 6)
     arresid = copy(resid)
     arworkd = copy(workd)
     arworkl = copy(workl)
-    ierr, state = ArpackInJulia.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+    ierr, state = GenericArpack.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
       ipntr, workd, workl, lworkl, info_initv;
       state, stats, debug 
     )
@@ -137,7 +137,7 @@ function mysimpleeigvals_check_dsapps(op::ArpackOp, nev::Int = 6)
     @test workd == arworkd 
 
     if ido[] == 1 || ido[] == -1
-      ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+      GenericArpack._i_do_now_opx_1!(op, ipntr, workd, n)
     elseif ido[] == 99
       break
     else
@@ -146,4 +146,4 @@ function mysimpleeigvals_check_dsapps(op::ArpackOp, nev::Int = 6)
   end
 end
 
-mysimpleeigvals_check_dsapps(ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:10)))
+mysimpleeigvals_check_dsapps(GenericArpack.ArpackSimpleOp(Diagonal(1.0:10)))

@@ -34,9 +34,9 @@ function _check_dgetv0_sequence!(M;
   }()
 
   # run the sequence
-  state = ArpackInJulia.ArpackState{Float64}()
+  state = GenericArpack.ArpackState{Float64}()
   while ido[] != 99
-    ierr = ArpackInJulia.dgetv0!(
+    ierr = GenericArpack.dgetv0!(
       ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd,
       state)
     
@@ -83,8 +83,8 @@ end
 
   resid0 = copy(resid)
 
-  state = ArpackInJulia.ArpackState{Float64}()
-  ierr = ArpackInJulia.dgetv0!(
+  state = GenericArpack.ArpackState{Float64}()
+  ierr = GenericArpack.dgetv0!(
     ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd,
     state)
 
@@ -260,11 +260,11 @@ end
   arworkd = zeros(2n)
 
   ierr = -1
-  state = ArpackInJulia.ArpackState{Float64}()
+  state = GenericArpack.ArpackState{Float64}()
   while ido[] != 99
-    #ierr = ArpackInJulia.dgetv0!(
+    #ierr = GenericArpack.dgetv0!(
 
-    ierr = ArpackInJulia.dgetv0!(
+    ierr = GenericArpack.dgetv0!(
       ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state)
     

@@ -14,8 +14,8 @@ _reset_libarpack_dgetv0_iseed if needed...
 =#
 module CheckWithArpackjll
   using Test
-  using ArpackInJulia
-  import ArpackInJulia: AitrState, Getv0State, Saup2State, AbstractArpackState
+  using GenericArpack
+  import GenericArpack: AitrState, Getv0State, Saup2State, AbstractArpackState
   using LinearAlgebra
 
   # this 
@@ -49,7 +49,7 @@ module CheckWithArpackjll
     handle_sgets::Symbol = :pass
   end 
 
-  function ArpackInJulia.dsaup2!(
+  function GenericArpack.dsaup2!(
     ido::Ref{Int}, 
     ::Val{BMAT},
     n::Int,
@@ -83,7 +83,7 @@ module CheckWithArpackjll
     @debug "In override dsaup2"
     # these codes won't work with idonow. 
     @assert idonow === nothing 
-    normalstate = ArpackInJulia.ArpackState{TR}()
+    normalstate = GenericArpack.ArpackState{TR}()
     normalstate.aitr = state.aitr
     normalstate.getv0 = state.getv0
     normalstate.saup2 = state.saup2
@@ -101,7 +101,7 @@ module CheckWithArpackjll
     end
   end
 
-  function ArpackInJulia.dgetv0!(
+  function GenericArpack.dgetv0!(
     ido::Ref{Int}, # input/output
     ::Val{BMAT},
     itry::Int, # input
@@ -115,12 +115,12 @@ module CheckWithArpackjll
     ipntr::AbstractVector{Int}, # output
     workd::AbstractVector{T}, # output
     state::ArpackjllState_CheckSaupd{TR};
-    stats::Union{ArpackInJulia.ArpackStats,Nothing}=nothing,
-    debug::Union{ArpackInJulia.ArpackDebug,Nothing}=nothing,
-    idonow::Union{ArpackInJulia.ArpackOp,Nothing}=nothing
+    stats::Union{GenericArpack.ArpackStats,Nothing}=nothing,
+    debug::Union{GenericArpack.ArpackDebug,Nothing}=nothing,
+    idonow::Union{GenericArpack.ArpackOp,Nothing}=nothing
     ) where {T, TR, BMAT}
 
-    normalstate = ArpackInJulia.ArpackState{TR}()
+    normalstate = GenericArpack.ArpackState{TR}()
     normalstate.getv0 = state.getv0
 
     if state.handle_getv0 == :use
@@ -139,7 +139,7 @@ module CheckWithArpackjll
       aripntr = copy(ipntr)
       arworkd = copy(workd) 
 
-      ierr = ArpackInJulia.dgetv0!(
+      ierr = GenericArpack.dgetv0!(
         ido, Val(BMAT), itry, initv, n, j, V, ldv, resid, rnorm, ipntr, workd,
         normalstate; stats, debug, idonow)
       
@@ -209,7 +209,7 @@ end
     state.handle_saup2 = :use
     stats = ArpackStats()
     while ido[] != 99
-      ierr, state = ArpackInJulia.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+      ierr, state = GenericArpack.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
         ipntr, workd, workl, lworkl, info_initv;
         state, stats
       )
@@ -218,7 +218,7 @@ end
         ipntr=copy(ipntr), workd=copy(workd), workl=copy(workl), ierr))
 
       if ido[] == 1 || ido[] == -1
-        ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+        GenericArpack._i_do_now_opx_1!(op, ipntr, workd, n)
       elseif ido[] == 99
         break
       else
@@ -245,7 +245,7 @@ end
         ipntr=copy(ipntr), workd=copy(workd), workl=copy(workl), ierr))
       
       if ido[] == 1 || ido[] == -1
-        ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+        GenericArpack._i_do_now_opx_1!(op, ipntr, workd, n)
       elseif ido[] == 99
         break
       else
@@ -274,7 +274,7 @@ end
   end 
 
   A = Diagonal(1.0:10)
-  op = ArpackInJulia.ArpackSimpleOp(A)
+  op = GenericArpack.ArpackSimpleOp(A)
   mysimpleeigvals_with_checks(op);
 
 end
@@ -311,10 +311,10 @@ function _run_saitr_sequence!(M;
   }()
 
   if state === nothing
-    state = ArpackInJulia.ArpackState{Float64}()
+    state = GenericArpack.ArpackState{Float64}()
   end 
   while ido[] != 99
-    info = ArpackInJulia.dsaitr!(
+    info = GenericArpack.dsaitr!(
       ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd, state; 
       stats, debug, idonow)
 

@@ -1,6 +1,6 @@
 ## test allocations
 using BenchmarkTools
-using ArpackInJulia
+using GenericArpack
 using LinearAlgebra
 using Arpack_jll
 
@@ -53,7 +53,7 @@ function eigrun(op,ido, ::Val{BMAT}, n, which, nev, tol, resid, ncv, V, ldv, ipa
   nbytes = 0 
 
   if idonow # just try everything in one go! 
-    nbytes += @allocated ArpackInJulia.dsaupd!(ido, Val(BMAT), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+    nbytes += @allocated GenericArpack.dsaupd!(ido, Val(BMAT), n, which, nev, tol, resid, ncv, V, ldv, iparam,
       ipntr, workd, workl, lworkl, info_initv;
       state, idonow = op
     )
@@ -64,13 +64,13 @@ function eigrun(op,ido, ::Val{BMAT}, n, which, nev, tol, resid, ncv, V, ldv, ipa
   end
 
   while ido[] != 99
-    nbytes += @allocated ArpackInJulia.dsaupd!(ido, Val(BMAT), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+    nbytes += @allocated GenericArpack.dsaupd!(ido, Val(BMAT), n, which, nev, tol, resid, ncv, V, ldv, iparam,
       ipntr, workd, workl, lworkl, info_initv;
       state 
     )
     if ido[] == 1 || ido[] == -1
       niter += 1
-      ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+      GenericArpack._i_do_now_opx_1!(op, ipntr, workd, n)
     elseif ido[] == 99
       break
     else
@@ -91,7 +91,7 @@ function eigrun_arpackjll(op, ido, bmat, n, which, nev, tol, resid, ncv, V, ldv,
     info_initv = 0 # important for arpack... 
     if ido[] == 1 || ido[] == -1
       niter += 1
-      ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+      GenericArpack._i_do_now_opx_1!(op, ipntr, workd, n)
     elseif ido[] == 99
       break
     else
@@ -108,7 +108,7 @@ begin
   @btime begin
     eigrun(op, ido, bmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv, state);
   end setup=begin
-    op = ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:10^3))
+    op = GenericArpack.ArpackSimpleOp(Diagonal(1.0:10^3))
     nev = 6
     ido = Ref{Int}(0)
     bmat = Val(:I)
@@ -135,7 +135,7 @@ begin
 
     # Note that we cannot run two sequences at once and check them where we start a whole
     # second arpack call because of the expected Arpack state. 
-    state = ArpackInJulia.ArpackState{Float64}()
+    state = GenericArpack.ArpackState{Float64}()
 
     niter = 0 
   end
@@ -147,7 +147,7 @@ begin
   @btime begin
     eigrun(op, ido, bmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv, state; idonow=true);
   end setup=begin
-    op = ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:10^3))
+    op = GenericArpack.ArpackSimpleOp(Diagonal(1.0:10^3))
     nev = 6
     ido = Ref{Int}(0)
     bmat = Val(:I)
@@ -174,7 +174,7 @@ begin
 
     # Note that we cannot run two sequences at once and check them where we start a whole
     # second arpack call because of the expected Arpack state. 
-    state = ArpackInJulia.ArpackState{Float64}()
+    state = GenericArpack.ArpackState{Float64}()
 
     niter = 0 
   end
@@ -186,7 +186,7 @@ begin
   @btime begin
     eigrun_arpackjll(op, ido, bmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv);
   end setup=begin
-    op = ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:10^3))
+    op = GenericArpack.ArpackSimpleOp(Diagonal(1.0:10^3))
     nev = 6
     ido = Ref{Int}(0)
     bmat = :I
@@ -212,9 +212,9 @@ begin
 end
 
 ## profiling 
-using Revise, ArpackInJulia, LinearAlgebra, BenchmarkTools
+using Revise, GenericArpack, LinearAlgebra, BenchmarkTools
 begin
-  op = ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:10^3))
+  op = GenericArpack.ArpackSimpleOp(Diagonal(1.0:10^3))
   nev = 6
   ido = Ref{Int}(0)
   bmat = Val(:I)
@@ -241,7 +241,7 @@ begin
 
   # Note that we cannot run two sequences at once and check them where we start a whole
   # second arpack call because of the expected Arpack state. 
-  state = ArpackInJulia.ArpackState{Float64}()
+  state = GenericArpack.ArpackState{Float64}()
 
   niter = 0 
   @profview eigrun(op, ido, bmat, n, which, nev, tol, resid, ncv, V, ldv, iparam, ipntr, workd, workl, lworkl, info_initv, state)

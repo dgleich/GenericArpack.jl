@@ -10,7 +10,7 @@
       @test y == A*x
     else
       # generalized op... or shift-invert op
-      #shift = ArpackInJulia.shift(T, op) 
+      #shift = GenericArpack.shift(T, op) 
     end 
     
   end 
@@ -19,10 +19,10 @@
     using Random
     Random.seed!(0)
     A = Diagonal(1.0:10.0)
-    idonow = ArpackInJulia.ArpackSimpleOp(A)
+    idonow = GenericArpack.ArpackSimpleOp(A)
     y = zeros(size(A,1))
     x = randn(size(A,1))
-    ArpackInJulia.opx!(y,idonow,x)
+    GenericArpack.opx!(y,idonow,x)
     @test y == A*x 
   end 
 
@@ -32,11 +32,11 @@
     B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1))*(1/(6*(n+1)))
     #B = SymTridiagonal(4*ones(n),ones(n-1))*(1/(6*(n+1)))
 
-    op1 = ArpackInJulia.ArpackSymmetricGeneralizedOp(A,factorize(B),B)
+    op1 = GenericArpack.ArpackSymmetricGeneralizedOp(A,factorize(B),B)
     # TODO, this would ideally work with factorize
     # factorize(Symmetric(B)) 
     # but that hits issue https://github.com/JuliaLang/julia/issues/44973
-    op2 = ArpackInJulia.ArpackSymmetricGeneralizedOp(Symmetric(A),lu!(copy(B)),Symmetric(B))
+    op2 = GenericArpack.ArpackSymmetricGeneralizedOp(Symmetric(A),lu!(copy(B)),Symmetric(B))
 
     using Random
     Random.seed!(0)
@@ -46,19 +46,19 @@
     x1 = copy(x)
 
     x = copy(x1) 
-    ArpackInJulia.genopx!(y,op1,x)
+    GenericArpack.genopx!(y,op1,x)
     @test y ≈ B\(A*x1)
 
     x = copy(x1)
-    ArpackInJulia.genopx!(y,op2,x)
+    GenericArpack.genopx!(y,op2,x)
     @test y ≈ B\(A*x1)
 
     x = copy(x1)
-    ArpackInJulia.bx!(y,op1,x)
+    GenericArpack.bx!(y,op1,x)
     @test y ≈ B*x1
 
     x = copy(x1)
-    ArpackInJulia.bx!(y,op2,x)
+    GenericArpack.bx!(y,op2,x)
     @test y ≈ B*x1
   end 
 
@@ -67,7 +67,7 @@
     op = ArpackNormalOp(Float64, A)
     B = Matrix(Float64, op) 
     @test size(op) == 8 
-    @test ArpackInJulia._uv_size(op) == (20,8)
+    @test GenericArpack._uv_size(op) == (20,8)
     @test A'*A ≈ B 
   end 
 
@@ -78,7 +78,7 @@
     op = ArpackNormalFunctionOp(myav, myatv, size(A)...)
     B = Matrix(Float64, op) 
     @test size(op) == 8 
-    @test ArpackInJulia._uv_size(op) == (20,8)
+    @test GenericArpack._uv_size(op) == (20,8)
     @test A'*A ≈ B 
   end 
 end 

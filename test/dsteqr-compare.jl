@@ -12,7 +12,7 @@ function compare_dsteqr(A::SymTridiagonal{Float64})
   Z2 = copy(Z1)
   work2 = copy(work1)
 
-  ArpackInJulia.simple_dsteqr!(d1, e1, Z1; work=work1)
+  GenericArpack.simple_dsteqr!(d1, e1, Z1; work=work1)
   _dsteqr_blas!(d2, e2, Z2, work2)
 
   test_diffs("dsteqr: d1,d2", d1, d2)

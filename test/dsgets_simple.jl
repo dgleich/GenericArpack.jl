@@ -7,7 +7,7 @@
     bounds = [0.0, 0.01, 0.00001, 2.0, 0.5]
     pairs = Set(zip(ritz, bounds))
     shifts = [0.0, 0.0, 0.0]
-    @test_nowarn ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
+    @test_nowarn GenericArpack.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
     @test pairs == Set(zip(ritz, bounds)) # should get the same pairs in both cases
 
     kev = 2
@@ -16,7 +16,7 @@
     bounds = [0.0, 0.01, 0.00001, 2.0, 0.5]
     shifts = [0.0, 0.0, 0.0]
     pairs = Set(zip(ritz, bounds))
-    @test_nowarn ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
+    @test_nowarn GenericArpack.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
     @test pairs == Set(zip(ritz, bounds)) # should get the same pairs in both cases
 
     @test union!(Set(shifts[1:np]), ritz[np+1:end]) == Set(ritz)

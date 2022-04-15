@@ -1,4 +1,4 @@
-using ArpackInJulia
+using GenericArpack
 
 function test_diffs(tagstr, a, b)
   @assert(size(a) == size(b)) # otherwise, use view to make them the same...
@@ -67,7 +67,7 @@ function relfloatsbetween(a::T,b::T;ref=eps(T)/2) where {T <: Float64}
   return flipsign*rval
 end
 
-struct ArpackSymProblem{Op <: ArpackInJulia.ArpackOp,T}
+struct ArpackSymProblem{Op <: GenericArpack.ArpackOp,T}
   op::Op
   V::Matrix{T}
   resid::Vector{T}
@@ -127,8 +127,8 @@ function __val2sym(::Val{BMAT}) where BMAT
   return BMAT
 end 
 
-function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op), 
-    mode=ArpackInJulia.arpack_mode(prob.op), 
+function _eigrun!(prob,nev; which=:LM, bmat=GenericArpack.bmat(prob.op), 
+    mode=GenericArpack.arpack_mode(prob.op), 
     iterfunc=nothing, state=nothing, ncv=size(prob.V,2), tol=0, initv=nothing,
     stats=nothing, debug=nothing, maxiter=300, idonow::Bool=false, 
     arpackjllfunc = nothing)
@@ -146,7 +146,7 @@ function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op),
   
   
   if state === nothing 
-    state = ArpackInJulia.ArpackState{TF}()
+    state = GenericArpack.ArpackState{TF}()
   end 
   ido = prob.ido
 
@@ -166,7 +166,7 @@ function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op),
 
   if idonow == false 
     op = prob.op
-    aupdfunc = () -> ArpackInJulia.dsaupd!(ido, bmat, n, which, nev, tol, prob.resid, ncv, V, size(V,1), 
+    aupdfunc = () -> GenericArpack.dsaupd!(ido, bmat, n, which, nev, tol, prob.resid, ncv, V, size(V,1), 
         prob.iparam,
         prob.ipntr, prob.workd, prob.workl, lworkl, info_initv;
         state, stats, debug 
@@ -186,22 +186,22 @@ function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op),
       info_initv = 0 
 
       if ido[] == 1 && mode == 1
-        ArpackInJulia._i_do_now_opx_1!(op, prob.ipntr, prob.workd, n)
+        GenericArpack._i_do_now_opx_1!(op, prob.ipntr, prob.workd, n)
       elseif ido[] == 1 && mode == 2
-        ArpackInJulia._i_do_now_opx_mode2_1!(op, prob.ipntr, prob.workd, n)
+        GenericArpack._i_do_now_opx_mode2_1!(op, prob.ipntr, prob.workd, n)
       elseif ido[] == 1 # mode 3, 4, 5
-        ArpackInJulia._i_do_now_opx_shiftinvert_1!(op, prob.ipntr, prob.workd, n)
+        GenericArpack._i_do_now_opx_shiftinvert_1!(op, prob.ipntr, prob.workd, n)
       elseif ido[] == -1 
-        ArpackInJulia._i_do_now_opx_neg1!(op, prob.ipntr, prob.workd, n)
+        GenericArpack._i_do_now_opx_neg1!(op, prob.ipntr, prob.workd, n)
       elseif ido[] == 2
-        ArpackInJulia._i_do_now_bx!(op, prob.ipntr, prob.workd, n)
+        GenericArpack._i_do_now_bx!(op, prob.ipntr, prob.workd, n)
       elseif ido[] == 3
-        ArpackInJulia._i_do_now_shifts!(op, prob.iparam[8], prob.ipntr, prob.workl, n)
+        GenericArpack._i_do_now_shifts!(op, prob.iparam[8], prob.ipntr, prob.workl, n)
       end 
     end
     return niter, ierr  
   else
-    ierr = ArpackInJulia.dsaupd!(ido, bmat, n, which, nev, tol, prob.resid, ncv, V, size(V,1), 
+    ierr = GenericArpack.dsaupd!(ido, bmat, n, which, nev, tol, prob.resid, ncv, V, size(V,1), 
         prob.iparam,
         prob.ipntr, prob.workd, prob.workl, lworkl, info_initv;
         state, stats, debug, idonow= prob.op 
@@ -213,7 +213,7 @@ function _eigrun!(prob,nev; which=:LM, bmat=ArpackInJulia.bmat(prob.op),
   end 
 end 
 
-function _eigenvecs(prob,nev;which=:LM, bmat=ArpackInJulia.bmat(prob.op), 
+function _eigenvecs(prob,nev;which=:LM, bmat=GenericArpack.bmat(prob.op), 
   iterfunc=nothing, state=nothing, ncv=size(prob.V,2), tol=0, 
   #stats=nothing, 
   debug=nothing)
@@ -230,7 +230,7 @@ function _eigenvecs(prob,nev;which=:LM, bmat=ArpackInJulia.bmat(prob.op),
   rvec = true
   sigma = shift(eltype(prob.V), prob.op)
 
-  ierr = ArpackInJulia.dseupd!(rvec, select, d, Z, sigma, 
+  ierr = GenericArpack.dseupd!(rvec, select, d, Z, sigma, 
     bmat, n, which, nev, tol, prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
     prob.workd, prob.workl; debug)
 
@@ -244,7 +244,7 @@ end
 function check_svd(A, U, s, V; tol=2)
   @test U'*U ≈ I 
   @test V'*V ≈ I 
-  r = ArpackInJulia.svd_residuals(A, U, s, V)
+  r = GenericArpack.svd_residuals(A, U, s, V)
   if tol <= 0
     @test_broken maximum(r) <= eps(real(eltype(U)))*abs(tol)
   else 

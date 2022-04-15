@@ -6,7 +6,7 @@
     tau = zeros(minimum(size(A)))
     work = zeros(size(A,2))
     cA = copy(A)
-    ArpackInJulia._dgeqr2!(cA, tau, work)
+    GenericArpack._dgeqr2!(cA, tau, work)
     return cA, tau
   end 
 
@@ -15,7 +15,7 @@
     B, tauB = _dgeqr2_blas!(copy(A))
     tau = zeros(minimum(size(A)))
     work = zeros(size(A,2))
-    ArpackInJulia._dgeqr2!(A, tau, work)
+    GenericArpack._dgeqr2!(A, tau, work)
 
     @test A == B
     @test tau == tauB 
@@ -56,10 +56,10 @@
 
 
       work = zeros(mn)
-      Q1j = ArpackInJulia.dorm2r!(Val(:L), Val(:N), m, n, length(tau1), QH1, tau1, Matrix(1.0I, m, n), work)
-      Q2j = ArpackInJulia.dorm2r!(Val(:R), Val(:N), m, m, length(tau1), QH1, tau1, Matrix(1.0I, m, m), work)
-      Q3j = ArpackInJulia.dorm2r!(Val(:L), Val(:T), n, n, length(tau1), QH1, tau1, Matrix(1.0I, n, n), work)
-      Q4j = ArpackInJulia.dorm2r!(Val(:R), Val(:T), m, m, length(tau1), QH1, tau1, Matrix(1.0I, m, m), work)
+      Q1j = GenericArpack.dorm2r!(Val(:L), Val(:N), m, n, length(tau1), QH1, tau1, Matrix(1.0I, m, n), work)
+      Q2j = GenericArpack.dorm2r!(Val(:R), Val(:N), m, m, length(tau1), QH1, tau1, Matrix(1.0I, m, m), work)
+      Q3j = GenericArpack.dorm2r!(Val(:L), Val(:T), n, n, length(tau1), QH1, tau1, Matrix(1.0I, n, n), work)
+      Q4j = GenericArpack.dorm2r!(Val(:R), Val(:T), m, m, length(tau1), QH1, tau1, Matrix(1.0I, m, m), work)
 
       @test Q1b == Q1j
       @test Q2b == Q2j
@@ -103,7 +103,7 @@
     tau2 = copy(tau)
     work2 = copy(work)
 
-    ArpackInJulia._dgeqr2!(Q, tau, work)
+    GenericArpack._dgeqr2!(Q, tau, work)
     _dgeqr2_blas!(Q1, tau1, work1)
 
     test_diffs("Q, Q1", Q, Q1)
@@ -113,7 +113,7 @@
     @test tau == tau1
     @test work == work1 
 
-    ArpackInJulia._dgeqr2!(Q2, tau2, work2)
+    GenericArpack._dgeqr2!(Q2, tau2, work2)
 
     test_diffs("Q1, Q2", Q1, Q2)
     test_diffs("tau1, tau2", tau1, tau2)
@@ -135,13 +135,13 @@
     longwork1 = copy(longwork)
     longwork2 = copy(longwork)
   
-    ArpackInJulia.dorm2r!(Val(:R), Val(:N), longn, ncv, nconv, 
+    GenericArpack.dorm2r!(Val(:R), Val(:N), longn, ncv, nconv, 
       Q, tau, @view(V[1:longn, 1:ncv]), @view(longwork[1:longn]))
 
     _dorm2r_blas!('R', 'N', longn, ncv, nconv, Q, tau, @view(V1[1:longn, 1:ncv]), 
       @view(longwork1[1:longn]))
 
-    ArpackInJulia.dorm2r!(Val(:R), Val(:N), longn, ncv, nconv, 
+    GenericArpack.dorm2r!(Val(:R), Val(:N), longn, ncv, nconv, 
       copy(Q), copy(tau), V2, longwork2)
 
     test_diffs("V, V1", V, V1)
@@ -158,7 +158,7 @@
       work2 = zeros(n) 
       Qinfo, tau = _simple_dgeqr2(A)
       Q2 = copy(Qinfo) # copy for blas
-      Q = ArpackInJulia.dorg2r!(Qinfo, tau, work)
+      Q = GenericArpack.dorg2r!(Qinfo, tau, work)
       Q2 = _dorg2r_blas!(m, n, length(tau), Q2, stride(Q2,2), tau, work2)
       @test Q == Q2
       @test work == work2 

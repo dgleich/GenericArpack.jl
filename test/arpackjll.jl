@@ -20,7 +20,7 @@ function _reset_libarpack_dgetv0_iseed()
   else
     errmsg = """Unknown libarpack sha $(bytes2hex(sha)) for $(Arpack_jll.libarpack_path)
 
-    Please post a new issue on the github page for ArpackInJulia."""
+    Please post a new issue on the github page for GenericArpack."""
     @error(errmsg)
   end
   libar = Base.Libc.dlopen(Arpack_jll.libarpack_path)

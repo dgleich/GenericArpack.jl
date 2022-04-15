@@ -1,6 +1,6 @@
 using LinearAlgebra
 @testset "dsaupd with idonow for simple" begin 
-  op = ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:30))
+  op = GenericArpack.ArpackSimpleOp(Diagonal(1.0:30))
   prob1 = _allocate_symproblem(op, 12)
   prob2 = deepcopy(prob1)
 
@@ -24,12 +24,12 @@ end
   prob1 = _allocate_symproblem(op, 10)
   prob2 = _allocate_symproblem(op, 10)
 
-  stats1 = ArpackInJulia.ArpackStats()
-  stats2 = ArpackInJulia.ArpackStats()
-  debug = ArpackInJulia.ArpackDebug()
+  stats1 = GenericArpack.ArpackStats()
+  stats2 = GenericArpack.ArpackStats()
+  debug = GenericArpack.ArpackDebug()
   #debug.maupd = 1
   #debug.maup2 = 1
-  #ArpackInJulia.set_debug_high!(debug)
+  #GenericArpack.set_debug_high!(debug)
   
   niter1, ierr1 = _eigrun!(prob1, nev; mode=2, bmat=Val(:G), stats=stats1)
   niter2, ierr2 = _eigrun!(prob2, nev; mode=2, bmat=Val(:G), idonow=true, stats=stats2)
@@ -55,12 +55,12 @@ end
   prob1 = _allocate_symproblem(op, 10)
   prob2 = _allocate_symproblem(op, 10)
 
-  stats1 = ArpackInJulia.ArpackStats()
-  stats2 = ArpackInJulia.ArpackStats()
-  debug = ArpackInJulia.ArpackDebug()
+  stats1 = GenericArpack.ArpackStats()
+  stats2 = GenericArpack.ArpackStats()
+  debug = GenericArpack.ArpackDebug()
   #debug.maupd = 1
   #debug.maup2 = 1
-  #ArpackInJulia.set_debug_high!(debug)
+  #GenericArpack.set_debug_high!(debug)
   
   niter1, ierr1 = _eigrun!(prob1, nev; mode=2, bmat=Val(:G), stats=stats1, which=:SA, maxiter=400)
   niter2, ierr2 = _eigrun!(prob2, nev; mode=2, bmat=Val(:G), idonow=true, stats=stats2, which=:SA, maxiter=400)
@@ -86,12 +86,12 @@ end
   prob1 = _allocate_symproblem(op, 10)
   prob2 = _allocate_symproblem(op, 10)
 
-  stats1 = ArpackInJulia.ArpackStats()
-  stats2 = ArpackInJulia.ArpackStats()
-  debug = ArpackInJulia.ArpackDebug()
+  stats1 = GenericArpack.ArpackStats()
+  stats2 = GenericArpack.ArpackStats()
+  debug = GenericArpack.ArpackDebug()
   #debug.maupd = 1
   #debug.maup2 = 1
-  #ArpackInJulia.set_debug_high!(debug)
+  #GenericArpack.set_debug_high!(debug)
   
   niter1, ierr1 = _eigrun!(prob1, nev; mode=2, bmat=Val(:G), stats=stats1, which=:SA)
   niter2, ierr2 = _eigrun!(prob2, nev; mode=2, bmat=Val(:G), idonow=true, stats=stats2, which=:SA)
@@ -121,12 +121,12 @@ end
   prob1 = _allocate_symproblem(Float32, Float32, op, 10)
   prob2 = _allocate_symproblem(Float32, Float32, op, 10)
 
-  stats1 = ArpackInJulia.ArpackStats()
-  stats2 = ArpackInJulia.ArpackStats()
-  debug = ArpackInJulia.ArpackDebug()
+  stats1 = GenericArpack.ArpackStats()
+  stats2 = GenericArpack.ArpackStats()
+  debug = GenericArpack.ArpackDebug()
   #debug.maupd = 1
   #debug.maup2 = 1
-  #ArpackInJulia.set_debug_high!(debug)
+  #GenericArpack.set_debug_high!(debug)
   
   niter1, ierr1 = _eigrun!(prob1, nev; mode=2, bmat=Val(:G), stats=stats1, which=:SA, maxiter=400)
   niter2, ierr2 = _eigrun!(prob2, nev; mode=2, bmat=Val(:G), idonow=true, stats=stats2, which=:SA, maxiter=400)

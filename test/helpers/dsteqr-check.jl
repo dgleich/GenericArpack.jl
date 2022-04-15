@@ -1,4 +1,4 @@
-using ArpackInJulia
+using GenericArpack
 using LinearAlgebra
 using Test
 include("../../src/arpack-blas-direct.jl")
@@ -28,7 +28,7 @@ function compare_dsteqr(A::SymTridiagonal{Float64})
   Z2 = copy(Z1)
   work2 = copy(work1)
 
-  ArpackInJulia.simple_dsteqr!(d1, e1, Z1; work=work1)
+  GenericArpack.simple_dsteqr!(d1, e1, Z1; work=work1)
   _dsteqr_blas!(d2, e2, Z2, work2)
   @show d2
 
@@ -49,7 +49,7 @@ compare_dsteqr(SymTridiagonal(collect(range(1.0, 0.1, n)), ones(n-1)))
   n = 12
   A = SymTridiagonal(collect(range(1.0, 0.1, n)), ones(n-1))
   Z = zeros(n,n)
-  lams = ArpackInJulia.flexible_dsteqr!(copy(A), Z)[1]
+  lams = GenericArpack.flexible_dsteqr!(copy(A), Z)[1]
   display(diag(lams)')
   display(Z)
   display(eigen(A).values')
@@ -61,7 +61,7 @@ end
   n = 12
   A = SymTridiagonal(collect(reverse(range(1.0, 0.1, n))), ones(n-1))
   Z = zeros(n,n)
-  lams = ArpackInJulia.flexible_dsteqr!(copy(A), Z)[1]
+  lams = GenericArpack.flexible_dsteqr!(copy(A), Z)[1]
   display(diag(lams)')
   display(Z)
   display(eigen(A).values')

@@ -1,22 +1,22 @@
 ## test allocations
 using BenchmarkTools
-using ArpackInJulia
+using GenericArpack
 using LinearAlgebra
 begin
   @btime begin
-    ierr = ArpackInJulia.dgetv0!(
+    ierr = GenericArpack.dgetv0!(
       ido, Val{bmat}, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state, stats)
     if ido[] == -1
       mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),M,@view(workd[ipntr[1]:ipntr[1]+n-1]))
     end
-    ierr = ArpackInJulia.dgetv0!(
+    ierr = GenericArpack.dgetv0!(
       ido, bmat, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state, stats)
     if ido[]==2
       mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),B,@view(workd[ipntr[1]:ipntr[1]+n-1]))
     end
-    ierr = ArpackInJulia.dgetv0!(
+    ierr = GenericArpack.dgetv0!(
       ido, bmat, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state, stats)
   end setup=begin
@@ -35,23 +35,23 @@ begin
     M = Diagonal(1.0:10.0)
     B = Diagonal(0.1:0.1:1.0)
     stats = ArpackStats()
-    state=ArpackInJulia.ArpackState{Float64}()
+    state=GenericArpack.ArpackState{Float64}()
   end
 end
 
 ##
 using BenchmarkTools
-using ArpackInJulia
+using GenericArpack
 using LinearAlgebra
 begin
   @btime begin
-    ierr = ArpackInJulia.dgetv0!(
+    ierr = GenericArpack.dgetv0!(
       ido, bmat, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state, stats)
     if ido[] == -1
       mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),M,@view(workd[ipntr[1]:ipntr[1]+n-1]))
     end
-    ierr = ArpackInJulia.dgetv0!(
+    ierr = GenericArpack.dgetv0!(
       ido, bmat, itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd;
       state, stats)
   end setup=begin
@@ -70,6 +70,6 @@ begin
     M = Diagonal(1.0:10.0)
     B = Diagonal(0.1:0.1:1.0)
     stats = ArpackStats()
-    state=ArpackInJulia.ArpackState{Float64}()
+    state=GenericArpack.ArpackState{Float64}()
   end
 end

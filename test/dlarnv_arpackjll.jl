@@ -29,7 +29,7 @@
     z1 = zeros(n)
     z2 = zeros(n)
     _dlarnv_check_blas!(2, seed1, length(z1), z1)
-    ArpackInJulia._dlarnv_idist_2!(seed2, length(z2), z2)
+    GenericArpack._dlarnv_idist_2!(seed2, length(z2), z2)
     @test seed1[] == seed2[]
     @test z1 == z2
   end
@@ -40,7 +40,7 @@
     z1 = zeros(Float32, n)
     z2 = zeros(Float32, n)
     _dlarnv_check_blas!(2, seed1, length(z1), z1)
-    ArpackInJulia._dlarnv_idist_2!(seed2, length(z2), z2)
+    GenericArpack._dlarnv_idist_2!(seed2, length(z2), z2)
     @test seed1[] == seed2[]
     @test z1 == z2
   end  
@@ -51,7 +51,7 @@
     z1 = zeros(ComplexF64, n)
     z2 = zeros(ComplexF64, n)
     _dlarnv_check_blas!(2, seed1, length(z1), z1)
-    ArpackInJulia._dlarnv_idist_2!(seed2, length(z2), z2)
+    GenericArpack._dlarnv_idist_2!(seed2, length(z2), z2)
     @test seed1[] == seed2[]
     @test z1 == z2
   end  
@@ -65,7 +65,7 @@
     z1 = zeros(n)
     z2 = zeros(n)
     _dlarnv_check_blas!(2, s1, length(z1), z1)
-    ArpackInJulia._dlarnv_idist_2!(s2, length(z2), z2)
+    GenericArpack._dlarnv_idist_2!(s2, length(z2), z2)
     @test seed1[] == seed2[]
     @test z1 == z2
   end

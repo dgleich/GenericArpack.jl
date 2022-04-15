@@ -14,13 +14,13 @@ In ArparkInJulia environment...
 
 Elsewhere
 
-    using Pkg; Pkg.test("ArpackInJulia"; test_args=["arpackjll"])
+    using Pkg; Pkg.test("GenericArpack"; test_args=["arpackjll"])
 
 =#    
 
-# This needs to be before ArpackInJulia to get debug macros enabled
+# This needs to be before GenericArpack to get debug macros enabled
 if "debug" in ARGS
-  ENV["JULIA_DEBUG"] = "ArpackInJulia,Main"
+  ENV["JULIA_DEBUG"] = "GenericArpack,Main"
 end
 
 if "multithread" in ARGS
@@ -31,13 +31,14 @@ else
 end 
 
 using Test
-using ArpackInJulia
+using GenericArpack
 
 # utility can depend on test... 
 include("utility.jl")
 
 # want to run these first... 
 # Generally, the strategy is to write "method_simple" and "method_arpackjll" here...
+# or use failing.jl to diagnose failing tests...
 if false # switch to true while developing
   @testset "development..." begin
     # include("arpackjll.jl") # uncomment to develop arpackjll tests
@@ -68,15 +69,15 @@ include("macros.jl")
   include("dsgets_simple.jl")
   
   @testset "dsconv" begin
-    @test_throws ArgumentError ArpackInJulia.dsconv(6, zeros(5), ones(5), 1e-8)
-    @test_nowarn ArpackInJulia.dsconv(5, zeros(5), ones(5), 1e-8)
-    @test_nowarn ArpackInJulia.dsconv(5, zeros(5), ones(5), 1e-8;
-                    stats=ArpackInJulia.ArpackStats())
-    stats = ArpackInJulia.ArpackStats()
-    @test ArpackInJulia.dsconv(15, ones(15), zeros(15), 1e-8; stats)==15
+    @test_throws ArgumentError GenericArpack.dsconv(6, zeros(5), ones(5), 1e-8)
+    @test_nowarn GenericArpack.dsconv(5, zeros(5), ones(5), 1e-8)
+    @test_nowarn GenericArpack.dsconv(5, zeros(5), ones(5), 1e-8;
+                    stats=GenericArpack.ArpackStats())
+    stats = GenericArpack.ArpackStats()
+    @test GenericArpack.dsconv(15, ones(15), zeros(15), 1e-8; stats)==15
     #@test stats.tconv > 0  # we did record some time
     t1 = stats.tconv
-    @test ArpackInJulia.dsconv(25, ones(25), zeros(25), 1e-8; stats)==25
+    @test GenericArpack.dsconv(25, ones(25), zeros(25), 1e-8; stats)==25
     #@test stats.tconv > t1  # we did record some more time
 
     # TODO, add more relevant tests here.
@@ -85,13 +86,13 @@ include("macros.jl")
   @testset "dsortr" begin
     x = randn(10)
     # check obvious error
-    @test_throws ArgumentError ArpackInJulia.dsortr(:LA, false, length(x)+1, x, zeros(0))
-    @test_throws ArgumentError ArpackInJulia.dsortr(:LA, true, length(x), x, zeros(0))
-    @test_nowarn ArpackInJulia.dsortr(:LA, false, length(x), x, zeros(0))
+    @test_throws ArgumentError GenericArpack.dsortr(:LA, false, length(x)+1, x, zeros(0))
+    @test_throws ArgumentError GenericArpack.dsortr(:LA, true, length(x), x, zeros(0))
+    @test_nowarn GenericArpack.dsortr(:LA, false, length(x), x, zeros(0))
     @test issorted(x)
 
     x = randn(8)
-    @test_nowarn ArpackInJulia.dsortr(:LA, false, length(x), x, zeros(0))
+    @test_nowarn GenericArpack.dsortr(:LA, false, length(x), x, zeros(0))
     @test issorted(x)
   end
 
@@ -109,9 +110,9 @@ include("macros.jl")
     bounds = randn(n) 
     workl = randn(n,3)
     debug = ArpackDebug(logfile=IOBuffer())
-    ArpackInJulia.set_debug_high!(debug)
+    GenericArpack.set_debug_high!(debug)
     stats = ArpackStats()
-    ArpackInJulia.dseigt!(rnorm, n, H, n, eigval, bounds, workl, nothing; debug, stats)
+    GenericArpack.dseigt!(rnorm, n, H, n, eigval, bounds, workl, nothing; debug, stats)
 
     # check against the analytical results...
     @test maximum(abs.(map(relfloatsbetween, lams, eigval))) .<= 2*n
@@ -119,7 +120,7 @@ include("macros.jl")
   end
 
   @testset "dnrm2" begin 
-    @test ArpackInJulia._dnrm2_unroll_ext(zeros(5)) == 0 # make sure we get zero
+    @test GenericArpack._dnrm2_unroll_ext(zeros(5)) == 0 # make sure we get zero
   end 
 
   include("dgetv0_simple.jl")
@@ -139,7 +140,7 @@ end
 
 ##
 # To run, use
-# using Pkg; Pkg.test("ArpackInJulia"; test_args=["arpackjll"])
+# using Pkg; Pkg.test("GenericArpack"; test_args=["arpackjll"])
 #
 if "arpackjll" in ARGS
   @testset "blas-lapack" begin
@@ -154,18 +155,18 @@ if "arpackjll" in ARGS
 
     @testset "dsconv" begin
       soln = arpack_dsconv(10, ones(10), zeros(10), 1e-8)
-      @test ArpackInJulia.dsconv(10, ones(10), zeros(10), 1e-8)==soln
+      @test GenericArpack.dsconv(10, ones(10), zeros(10), 1e-8)==soln
 
       soln = arpack_dsconv(10, zeros(10), ones(10), 1e-8)
-      @test ArpackInJulia.dsconv(10, zeros(10), ones(10), 1e-8)==soln
+      @test GenericArpack.dsconv(10, zeros(10), ones(10), 1e-8)==soln
     end
 
     @testset "dsortr" begin
       #soln = arpack_dsconv(10, ones(10), zeros(10), 1e-8)
-      #@test ArpackInJulia.dsconv(10, ones(10), zeros(10), 1e-8)==soln
+      #@test GenericArpack.dsconv(10, ones(10), zeros(10), 1e-8)==soln
       x = collect(9.0:-1:1)
       x1 = copy(x); x2 = copy(x)
-      ArpackInJulia.dsortr(:LM, false, length(x), x1, zeros(0))
+      GenericArpack.dsortr(:LM, false, length(x), x1, zeros(0))
       arpack_dsortr(:LM, false, length(x), x2, zeros(0))
       @test x1==x2
 
@@ -173,7 +174,7 @@ if "arpackjll" in ARGS
       y = collect(1.0:9)
       x1 = copy(x); x2 = copy(x)
       y1 = copy(y); y2 = copy(y)
-      ArpackInJulia.dsortr(:LA, true, length(x), x1, y1)
+      GenericArpack.dsortr(:LA, true, length(x), x1, y1)
       arpack_dsortr(:LA, true, length(x), x2, y2)
       @test x1==x2
       @test y1==y2
@@ -199,7 +200,7 @@ if "arpackjll" in ARGS
       bounds2 = copy(bounds1)
       workl2 = copy(workl1)
 
-      info1 = ArpackInJulia.dseigt!(rnorm, n, H, n, eigval1, bounds1, workl1, nothing)
+      info1 = GenericArpack.dseigt!(rnorm, n, H, n, eigval1, bounds1, workl1, nothing)
       info2 = arpack_dseigt!(rnorm, n, H2, n, eigval2, bounds2, workl2)
       @test H == H2
       @test eigval1 == eigval2 
@@ -260,19 +261,19 @@ if "full" in ARGS
       X = all_permutations(collect(range))
       for x in X
         y = copy(x)
-        @test_nowarn ArpackInJulia.dsortr(:LA, false, length(y), y, zeros(0))
+        @test_nowarn GenericArpack.dsortr(:LA, false, length(y), y, zeros(0))
         @test issorted(y)
 
         y = copy(x)
-        @test_nowarn ArpackInJulia.dsortr(:LM, false, length(y), y, zeros(0))
+        @test_nowarn GenericArpack.dsortr(:LM, false, length(y), y, zeros(0))
         @test issorted(y, by=abs)
 
         y = copy(x)
-        @test_nowarn ArpackInJulia.dsortr(:SM, false, length(y), y, zeros(0))
+        @test_nowarn GenericArpack.dsortr(:SM, false, length(y), y, zeros(0))
         @test issorted(y, by=abs, rev=true)
 
         y = copy(x)
-        @test_nowarn ArpackInJulia.dsortr(:SA, false, length(y), y, zeros(0))
+        @test_nowarn GenericArpack.dsortr(:SA, false, length(y), y, zeros(0))
         @test issorted(y, rev=true)
       end
     end

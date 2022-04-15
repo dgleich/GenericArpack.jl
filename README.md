@@ -12,7 +12,7 @@ using DoubleFloats
 A = Symmetric(sprand(Double64, 100000, 100000, 5/100000) |> A -> A + A')
 ... 
 julia> eigs(A, 2; ncv=10)
-ArpackInJulia.ArpackEigen{...}
+GenericArpack.ArpackEigen{...}
 eigenspace: LM
 values:
 2-element Vector{Double64}:

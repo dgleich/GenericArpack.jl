@@ -1,6 +1,6 @@
 using BenchmarkTools
 @btime begin 
-  ArpackInJulia._dnrm2_unroll_ext(x)
+  GenericArpack._dnrm2_unroll_ext(x)
 end setup=begin 
   x = randn(10000)
 end 

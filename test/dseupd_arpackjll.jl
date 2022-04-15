@@ -7,7 +7,7 @@
     which = :LM
     n = 30 
     tol = eps(T)/2
-    op = ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:n))
+    op = GenericArpack.ArpackSimpleOp(Diagonal(1.0:n))
     ncv = 12
     prob = _allocate_symproblem(op, ncv)
     nev = 6
@@ -25,9 +25,9 @@
     arZ = copy(Z)
     arselect = copy(select)
 
-    debug = ArpackInJulia.ArpackDebug()
-    #ArpackInJulia.set_debug_high!(debug)
-    ierr = ArpackInJulia.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
+    debug = GenericArpack.ArpackDebug()
+    #GenericArpack.set_debug_high!(debug)
+    ierr = GenericArpack.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
       tol, 
       prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
       prob.workd, prob.workl; debug
@@ -93,7 +93,7 @@
     which = :LM
     n = 25 
     tol = eps(T)/2
-    op = ArpackInJulia.ArpackSimpleOp(Diagonal(range(-10, 9, length=n)))
+    op = GenericArpack.ArpackSimpleOp(Diagonal(range(-10, 9, length=n)))
     ncv = 12
     prob = _allocate_symproblem(op, ncv)
     nev = 6
@@ -116,9 +116,9 @@
     #H, ritzvec, boundsvec, hdvec, hbvec, workvec, Q, Q1 = parse_workl_dseupd(prob)
     #@show boundsvec
 
-    debug = ArpackInJulia.ArpackDebug()
-    #ArpackInJulia.set_debug_high!(debug)
-    ierr = ArpackInJulia.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
+    debug = GenericArpack.ArpackDebug()
+    #GenericArpack.set_debug_high!(debug)
+    ierr = GenericArpack.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
       tol, 
       prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
       prob.workd, prob.workl; debug
@@ -160,10 +160,10 @@
     A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*((n+1))
     B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1)).*(1/(6*(n+1)))
     F = lu(B)
-    op = ArpackInJulia.ArpackSymmetricGeneralizedOp(A,F,B)
+    op = GenericArpack.ArpackSymmetricGeneralizedOp(A,F,B)
     bmat = :G
     BMAT = Val(bmat)
-    mode = ArpackInJulia.arpack_mode(op)
+    mode = GenericArpack.arpack_mode(op)
     which = :SA
     sigma = 0.0
     tol = eps(Float64)/2
@@ -186,9 +186,9 @@
 
     rvec = false
 
-    debug = ArpackInJulia.ArpackDebug()
-    #ArpackInJulia.set_debug_high!(debug)
-    ierr = ArpackInJulia.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
+    debug = GenericArpack.ArpackDebug()
+    #GenericArpack.set_debug_high!(debug)
+    ierr = GenericArpack.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
       tol, 
       prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
       prob.workd, prob.workl; debug
@@ -217,9 +217,9 @@
     arZ = copy(Z)
     arselect = copy(select)
 
-    debug = ArpackInJulia.ArpackDebug()
-    #ArpackInJulia.set_debug_high!(debug)
-    ierr = ArpackInJulia.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
+    debug = GenericArpack.ArpackDebug()
+    #GenericArpack.set_debug_high!(debug)
+    ierr = GenericArpack.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
       tol, 
       prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
       prob.workd, prob.workl; debug
@@ -250,10 +250,10 @@
     A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*((n+1))
     B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1)).*(1/(6*(n+1)))
     F = lu(B)
-    op = ArpackInJulia.ArpackSymmetricGeneralizedOp(A,F,B)
+    op = GenericArpack.ArpackSymmetricGeneralizedOp(A,F,B)
     bmat = :G
     BMAT = Val(bmat)
-    mode = ArpackInJulia.arpack_mode(op)
+    mode = GenericArpack.arpack_mode(op)
     which = :LM
     sigma = 0.0
     tol = eps(Float64)/2
@@ -276,9 +276,9 @@
 
     rvec = false
 
-    debug = ArpackInJulia.ArpackDebug()
-    #ArpackInJulia.set_debug_high!(debug)
-    ierr = ArpackInJulia.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
+    debug = GenericArpack.ArpackDebug()
+    #GenericArpack.set_debug_high!(debug)
+    ierr = GenericArpack.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
       tol, 
       prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
       prob.workd, prob.workl; debug
@@ -307,9 +307,9 @@
     arZ = copy(Z)
     arselect = copy(select)
 
-    debug = ArpackInJulia.ArpackDebug()
-    #ArpackInJulia.set_debug_high!(debug)
-    ierr = ArpackInJulia.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
+    debug = GenericArpack.ArpackDebug()
+    #GenericArpack.set_debug_high!(debug)
+    ierr = GenericArpack.simple_dseupd!(rvec, select, d, Z, sigma,  BMAT, n, which, nev, 
       tol, 
       prob.resid, ncv, prob.V, prob.iparam, prob.ipntr, 
       prob.workd, prob.workl; debug

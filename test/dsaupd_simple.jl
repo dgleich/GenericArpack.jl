@@ -34,12 +34,12 @@ using LinearAlgebra
 
     # Note that we cannot run two sequences at once and check them where we start a whole
     # second arpack call because of the expected Arpack state. 
-    state = ArpackInJulia.ArpackState{Float64}()
+    state = GenericArpack.ArpackState{Float64}()
     stats = ArpackStats()
-    debug = ArpackInJulia.ArpackDebug(logfile=IOBuffer())
-    ArpackInJulia.set_debug_high!(debug)
+    debug = GenericArpack.ArpackDebug(logfile=IOBuffer())
+    GenericArpack.set_debug_high!(debug)
     while ido[] != 99
-      ierr, state = ArpackInJulia.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+      ierr, state = GenericArpack.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
         ipntr, workd, workl, lworkl, info_initv;
         state, stats, debug 
       )
@@ -50,7 +50,7 @@ using LinearAlgebra
         ipntr=copy(ipntr), workd=copy(workd), workl=copy(workl), ierr))
 
       if ido[] == 1 || ido[] == -1
-        ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+        GenericArpack._i_do_now_opx_1!(op, ipntr, workd, n)
       elseif ido[] == 99
         break
       else
@@ -61,5 +61,5 @@ using LinearAlgebra
     @test sort(eigvals(op.A), by=abs, rev=true)[1:nev] ≈ sort(workl[2*ncv+1:2*ncv+nev], by=abs, rev=true)
   end
 
-  mysimpleeigvals(ArpackInJulia.ArpackSimpleOp(Diagonal(1.0:10)))
+  mysimpleeigvals(GenericArpack.ArpackSimpleOp(Diagonal(1.0:10)))
 end 

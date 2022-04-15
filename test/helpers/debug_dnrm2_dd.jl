@@ -2,7 +2,7 @@
 # There is a case where we get NaN/Inf from our implementation 
 # and not from Blas
 using Test
-using ArpackInJulia
+using GenericArpack
 using LinearAlgebra
 
 """ Return the number of floating point values between two values, including
@@ -42,23 +42,23 @@ function eval_nrm2_dd(a::AbstractVector{T}) where T
   ss3 = (zero(T), zero(T))
   ss4 = (zero(T), zero(T))
   @inbounds while offset+8 <= len
-    ss1 = ArpackInJulia.add_sum_sq(ss1, a[offset]*scale)
-    ss2 = ArpackInJulia.add_sum_sq(ss2, a[offset+1]*scale)
-    ss3 = ArpackInJulia.add_sum_sq(ss3, a[offset+2]*scale)
-    ss4 = ArpackInJulia.add_sum_sq(ss4, a[offset+3]*scale)
-    ss1 = ArpackInJulia.add_sum_sq(ss1, a[offset+4]*scale)
-    ss2 = ArpackInJulia.add_sum_sq(ss2, a[offset+5]*scale)
-    ss3 = ArpackInJulia.add_sum_sq(ss3, a[offset+6]*scale)
-    ss4 = ArpackInJulia.add_sum_sq(ss4, a[offset+7]*scale)
+    ss1 = GenericArpack.add_sum_sq(ss1, a[offset]*scale)
+    ss2 = GenericArpack.add_sum_sq(ss2, a[offset+1]*scale)
+    ss3 = GenericArpack.add_sum_sq(ss3, a[offset+2]*scale)
+    ss4 = GenericArpack.add_sum_sq(ss4, a[offset+3]*scale)
+    ss1 = GenericArpack.add_sum_sq(ss1, a[offset+4]*scale)
+    ss2 = GenericArpack.add_sum_sq(ss2, a[offset+5]*scale)
+    ss3 = GenericArpack.add_sum_sq(ss3, a[offset+6]*scale)
+    ss4 = GenericArpack.add_sum_sq(ss4, a[offset+7]*scale)
     offset += 8 
   end
   #@show ss1, ss2, ss3, ss4
   @inbounds for i=offset:len
-    ss1 = ArpackInJulia.add_sum_sq(ss1, a[i]*scale)
+    ss1 = GenericArpack.add_sum_sq(ss1, a[i]*scale)
   end
-  ss1 = ArpackInJulia.add_dddd_dd(ss1, ss3)
-  ss1 = ArpackInJulia.add_dddd_dd(ss1, ss2) 
-  ss1 = ArpackInJulia.add_dddd_dd(ss1, ss4) 
+  ss1 = GenericArpack.add_dddd_dd(ss1, ss3)
+  ss1 = GenericArpack.add_dddd_dd(ss1, ss2) 
+  ss1 = GenericArpack.add_dddd_dd(ss1, ss4) 
 
   
   
@@ -66,19 +66,19 @@ function eval_nrm2_dd(a::AbstractVector{T}) where T
   # inline sqrt_dd_dd from DoubleFloats.jl
   r = inv(sqrt(ss1[1]))
   h = (ss1[1]*0.5, ss1[2]*0.5)
-  r2 = ArpackInJulia.two_prod(r, r) 
-  hr2 = ArpackInJulia.mul_dddd_dd(h, r2)
-  radj = ArpackInJulia.sub_fpdd_dd(0.5, hr2)
-  radj = ArpackInJulia.mul_dddd_dd(radj, (r, 0.0))
-  r = ArpackInJulia.add_fpdd_dd(r, radj)
+  r2 = GenericArpack.two_prod(r, r) 
+  hr2 = GenericArpack.mul_dddd_dd(h, r2)
+  radj = GenericArpack.sub_fpdd_dd(0.5, hr2)
+  radj = GenericArpack.mul_dddd_dd(radj, (r, 0.0))
+  r = GenericArpack.add_fpdd_dd(r, radj)
 
-  r2 = ArpackInJulia.mul_dddd_dd(r,r)
-  hr2 = ArpackInJulia.mul_dddd_dd(h, r2)
-  radj = ArpackInJulia.sub_fpdd_dd(0.5, hr2)
-  radj = ArpackInJulia.mul_dddd_dd(radj, r)
-  r = ArpackInJulia.add_dddd_dd(r, radj)
+  r2 = GenericArpack.mul_dddd_dd(r,r)
+  hr2 = GenericArpack.mul_dddd_dd(h, r2)
+  radj = GenericArpack.sub_fpdd_dd(0.5, hr2)
+  radj = GenericArpack.mul_dddd_dd(radj, r)
+  r = GenericArpack.add_dddd_dd(r, radj)
 
-  r = ArpackInJulia.mul_dddd_dd(r, ss1)
+  r = GenericArpack.mul_dddd_dd(r, ss1)
   return r[1]/scale 
 end 
 
@@ -89,7 +89,7 @@ end
     0.9038269570258635, -0.25045104802183715, 0.33224741301423677, -0.29023922021963955]
   n1 = _eval_dnrm2_blas(vals)
   n2 = eval_nrm2_dd(vals)
-  n3 = ArpackInJulia._dnrm2_unroll_ext(vals)
+  n3 = GenericArpack._dnrm2_unroll_ext(vals)
   @show norm(vals), n1, n2, n3 
   @test n1 == n2
   @test n1 == n3

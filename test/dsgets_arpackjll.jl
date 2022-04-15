@@ -11,7 +11,7 @@
     abounds = copy(bounds)
     ashifts = copy(shifts)
     arpack_dsgets(ishift, which, kev, np, aritz, abounds, ashifts)
-    ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
+    GenericArpack.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
     @test ritz == aritz
     @test bounds == abounds
     @test shifts == ashifts
@@ -26,7 +26,7 @@
     abounds = copy(bounds)
     ashifts = copy(shifts)
     arpack_dsgets(ishift, which, kev, np, aritz, abounds, ashifts)
-    ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
+    GenericArpack.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
     @test ritz == aritz
     @test bounds == abounds
     @test shifts == ashifts
@@ -41,7 +41,7 @@
     abounds = copy(bounds)
     ashifts = copy(shifts)
     arpack_dsgets(ishift, which, kev, np, aritz, abounds, ashifts)
-    ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
+    GenericArpack.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
     @test ritz == aritz
     @test bounds == abounds
     @test shifts == ashifts
@@ -60,7 +60,7 @@
     abounds = copy(bounds)
     ashifts = copy(shifts)
     arpack_dsgets(ishift, which, kev, np, aritz, abounds, ashifts)
-    ArpackInJulia.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
+    GenericArpack.dsgets(ishift, which, kev, np, ritz, bounds, shifts)
     @test ritz == aritz
     @test bounds == abounds
     @test shifts == ashifts == orig_shifts # should be unchanged for ishift=0

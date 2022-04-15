@@ -11,7 +11,7 @@
 
 # This was causing it to get 
 using Revise
-using ArpackInJulia
+using GenericArpack
 using Test
 using LinearAlgebra
 include("../arpackjll.jl")
@@ -49,7 +49,7 @@ function store_arpackjll_dsaitr_sequence(M;
     mul!(@view(workd[n+1:2n]),M,@view(resid[1:n]))
   end 
 
-  state = ArpackInJulia.ArpackState{Float64}()
+  state = GenericArpack.ArpackState{Float64}()
   while ido[] != 99
     info = arpack_dsaitr!(
       ido, bmat, n, k, np, mode, resid, rnorm, V, ldv, H, ldh, 
@@ -66,7 +66,7 @@ function store_arpackjll_dsaitr_sequence(M;
   return histdata
 end
 
-function store_ArpackInJulia_dsaitr_sequence(M;
+function store_GenericArpack_dsaitr_sequence(M;
   B=1.0LinearAlgebra.I,
   idostart::Int,
   bmat::Symbol,
@@ -92,15 +92,15 @@ function store_ArpackInJulia_dsaitr_sequence(M;
       NamedTuple{(:V,:H,:resid,:workd), Tuple{Matrix{T},Matrix{T},Vector{T},Matrix{T}}}
   }()
 
-  state = ArpackInJulia.ArpackState{Float64}()
-  debug = ArpackInJulia.set_debug_high!(ArpackInJulia.ArpackDebug())
-  #debug = ArpackInJulia.ArpackDebug()
+  state = GenericArpack.ArpackState{Float64}()
+  debug = GenericArpack.set_debug_high!(GenericArpack.ArpackDebug())
+  #debug = GenericArpack.ArpackDebug()
   while ido[] != 99
-    info = ArpackInJulia.dsaitr!(
+    info = GenericArpack.dsaitr!(
       ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, 
       ipntr, workd;
       state, debug)
-    @info "ArpackInJulia: Step $(length(histdata)): ", ido[], info, mode, bmat
+    @info "GenericArpack: Step $(length(histdata)): ", ido[], info, mode, bmat
     if ido[] == -1 || ido[] == 1
       mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),M,@view(workd[ipntr[1]:ipntr[1]+n-1]))
     elseif ido[] == 2
@@ -155,7 +155,7 @@ function run_example_AiJ()
 
   M = Diagonal(1.0:n)
   
-  histinfo = store_ArpackInJulia_dsaitr_sequence(M;  idostart=0, 
+  histinfo = store_GenericArpack_dsaitr_sequence(M;  idostart=0, 
     bmat, n, k, np, mode, resid, rnorm, V, ldv, H, ldh
   )
   return histinfo
@@ -243,7 +243,7 @@ function run_example_generalized()
   M = Diagonal(1.0:n)
   B = Diagonal(range(0.1, 1.0, length=n))
   
-  histinfo2 = store_ArpackInJulia_dsaitr_sequence(M; B, idostart=0, 
+  histinfo2 = store_GenericArpack_dsaitr_sequence(M; B, idostart=0, 
     bmat, n, k, np, mode, resid, rnorm, V, ldv, H, ldh
   )
 
@@ -302,7 +302,7 @@ function study_generalized_example()
 
   rnorm = Ref{Float64}(sqrt(abs(resid'*B*resid)))
 
-  #return store_ArpackInJulia_dsaitr_sequence(M; B, idostart=0, 
+  #return store_GenericArpack_dsaitr_sequence(M; B, idostart=0, 
   return store_arpackjll_dsaitr_sequence(M; B, idostart=0,
     bmat, n, k, np, mode, resid, rnorm, V, ldv, H, ldh
   )

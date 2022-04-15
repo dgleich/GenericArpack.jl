@@ -1,5 +1,5 @@
 using LinearAlgebra
-conceptual_dstqrb! = ArpackInJulia.conceptual_dstqrb!
+conceptual_dstqrb! = GenericArpack.conceptual_dstqrb!
 ## Helper functions
 # all subidagonals are zero.
 function reverse_T(T::SymTridiagonal)

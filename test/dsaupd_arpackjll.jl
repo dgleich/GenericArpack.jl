@@ -39,10 +39,10 @@
       tol = eps(Float64)/2
     end 
 
-    state = ArpackInJulia.ArpackState{Float64}()
-    stats = ArpackInJulia.ArpackStats()
+    state = GenericArpack.ArpackState{Float64}()
+    stats = GenericArpack.ArpackStats()
     iter = 0
-    debug = ArpackInJulia.ArpackDebug()
+    debug = GenericArpack.ArpackDebug()
     #debug.maitr = 1
     while ido[] != 99
       # make a copy of state for arpack
@@ -54,7 +54,7 @@
       arworkd = copy(workd)
       arworkl = copy(workl)
 
-      ierr, state = ArpackInJulia.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+      ierr, state = GenericArpack.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
         ipntr, workd, workl, lworkl, info_initv;
         state, stats, debug
       )
@@ -86,7 +86,7 @@
           ldiv!(invBop, @view(workd[ipntr[2]:ipntr[2]+n-1]))
         else
           #mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),M,@view(workd[ipntr[1]:ipntr[1]+n-1]))
-          ArpackInJulia._i_do_now_opx_1!(ArpackInJulia.ArpackSimpleOp(M), ipntr, workd, n)
+          GenericArpack._i_do_now_opx_1!(GenericArpack.ArpackSimpleOp(M), ipntr, workd, n)
         end 
       elseif ido[] == 2
         mul!(@view(workd[ipntr[2]:ipntr[2]+n-1]),B,@view(workd[ipntr[1]:ipntr[1]+n-1]))

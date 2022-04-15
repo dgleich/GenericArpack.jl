@@ -1,12 +1,12 @@
 ## Here, we are going to try overriding dgetv0 with a state variable.
 using Test
 @testset "Checked state" begin 
-  import ArpackInJulia
+  import GenericArpack
 
-  Base.@kwdef mutable struct Override_dgetv0_ArpackState{T} <: ArpackInJulia.AbstractArpackState{T}
-    aitr::ArpackInJulia.AitrState{T} = ArpackInJulia.AitrState{T}()
-    getv0::ArpackInJulia.Getv0State{T} = ArpackInJulia.Getv0State{T}()
-    saup2::ArpackInJulia.Saup2State{T} = ArpackInJulia.Saup2State{T}()
+  Base.@kwdef mutable struct Override_dgetv0_ArpackState{T} <: GenericArpack.AbstractArpackState{T}
+    aitr::GenericArpack.AitrState{T} = GenericArpack.AitrState{T}()
+    getv0::GenericArpack.Getv0State{T} = GenericArpack.Getv0State{T}()
+    saup2::GenericArpack.Saup2State{T} = GenericArpack.Saup2State{T}()
     aupd_nev0 = Ref{Int}(0)
     aupd_np = Ref{Int}(0)
     aupd_mxiter = Ref{Int}(0)
@@ -17,7 +17,7 @@ using Test
   ntimes = 0 
 
 
-  function ArpackInJulia.dgetv0!(
+  function GenericArpack.dgetv0!(
     ido::Ref{Int}, # input/output
     ::Val{BMAT},
     itry::Int, # input
@@ -31,16 +31,16 @@ using Test
     ipntr::AbstractVector{Int}, # output
     workd::AbstractVector{T}, # output
     state::Override_dgetv0_ArpackState{T};
-    stats::Union{ArpackInJulia.ArpackStats,Nothing}=nothing,
-    debug::Union{ArpackInJulia.ArpackDebug,Nothing}=nothing,
-    idonow::Union{ArpackInJulia.ArpackOp,Nothing}=nothing
+    stats::Union{GenericArpack.ArpackStats,Nothing}=nothing,
+    debug::Union{GenericArpack.ArpackDebug,Nothing}=nothing,
+    idonow::Union{GenericArpack.ArpackOp,Nothing}=nothing
     ) where {T, BMAT}
 
     ntimes::Int += 1 # use global variable 
-    normalstate = ArpackInJulia.ArpackState{T}()
+    normalstate = GenericArpack.ArpackState{T}()
     normalstate.getv0 = state.getv0
 
-    return ArpackInJulia.dgetv0!(ido, Val(BMAT), itry, initv, n, j, V, ldv, resid, rnorm, ipntr, workd,
+    return GenericArpack.dgetv0!(ido, Val(BMAT), itry, initv, n, j, V, ldv, resid, rnorm, ipntr, workd,
       normalstate; debug, idonow, stats
     )
     state.getv0 = normalstate.getv0
@@ -63,8 +63,8 @@ using Test
 
   @test ntimes == 0 
   state=Override_dgetv0_ArpackState{Float64}()
-  #state=ArpackInJulia.ArpackState{Float64}()
-  ierr = ArpackInJulia.dgetv0!(
+  #state=GenericArpack.ArpackState{Float64}()
+  ierr = GenericArpack.dgetv0!(
     ido, Val(bmat), itry, initv, n, j, v, ldv, resid, rnorm, ipntr, workd, state
   )
 

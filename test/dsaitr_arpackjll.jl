@@ -32,9 +32,9 @@
         NamedTuple{(:info,:ido,:rnorm), Tuple{Int64,Int64,T}}
     }()
 
-    state = ArpackInJulia.ArpackState{Float64}()
+    state = GenericArpack.ArpackState{Float64}()
     while ido[] != 99
-      info = ArpackInJulia.dsaitr!(
+      info = GenericArpack.dsaitr!(
         ido, Val(bmat), n, k, np, mode, resid, rnorm, V, ldv, H, ldh, ipntr, workd,
         state)
 

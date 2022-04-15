@@ -20,7 +20,7 @@
 
 # This was causing it to get 
 using Revise
-using ArpackInJulia
+using GenericArpack
 using Test
 using LinearAlgebra
 include("../arpackjll.jl")
@@ -52,7 +52,7 @@ function store_arpackjll_dsaitr_sequence(M;
       NamedTuple{(:V,:H,:resid,:workd), Tuple{Matrix{T},Matrix{T},Vector{T},Vector{T}}}
   }()
 
-  state = ArpackInJulia.ArpackState{Float64}()
+  state = GenericArpack.ArpackState{Float64}()
   while ido[] != 99
     arinfo = arpack_dsaitr!(
       ido, bmat, n, k, np, mode, resid, rnorm, V, ldv, H, ldh, 

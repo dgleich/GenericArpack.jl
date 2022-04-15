@@ -33,12 +33,12 @@
 
     # Note that we cannot run two sequences at once and check them where we start a whole
     # second arpack call because of the expected Arpack state. 
-    state = ArpackInJulia.ArpackState{Float64}()
+    state = GenericArpack.ArpackState{Float64}()
     stats = ArpackStats()
-    debug = ArpackInJulia.ArpackDebug(logfile=IOBuffer())
-    ArpackInJulia.set_debug_high!(debug)
+    debug = GenericArpack.ArpackDebug(logfile=IOBuffer())
+    GenericArpack.set_debug_high!(debug)
     while ido[] != 99
-      ierr, state = ArpackInJulia.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
+      ierr, state = GenericArpack.dsaupd!(ido, Val(bmat), n, which, nev, tol, resid, ncv, V, ldv, iparam,
         ipntr, workd, workl, lworkl, info_initv;
         state, stats, debug 
       )
@@ -49,7 +49,7 @@
         ipntr=copy(ipntr), workd=copy(workd), workl=copy(workl), ierr))
 
       if ido[] == 1 || ido[] == -1
-        ArpackInJulia._i_do_now_opx_1!(op, ipntr, workd, n)
+        GenericArpack._i_do_now_opx_1!(op, ipntr, workd, n)
       elseif ido[] == 99
         break
       else
@@ -64,7 +64,7 @@
     d = zeros(Float64, nev)
     select = zeros(Int, ncv)
 
-    ierr = ArpackInJulia.simple_dseupd!(true, select, d, Z, 0.0, Val(bmat), n, which, nev, tol, resid, ncv, V, iparam, ipntr, workd, workl)
+    ierr = GenericArpack.simple_dseupd!(true, select, d, Z, 0.0, Val(bmat), n, which, nev, tol, resid, ncv, V, iparam, ipntr, workd, workl)
 
     @test sort(eigvals(Matrix(op.A)), by=abs, rev=true)[1:nev] ≈ sort(d, by=abs, rev=true)
     for i in 1:size(Z,2)
@@ -77,5 +77,5 @@
 
   n = 20 
   A = Tridiagonal(1.0im*ones(n-1), collect(range(0.1, 2.0, length=n)) .+ 0.0*im, -1.0im*ones(n-1))
-  mysimpleeigvals(ArpackInJulia.ArpackSimpleOp(A))
+  mysimpleeigvals(GenericArpack.ArpackSimpleOp(A))
 end
