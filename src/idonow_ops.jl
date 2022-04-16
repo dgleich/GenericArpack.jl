@@ -76,10 +76,22 @@ c           ===> OP = A  and  B = I.
 =#
 
 """
-    ArpackSimpleOp
+    ArpackSimpleOp(A)
 
-This corresponds to a simple eigenvalue problem Ax = lambda x.
+This corresponds to a simple eigenvalue problem Ax = lambda x, and builds
+a Julia object that represents the minimal information Arpack needs about
+the matrix to run an eigenvalue problem. 
 
+# Arguments
+- `A`: Anything that implements `Base.size`, `LinearAlgebra.mul!`
+
+# Examples
+```julia-repl
+julia> op = ArpackSimpleOp(A)
+juila> size(op) == size(A,1)
+```
+
+See also [`ArpackSymmetricGeneralizedOp`](@ref), [`ArpackSimpleFunctionOp`](@ref)
 """
 struct ArpackSimpleOp{MatT} <: ArpackOp
   A::MatT
@@ -160,12 +172,24 @@ function eigenvecs_to_singvecs!(U::AbstractMatrix, V::AbstractMatrix,
 end 
 
 """
-    ArpackNormalOp
+    ArpackNormalOp(A)
 
-This driver maniuplates the matrix AA^T or A^T A 
-depending on which is smaller. Note that this
-function allocates memory to compute the operation,
+This provides an [`ArpackSVDOp`](@ref) that is used as a bridge in `svds` 
+to call the symeigs routine. It maniuplates the so-called normal matrix 
+\$AA^H\$ or \$A^H A\$ depending on which 
+is smaller. Note that this function allocates memory to compute the operation,
 so it will not be safe to use with multiple threads. 
+
+# Arguments
+- `A`: Anything that implements `Base.size`, `LinearAlgebra.mul!(y,A,x)`,
+  `LinearAlgebra.adjoint` and `LinearAlgebra.mul!(y,adjoint(A),x)``
+
+# Examples
+```julia-repl
+julia> op = ArpackNormalOp(A)
+```
+
+See also [`ArpackNormalFunctionOp`](@ref)
 """
 abstract type ArpackNormalSVDOp <: ArpackSVDOp end 
 
@@ -289,10 +313,28 @@ function eigenvecs_to_singvecs!(U::AbstractMatrix, V::AbstractMatrix,
 end 
 
 """
-    ArpackSimpleFunctionOp
+    ArpackSimpleFunctionOp(F::Function, n::Integer)
 
 This corresponds to a simple eigenvalue problem Ax = lambda x, but 
 takes a functional operator that we apply.
+
+# Arguments
+- `F::Function` this is a function (y,x) -> mul!(y,A,x), i.e. a function 
+  that writes \$A*x\$ into \$y\$
+- `n::Integer` the dimension of the problem 
+
+# Examples
+```julia-repl
+julia> using GenericArpack, SparseArrays
+julia> function myf(y,x) 
+       fill!(y, 0)
+       y[1] += x[2] + x[100]
+       for i in 2:99
+         y[i] += x[i+1] + x[i-1]
+       end
+       y[100] += x[99] + x[1]
+       end
+julia> op = ArpackSimpleFunctionOp(myf, 100)
 """
 struct ArpackSimpleFunctionOp <: ArpackOp
   F::Function 
@@ -330,7 +372,15 @@ function _autotype_function(T::Type, F::Function, m, n)
   end
 end 
 """
-    ArpackNormalFunctionOp
+    ArpackNormalFunctionOp(ax::Function, atx::Function, m::Integer, n::Integer)
+
+# Arguments
+- `ax` A function to compute (y,x) and write y = A*x into the memory for y
+- `atx` A function to compute (y,x) and write y = A^H*x into the memory for y
+- `m` the number of rows of A
+- `n` the number of rows of A
+
+See also [`ArpackNormalOp`](@ref), [`ArpackSimpleFunctionOp`](@ref)
 """
 struct ArpackNormalFunctionOp{T} <: ArpackNormalSVDOp
   av::Function
@@ -378,12 +428,15 @@ We need three operations: A*x, invB*x, B*x
 B must also be symmetric, pos. def. 
 Note that if B can be factorized efficiently via Cholesky, then there is a better way to proceed. 
 
-Example: 
-    using LinearAlgebra
-    n = 100 
-    A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*(n+1)
-    B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1)).*(1/(6*(n+1)))
-    ArpackSymmetricGeneralizedOp(A, lu!(copy(B)), B)
+# Examples
+```julia-repl
+julia> using GenericArpack, LinearAlgebra
+julia> n = 100 
+julia> A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*(n+1)
+julia> B = Tridiagonal(ones(n-1),4*ones(n),ones(n-1)).*(1/(6*(n+1)))
+julia> op = ArpackSymmetricGeneralizedOp(A, lu!(copy(B)), B)
+
+See also [`ArpackSimpleOp`](@ref)
 """    
 struct ArpackSymmetricGeneralizedOp{MatT, SolveType, BType} <: ArpackOp
   A::MatT
