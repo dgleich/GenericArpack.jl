@@ -1176,7 +1176,8 @@ function simple_dseupd!(
   if (BMAT == :I)
     bnorm2 = rnorm
   elseif  (BMAT == :G)
-    bnorm2 = _dnrm2_unroll_ext(@view(workd[1:n]))
+    #bnorm2 = _dnrm2_unroll_ext(@view(workd[1:n]))
+    bnorm2 = norm2(TR, @view(workd[1:n]))
   end 
 
   if msglvl > 2

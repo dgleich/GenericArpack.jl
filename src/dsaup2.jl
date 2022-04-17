@@ -1410,7 +1410,8 @@ function dsaup2!(
         rnorm[] = dot(@view(resid[1:n]),@view(workd[1:n]))
         rnorm[] = sqrt(abs(rnorm[]))
       elseif BMAT == :I
-        rnorm[] = _dnrm2_unroll_ext(@view(resid[1:n]))
+        #rnorm[] = _dnrm2_unroll_ext(@view(resid[1:n]))
+        rnorm[] = norm2(TR, @view(resid[1:n]))
       end 
       # cnorm = .false. # this is set above
 

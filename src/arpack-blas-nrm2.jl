@@ -328,3 +328,22 @@ function _dnrm2_unroll_ext(a::AbstractVector{Complex{T}}) where {T <: AbstractFl
   return norm(a)
 end 
 
+# New norm2 interface, generic version 
+function norm2(TA::Type, v::AbstractVector) 
+  n = length(v)
+  norm::TA = zero(TA)
+  if n == 1
+    norm = abs(v[1])
+  else
+    scale, ssq = _dlassq(TA, v)
+    norm = scale*sqrt(ssq)
+  end
+  return norm::TA
+end 
+# for complex types... 
+norm2(TA::Type, a::AbstractVector{T}) where {T <: Complex} = norm2(TA, reinterpret(real(T), a))
+norm2(::Type{Float64}, a::AbstractVector{Float64}) = _dnrm2_unroll_ext(a) 
+norm2(::Type{Float64}, a::AbstractVector{Complex{Float64}}) = _dnrm2_unroll_ext(reinterpret(Float64, a)) 
+
+# if they didn't customize accumulation... 
+norm2(a::AbstractVector{T}) where T = norm2(real(T), a)

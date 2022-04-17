@@ -138,7 +138,8 @@ function _dlarfg!(alpha::T, x::AbstractVector{T}) where T
   if length(x) <= 0
     return (alpha, zero(T))
   end
-  xnorm = _dnrm2_unroll_ext(x)
+  #xnorm = _dnrm2_unroll_ext(x)
+  xnorm = norm2(x) 
   tau = zero(T) # 
   beta = alpha
   if xnorm == 0 
@@ -163,7 +164,8 @@ function _dlarfg!(alpha::T, x::AbstractVector{T}) where T
         end
       end
       # new beta is at most 1, at least safmin
-      xnorm = _dnrm2_unroll_ext(x)
+      #xnorm = _dnrm2_unroll_ext(x)
+      xnorm = norm2(x)
       beta = -copysign(_dlapy2_julia(alpha, xnorm), alpha)
     end
     tau = (beta-alpha)/beta

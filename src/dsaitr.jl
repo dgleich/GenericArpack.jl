@@ -1204,7 +1204,8 @@ function dsaitr!(
           wnorm = sqrt(abs(wnorm))
         elseif BMAT == :I
           #wnorm = _dnrm2(@view(resid[1:n])) # TODO, implement _dnrm2
-          wnorm = _dnrm2_unroll_ext(@view(resid[1:n]))
+          #wnorm = _dnrm2_unroll_ext(@view(resid[1:n]))
+          wnorm = norm2(TR, @view(resid[1:n]))
         end
 
         #=
@@ -1239,8 +1240,21 @@ function dsaitr!(
         mul!(@view(resid[1:n]), @view(V[1:n, 1:j]), @view(workd[irj:irj+j-1]), -one(T), one(T))
 
         # c        | Extend H to have j rows and columns. |
-
         H[j,2] = real(workd[irj+j-1])
+        # Draft code to try and get better precision... 
+        #=
+        if sizeof(T) < sizeof(TR) 
+          # compute this with higher-precision
+          if mode != 2
+            H[j,2] = ddot(TR, @view(V[:,j]), @view(workd[ipj:ipj+n-1]))
+          else
+            H[j,2] = ddot(TR, @view(V[:,j]), @view(workd[ivj:ivj+n-1]))
+          end
+          println("H[j,2] = $(H[j,2])  vs.  $(real(workd[irj+j-1]))  diff = $(real(workd[irj+j-1]) - H[j,2]) ")
+        else 
+          H[j,2] = real(workd[irj+j-1])
+        end 
+        =#
 
         if j == 1 || rstart
           H[j,1] = 0
@@ -1286,7 +1300,8 @@ function dsaitr!(
           rnorm[] = sqrt(abs(rnorm[]))
         elseif BMAT == :I
           #wnorm = _dnrm2(@view(resid[1:n])) # TODO, implement _dnrm2
-          rnorm[] = _dnrm2_unroll_ext(@view(resid[1:n]))
+          #rnorm[] = _dnrm2_unroll_ext(@view(resid[1:n]))
+          rnorm[] = norm2(TR, @view(resid[1:n]))
         end
 
         # end of step4 move to step5 if necessary...
@@ -1391,7 +1406,8 @@ function dsaitr!(
           rnorm1 = dot(@view(resid[1:n]), @view(workd[ipj:ipj+n-1]))
           rnorm1 = sqrt(abs(rnorm1))
         elseif BMAT == :I
-          rnorm1 = _dnrm2_unroll_ext(@view(resid[1:n]))
+          # rnorm1 = _dnrm2_unroll_ext(@view(resid[1:n]))
+          rnorm1 = norm2(TR, @view(resid[1:n]))
         end
 
         if msglvl > 0 && iter > 0

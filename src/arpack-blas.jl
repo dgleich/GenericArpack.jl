@@ -75,15 +75,15 @@ function _dscal!(a::T, v) where T
   broadcast!(*, v, v, a)
 end
 ##
-@inline function _dlassq(v::AbstractVector{T}) where T
-  scale::T = zero(T)
-  ssq::T = one(T)
+@inline function _dlassq(TA::Type, v::AbstractVector{T}) where T
+  scale::TA = zero(TA)
+  ssq::TA = one(TA)
   for xi in v
     if !iszero(xi)
-      absxi = abs(xi)
+      absxi = TA(abs(xi))
       if scale < absxi
-        ssq = 1+ssq*(scale/absxi)^2
-        scale = absxi
+        ssq = one(TA)+ssq*(scale/absxi)^2
+        scale = TA(absxi)
       else
         ssq += (absxi/scale)^2
       end
@@ -100,7 +100,7 @@ function _dnrm2(v::AbstractVector{T}) where T
   if n == 1
     norm = abs(v[1])
   else
-    scale, ssq = _dlassq(v)
+    scale, ssq = _dlassq(T, v)
     norm = scale*sqrt(ssq)
   end
   return norm::T
@@ -570,3 +570,12 @@ function _dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector
   end
   iseed[] = tuple(IT1,IT2,IT3,IT4) # update the seed
 end
+
+function ddot(T::Type, a::AbstractVector, b::AbstractVector)
+  rval = zero(T)
+  length(a) == length(b) || throw(ArgumentError("ddot needs both a and b to have the same length"))
+  @simd for i in eachindex(a)
+    rval += T(conj(a[i])*b[i])
+  end 
+  return rval 
+end 
