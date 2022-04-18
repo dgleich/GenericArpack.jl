@@ -10,8 +10,6 @@ makedocs(
   ]
 )
 
-#=
 deploydocs(
   repo   = "github.com/dgleich/GenericArpack.jl.git"
 )
-=#
