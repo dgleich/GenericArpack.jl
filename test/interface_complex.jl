@@ -31,7 +31,7 @@ end
     A = mytestmat(10,8,-3.0im)
     U,s,V = svds(A, 2; which=:BE)
     @test s ≈ [0.9640220546797924, 6.0316491543925785]
-    check_svd(A,U,s,V;tol=-100) # this will get flagged as broken
+    check_svd(A,U,s,V;tol=30) 
   end 
 
   @testset "using ArpackNormalFunctionOp" begin 
@@ -39,6 +39,6 @@ end
     fop = ArpackNormalFunctionOp((y,x) -> mul!(y, A, x), (y,x) -> mul!(y, adjoint(A), x), size(A)...)
     U,s,V = complexsvds(fop, 2; which=:LM)
     @test s ≈ [6.0316491543925785, 1.9374903374733126]
-    check_svd(A,U,s,V;tol=30) # this will get flagged as broken
+    check_svd(A,U,s,V;tol=30) 
   end 
 end 

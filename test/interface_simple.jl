@@ -53,7 +53,7 @@ end
   
   @testset "singular case" begin 
     A = ones(10,4)
-    @test_throws GenericArpack.ArpackException svds(A, 1; which=:SA)
+    @test_throws GenericArpack.ArpackException svds(A, 1; which=:SA, ncv=2)
     
     U,s,V = svds(A, 2; which=:SA, ritzvec=false )
     @test s ≈ [0.0; 0.0] atol=eps(Float64)

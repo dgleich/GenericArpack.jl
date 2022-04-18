@@ -42,7 +42,7 @@ Arguments
 Optional arguments
 ------------------
 - `which`: which part of the spectrum to compute. There are a few choices: 
-    + `:LM` _(the default)_ find the largest magnitude eigensapce 
+    + `:LM` _(the default)_ find the largest magnitude eigenspace 
     + `:SM` find the smallest magnitude eigenspace
     + `:LA` find the largest algebraic value eigenspace 
     + `:SA` find the smallest algebraic value eigenspace     
@@ -161,6 +161,9 @@ hermeigs(op::ArpackOp, k::Integer; kwargs...) = symeigs(ComplexF64, op, k; kwarg
 symeigs(TV::Type, op::ArpackOp, k::Integer; kwargs...) = symeigs(TV, _real_type(TV), op, k; kwargs...)
 hermeigs(TV::Type, op::ArpackOp, k::Integer; kwargs...) = symeigs(TV, _real_type(TV), op, k; kwargs...)
 
+symeigs(TV::Type, TF::Type, A::AbstractMatrix,k::Integer; kwargs...) = symeigs(TV, TF, ArpackSimpleOp(A), k; kwargs...)
+hermeigs(TV::Type, TF::Type, A::AbstractMatrix,k::Integer; kwargs...) = symeigs(TV, TF, ArpackSimpleOp(A), k; kwargs...)
+
 struct ArpackEigen{TL,TV,OpT,StateT,BMAT}
   which::Symbol
   ipntr::Vector{Int}
@@ -207,7 +210,7 @@ function symeigs(::Type{TV}, ::Type{TF}, op::ArpackOp, nev::Integer;
   which::Symbol=:LM, 
   maxiter::Int=max(300, ceil(Int,sqrt(size(op)))),
   bmat=bmat(op),
-  ncv::Int=min(size(op),2nev),
+  ncv::Int=min(size(op),max(2nev,20)),
   mode=arpack_mode(op),
   v0=nothing,
   stats=nothing,
