@@ -1,3 +1,5 @@
+- [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dgleich.github.io/GenericArpack.jl/dev)
+
 GenericArpack.jl
 ===============
 
