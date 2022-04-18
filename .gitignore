@@ -1,2 +1,4 @@
 lcov.info
 .vscode/
+docs/build
+.DS_Store

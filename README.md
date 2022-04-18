@@ -4,14 +4,14 @@ GenericArpack.jl
 This is a pure-Julia translation of the Arpack library. As such, it works
 with generic real-valued types in Julia. It's only dependency is `LinearAlgebra.jl`
 in the standard library and includes self-contained BLAS routines for the generic
-tools it requires. 
+tools it requires. **Currently, only the symmetric Arpack solver is implemented.**
 
 ```
 using GenericArpack
 using DoubleFloats
 A = Symmetric(sprand(Double64, 100000, 100000, 5/100000) |> A -> A + A')
 ... 
-julia> eigs(A, 2; ncv=10)
+julia> eigs(A, 2; ncv=12)
 GenericArpack.ArpackEigen{...}
 eigenspace: LM
 values:
@@ -23,13 +23,13 @@ values:
 
 The library also supports mixed precision, although, this needs to be used carefully. 
 ```
-julia> eigs(Float16, Float64, A, 2; ncv=10) # use Float16 for vectors, Float64 for Arnoldi info, Double64 for A
+julia> eigs(Float16, Float64, A, 2; ncv=12) # use Float16 for vectors, Float64 for Arnoldi info, Double64 for A
 values:
 2-element Vector{Float64}:
  -5.043265045062479
   6.522275837391058
 ```
-The library is better used with use high precision types, like Double64.
+The library is better used with use higher precision types, like Double64, although Float32 work okay. 
 
 Because it was fairly trivial to do in Julia, `GenericArpack.jl` also has a specialized Hermitian eigensolver.
 This has had more limited testing, but should work for many cases. This is useful because it gives a
@@ -39,6 +39,18 @@ See also the packages
 - [Arpack.jl](https://github.com/JuliaLinearAlgebra/Arpack.jl)
 - [KrylovKit.jl](https://github.com/Jutho/KrylovKit.jl)
 - [ArnoldiMethod.jl](https://github.com/haampie/ArnoldiMethod.jl)
+
+Rationale
+=========
+The compiled Arpack library has been wrapped in Julia for a long time. Why do we need this _translation_ 
+of the library into Julia? Here's the rationale: 
+- available with minimal dependencies; no need for a Fortran compiler on a new platform
+- multithread safe (the Fortran Arpack code will segfault if called from multiple threads because
+  it uses static variables that are not allocated to each thread )
+
+Of course, the downside at the moment is that the non-symmetric and non-Hermitian cases aren't yet translated.
+This will require a fair amount of dedicated effort, although everything has been prototyped and there is
+a path do it. 
 
 Key Functionality
 =================
@@ -119,4 +131,4 @@ for different compilers compiling the same code.)
 
 Along the way, it seemed like in many cases it was possible to get
 _bitwise equivalent floating point_ results for Float64 types. So 
-we seek to do that. 
+we seek to do that or understand why it is not possible. 

@@ -28,6 +28,25 @@ ido[] ==  3 --> idonow_shifts -> shifts!(lams, OP))
 
 import Base: Matrix
 
+"""
+    ArpackOp
+
+The general abstract ArpackOp interface.     
+
+See also [`ArpackSimpleOp`](@ref), 
+[`ArpackSymmetricGeneralizedOp`](@ref), 
+[`ArpackSimpleFunctionOp`](@ref)
+"""
+:ArpackOp
+
+"""
+    ArpackSVDSOp
+
+The general abstract ArpackSVDOp interface that bridges
+between eigenvaules and singular values.
+"""
+:ArpackSVDOp    
+
 abstract type ArpackOp end
 abstract type ArpackSVDOp <: ArpackOp end
 
@@ -171,6 +190,9 @@ function eigenvecs_to_singvecs!(U::AbstractMatrix, V::AbstractMatrix,
   normalize!.(eachcol(U))
 end 
 
+
+abstract type ArpackNormalSVDOp <: ArpackSVDOp end 
+
 """
     ArpackNormalOp(A)
 
@@ -191,8 +213,6 @@ julia> op = ArpackNormalOp(A)
 
 See also [`ArpackNormalFunctionOp`](@ref)
 """
-abstract type ArpackNormalSVDOp <: ArpackSVDOp end 
-
 struct ArpackNormalOp{MatT,ET} <: ArpackNormalSVDOp
   A::MatT    
   n::Int
@@ -335,6 +355,7 @@ julia> function myf(y,x)
        y[100] += x[99] + x[1]
        end
 julia> op = ArpackSimpleFunctionOp(myf, 100)
+```
 """
 struct ArpackSimpleFunctionOp <: ArpackOp
   F::Function 
@@ -473,6 +494,8 @@ end
 """
     ArpackShiftInvertOp
 
+!!! warn "Do not use"
+    Do not use this operator yet. It was just some prototype code.    
 """    
 struct ArpackShiftInvertOp{MatT, SolveType, BType, FType} <: ArpackOp
   A::MatT
@@ -495,6 +518,8 @@ function bmat(::ArpackShiftInvertOp{MatT,SolveT,BType,FType}
 end
 
 function shiftinvert_op(A,B,sigma)
+  @error "Do not use this operation, it has not been tested"
+  @warn "Do not use this operation, it has not been tested"
   S = factorize(A-sigma*B)
   return ArpackShiftInvertOp(A, S, B, sigma)
 end 
@@ -510,6 +535,60 @@ function opx!(y, OP::ArpackShiftInvertOp, x)
 end 
 
 function bx!(y, OP::ArpackShiftInvertOp, x)
+  mul!(y, OP.B, x)
+end 
+
+"""
+    ArpackBucklingOp
+
+```    
+c  Mode 4:  K*x = lambda*KG*x, K symmetric positive semi-definite,
+c           KG symmetric indefinite
+c           ===> OP = (inv[K - sigma*KG])*K  and  B = K.
+c           ===> Buckling mode
+```
+
+!!! warn "Do not use"
+    Do not use this operator yet. It was just some prototype code.
+"""    
+struct ArpackBucklingOp{MatT, SolveType, BType, FType} <: ArpackOp
+  A::MatT
+  S::SolveType
+  B::BType
+  sigma::FType
+end 
+Base.size(op::ArpackBucklingOp) = Base.size(op.A, 1)
+is_arpack_mode_valid_for_op(mode::Int, ::ArpackBucklingOp) = mode == 4
+shift(T, op::ArpackBucklingOp) = T(op.sigma) 
+
+arpack_mode(::ArpackBucklingOp) = 4
+function bmat(::ArpackBucklingOp{MatT,SolveT,BType,FType}
+) where {MatT, SolveT, BType, FType}
+  if BType <: UniformScaling
+    return Val(:I)
+  else
+    return Val(:G)
+  end 
+end
+
+function buckling_op(A,B,sigma)
+  @error "Do not use this operation, it has not been tested"
+  @warn "Do not use this operation, it has not been tested"
+  S = factorize(A-sigma*B)
+  return ArpackBucklingOp(A, S, A, sigma)
+end 
+
+function opx!(y, OP::ArpackBucklingOp, x, Bx)
+  copyto!(y, Bx)
+  ldiv!(OP.S, y)   # overwrite y with inv(A-sigma*B)*y 
+end 
+
+function opx!(y, OP::ArpackBucklingOp, x)
+  mul!(y, OP.B, x) # compute B*x
+  ldiv!(OP.S, y)   # overwrite y with inv(A-sigma*B)*y 
+end 
+
+function bx!(y, OP::ArpackBucklingOp, x)
   mul!(y, OP.B, x)
 end 
 

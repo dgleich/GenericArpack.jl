@@ -34,7 +34,7 @@ Arguments
 - `A` a square matrix that _should_ be symmetric (but we won't check)
 - `B` or `Symmetric(B)` or `Hermitian(B)` like A, but for a generalized eigenvalue problem. 
   The matrix B will be factorized via factorize(B), if you need more control, use
-  [`ArpackSymmetricGeneralizedOp!`](@ref), or see one of the more advanced
+  [`ArpackSymmetricGeneralizedOp`](@ref), or see one of the more advanced
   generalized interfaces below. 
 - `op::ArpackOp` An Arpack instance that holds the minimal information we need to run Arpack
 
@@ -197,7 +197,7 @@ Base.propertynames(F::ArpackEigen, private::Bool=false) =
 
 function show(io::IO, mime::MIME{Symbol("text/plain")}, F::ArpackEigen)
   summary(io, F); println(io)
-  println("eigenspace: ", F.which, )
+  println(io, "eigenspace: ", F.which, )
   println(io, "values:")
   show(io, mime, F.values)
   if size(F.vectors,2) > 0
@@ -282,6 +282,18 @@ function symeigs(::Type{TV}, ::Type{TF}, op::ArpackOp, nev::Integer;
 
   return ArpackEigen(which, ipntr, iparam, V, workd, workl, resid, values, vectors, bmat, op, state)
 end
+
+"""
+    svds(A, k; kwargs...)
+    svds(T::Type, A, k; kwargs...)
+    svds(TV::Type, TF::Type, A, k; kwargs...)
+    svds(TV::Type, TF::Type, op, k; kwargs...)
+    complexsvds(op, k; kwargs...)
+
+TODO: Write documentation
+See examples... 
+"""    
+:svds
 
 svds(A::AbstractMatrix{T}, k::Integer; kwargs...) where T = svds(_float_type(T), A, k; kwargs...)
 svds(T::Type, A::AbstractMatrix, k::Integer; kwargs...) = svds(T, ArpackNormalOp(T,A), k; kwargs...)

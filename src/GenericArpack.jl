@@ -6,7 +6,10 @@ include("macros.jl")
 export ArpackDebug, ArpackStats, ArpackTime, ArpackState, set_debug_high!
 
 include("idonow_ops.jl")
-export ArpackOp, ArpackSimpleOp, ArpackSimpleFunctionOp, ArpackSymmetricGeneralizedOp
+export ArpackOp, ArpackSVDOp
+export ArpackSimpleOp, ArpackSimpleFunctionOp
+export ArpackSymmetricGeneralizedOp, ArpackSymmetricGeneralizedFunctionOp
+export ArpackShiftInvertOp, ArpackBucklingOp
 export ArpackNormalOp, ArpackNormalFunctionOp
 
 include("output.jl")
