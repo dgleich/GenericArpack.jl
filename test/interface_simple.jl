@@ -51,7 +51,13 @@ end
   
   @testset "singular case" begin 
     A = ones(10,4)
-    @test_throws GenericArpack.ArpackException svds(A, 1; which=:SA, ncv=2)
+    # this one is tricky... 
+    if Sys.CPU_NAME == "ivybridge"
+      info=svds(A, 1; which=:SA, ncv=2)
+      @test maximum(GenericArpack.svd_residuals(A, info...)) <= GenericArpack._eps23(Float64)
+    else 
+      @test_throws GenericArpack.ArpackException svds(A, 1; which=:SA, ncv=2)
+    end 
     
     U,s,V = svds(A, 2; which=:SA, ritzvec=false )
     @test s ≈ [0.0; 0.0] atol=eps(Float64)
@@ -60,9 +66,9 @@ end
   end 
 
   @testset "mytestmat(10,8)" begin 
-    A = mytestmat(10,8)
+    A = mytestmat(10,8)    
     U, s, V = svds(A, 2; which=:BE)
-    check_svd(A, U, s, V; tol=25) # not quite as accurate on this one...
+    check_svd(A, U, s, V; tol=(25 + 25*Sys.CPU_NAME=="ivybridge")) # not quite as accurate on this one...
     @test s ≈ [0.20022491452411176, 2.424417285164735]
   end 
 end
