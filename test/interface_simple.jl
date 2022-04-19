@@ -74,7 +74,7 @@ end
     A[n-4:n,n-4:n] .= 0 
     # this one is tricky... 
     @test_throws GenericArpack.ArpackException svds(A, 1; which=:SA, ncv=2)
-    info = GenericArpack.ArpackException svds(A, 1; which=:SA, ncv=20)
+    info = svds(A, 1; which=:SA, ncv=20)
     
     maximum(GenericArpack.svd_residuals(A, info...)) <= n*sqrt(eps(Float64))
     
