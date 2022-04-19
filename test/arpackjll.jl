@@ -17,6 +17,54 @@ function _reset_libarpack_dgetv0_iseed()
   elseif bytes2hex(sha) == "88d0208af594702e43049e01e813d6ca5e15cc4974a9db782fbf74fe7cb93613"
     dgetv0offset = 0x000000000001cb60
     iseedoffsets = (0x00000000000538c0, 0x0000000000053d20, 0x0000000000053680, 0x0000000000054120)
+  elseif bytes2hex(sha) == "8b5b5e500dc839928a5ce4f124a84afa8331d99b22775211ec098c5bf4280c6f"
+    # this is from windows 
+    # Quick study of windows format to get the right offsets here...
+    # 
+    #dgetv0offset = 0x19400
+    # objdump -t -p ~/Downloads/Arpack.v3.5.1.x86_64-w64-mingw32-libgfortran5/bin/libarpack.dll | grep dgetv0    
+    #       15  0x19400  dgetv0_
+    #  AUX dgetv0.f
+    #  [581](sec  1)(fl 0x00)(ty  20)(scl   2) (nx 1) 0x00018400 dgetv0_
+    # we use the second one, because that's the more general symbol offset
+    # [326](sec  6)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00000060 iseed.3897
+    # [584](sec  6)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x000002c0 iseed.3896
+    # [1147](sec  6)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00000780 iseed.3896
+    # [1710](sec  6)(fl 0x00)(ty   0)(scl   3) (nx 0) 0x00000be0 iseed.3897
+    # above, we have relative offsets to the second base... ugh, annoying! 
+
+    # these are almost correct... 
+    #dgetv0offset = 0x00019400
+    #iseedoffsets = (0x00000060, 0x000002c0, 0x00000780, 0x00000be0)
+
+    # look at the disassembly
+    # dgleich@circulant GenericArpack % objdump -td -p ~/Downloads/Arpack.v3.5.1.x86_64-w64-mingw32-libgfortran5/bin/libarpack.dll | grep iseed 
+    # 64510a86: 0f 29 05 d3 45 04 00         	movaps	%xmm0, 280019(%rip)     # 0x64555060 <iseed.3897>
+    # 64510a95: 0f 29 05 d4 45 04 00         	movaps	%xmm0, 280020(%rip)     # 0x64555070 <iseed.3897+0x10>
+    # 64511078: 48 8d 15 e1 3f 04 00         	leaq	278497(%rip), %rdx      # 0x64555060 <iseed.3897>
+    # 64519453: 0f 29 05 66 be 03 00         	movaps	%xmm0, 245350(%rip)     # 0x645552c0 <iseed.3896>
+    # 64519462: 0f 29 05 67 be 03 00         	movaps	%xmm0, 245351(%rip)     # 0x645552d0 <iseed.3896+0x10>
+    # 645199e0: 48 8d 15 d9 b8 03 00         	leaq	243929(%rip), %rdx      # 0x645552c0 <iseed.3896>
+    # 6452a193: 0f 29 05 e6 b5 02 00         	movaps	%xmm0, 177638(%rip)     # 0x64555780 <iseed.3896>
+    # 6452a1a2: 0f 29 05 e7 b5 02 00         	movaps	%xmm0, 177639(%rip)     # 0x64555790 <iseed.3896+0x10>
+    # 6452a710: 48 8d 15 69 b0 02 00         	leaq	176233(%rip), %rdx      # 0x64555780 <iseed.3896>
+    # 6453b646: 0f 29 05 93 a5 01 00         	movaps	%xmm0, 107923(%rip)     # 0x64555be0 <iseed.3897>
+    # 6453b655: 0f 29 05 94 a5 01 00         	movaps	%xmm0, 107924(%rip)     # 0x64555bf0 <iseed.3897+0x10>
+    # 6453bc50: 48 8d 15 89 9f 01 00         	leaq	106377(%rip), %rdx      # 0x64555be0 <iseed.3897>  
+    
+    iseedoffsets = (0x64555060, 0x645552c0, 0x64555be0, 0x64555780)
+    dgetv0offset = 0x64519400
+
+    # note that these are consistent 
+    # dgetv0offset = 0x64519400
+    #                     ^^^^^
+    # iseedoffsets = (0x64555060, 0x645552c0, 0x64555be0, 0x64555780)
+    #                      ^^^^^         ^^^         ^^^         ^^^
+    
+    # so somewehre, we must get: section 1 has offset 0x645000000 and 
+    # this is from __ImageBase ? 
+    # [3677](sec -1)(fl 0x00)(ty   0)(scl   2) (nx 0) 0x64500000 __ImageBase
+
   else
     errmsg = """Unknown libarpack sha $(bytes2hex(sha)) for $(Arpack_jll.libarpack_path)
 
