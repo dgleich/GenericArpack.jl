@@ -1,7 +1,8 @@
-- [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dgleich.github.io/GenericArpack.jl/dev)
-
 GenericArpack.jl
 ===============
+
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dgleich.github.io/GenericArpack.jl/dev)
+[![Build Status](https://github.com/dgleich/GenericArpack.jl/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/GenericArpack/GenericArpack.jl/actions/workflows/test.yml?query=branch%3Amaster)
 
 This is a pure-Julia translation of the Arpack library. As such, it works
 with generic real-valued types in Julia. It's only dependency is `LinearAlgebra.jl`

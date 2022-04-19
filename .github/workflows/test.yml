@@ -1,0 +1,45 @@
+name: test
+
+on:
+  - push
+  - pull_request
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        version: 
+          - '1.7'
+        os:
+          - ubuntu-latest
+          - macOS-latest
+          - windows-latest
+        arch:
+          - x64 
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+      - uses: julia-actions/julia-buildpkg@latest
+      #- uses: julia-actions/julia-runtest@latest
+      # just inline the run calls...
+      - name: setup pkg_server 
+        run: julia --color=yes "$GITHUB_ACTION_PATH"/add_general_registry.jl
+        shell: bash
+        env:
+          # We set `JULIA_PKG_SERVER` only for this step to enforce
+          # `Pkg.Registry.add` to use Git.  This way, Pkg.jl can send
+          # the request metadata to pkg.julialang.org when installing
+          # packages via `Pkg.test`.
+          JULIA_PKG_SERVER: ""
+      - name: run testes
+        run: |
+          # The Julia command that will be executed
+          julia --color=yes --depwarn=yes--inline=yes --project=@. -e 'using Pkg; Pkg.test(;coverage=true,test_args=["arpackjll"])'
+        shell: bash
+      - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v2
+        with:
+          file: ./lcov.info
