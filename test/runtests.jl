@@ -18,6 +18,13 @@ Elsewhere
 
 =#    
 
+# TODO, improve quotes, etc. here... 
+# Use environment variables to pass arguments from julia-actions/runtests 
+# sigh...
+# we just push these along... keep it simple. 
+envargs = get(()->"", ENV, "JULIA_ACTIONS_RUNTEST_ARGS")
+foreach(s->push!(ARGS,s), split(envargs,","))
+
 # This needs to be before GenericArpack to get debug macros enabled
 if "debug" in ARGS
   ENV["JULIA_DEBUG"] = "GenericArpack,Main"
@@ -28,6 +35,10 @@ else
   # no multithreading to avoid annoying issues in comparing against ARPACK
   using LinearAlgebra
   LinearAlgebra.BLAS.set_num_threads(1)
+end 
+
+if "CI" in ARGS
+  versioninfo(verbose=true)
 end 
 
 using Test

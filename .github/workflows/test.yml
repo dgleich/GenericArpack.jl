@@ -1,4 +1,4 @@
-name: test
+name: Run default tests
 
 on:
   - push
@@ -8,6 +8,7 @@ jobs:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false # don't stop other platforms 
       matrix:
         version: 
           - '1.7'
@@ -24,6 +25,9 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
+        with:
+          env: 
+            JULIA_ACTIONS_RUNTEST_ARGS: CI,arpackjll
       # # just inline the run calls...
       # - name: run testes
       #   run: |

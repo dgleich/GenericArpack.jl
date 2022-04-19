@@ -41,8 +41,6 @@ end
   @test vals ≈ sort(sort(Avals, by=abs,rev=true)[1:k])
 end 
 
-
-
 @testset "svd interface" begin
   @testset "all ones" begin 
     A = ones(5,5)
