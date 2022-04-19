@@ -30,15 +30,17 @@ if "debug" in ARGS
   ENV["JULIA_DEBUG"] = "GenericArpack,Main"
 end
 
+using LinearAlgebra
 if "multithread" in ARGS
 else
   # no multithreading to avoid annoying issues in comparing against ARPACK
-  using LinearAlgebra
   LinearAlgebra.BLAS.set_num_threads(1)
 end 
 
 if "CI" in ARGS
+  import InteractiveUtils: versioninfo
   versioninfo(verbose=true)
+  @show LinearAlgebra.BLAS.get_config()
 end 
 
 using Test
