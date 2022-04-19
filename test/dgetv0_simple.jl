@@ -241,7 +241,7 @@
     @test niter == niterB + 2 # initial + final when ido == 99
     @test stats.nbx == niterB # initial 
     @test stats.nopx == 1 # initial 
-    @test stats.tgetv0 > 0 
+    @test stats.tgetv0 >= mintime 
     @test stats.tmvbx > 0 
     @test stats.tmvopx > 0 
   end

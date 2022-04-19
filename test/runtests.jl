@@ -46,6 +46,24 @@ end
 using Test
 using GenericArpack
 
+# setup the minimum platform dependent timing
+# windows doesn't have enough resolution in the timer to hit many of our tests. 
+mintime = Sys.iswindows() ? 0 : eps(GenericArpack.ArpackTime)
+
+# setup a list of platforms that have lower precisoin on some tests
+highertol = 0 
+if Sys.iswindows()
+  highertol = 1
+elseif Sys.CPU_NAME=="ivybridge"
+  highertol = 1
+elseif Sys.CPU_NAME=="icelake-server"
+  highertol = 1
+end
+
+if "CI" in ARGS
+  @show highertol 
+end 
+
 # utility can depend on test... 
 include("utility.jl")
 

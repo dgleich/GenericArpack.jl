@@ -52,7 +52,7 @@ end
   @testset "singular case" begin 
     A = ones(10,4)
     # this one is tricky... 
-    if Sys.CPU_NAME == "ivybridge"
+    if highertol > 0 
       info=svds(A, 1; which=:SA, ncv=2)
       @test maximum(GenericArpack.svd_residuals(A, info...)) <= GenericArpack._eps23(Float64)
     else 
@@ -60,7 +60,7 @@ end
     end 
     
     U,s,V = svds(A, 2; which=:SA, ritzvec=false )
-    @test s ≈ [0.0; 0.0] atol=(1 + 1*(Sys.CPU_NAME == "ivybridge"))*eps(Float64)
+    @test s ≈ [0.0; 0.0] atol=(1 + 1*(highertol))*eps(Float64)
     @test size(U,2) == 0
     @test size(V,2) == 0
   end 
@@ -68,7 +68,7 @@ end
   @testset "mytestmat(10,8)" begin 
     A = mytestmat(10,8)    
     U, s, V = svds(A, 2; which=:BE)
-    check_svd(A, U, s, V; tol=(25 + 50*(Sys.CPU_NAME=="ivybridge" || Sys.CPU_NAME=="icelake-server"))) # not quite as accurate on this one...
+    check_svd(A, U, s, V; tol=(25 + 50*(highertol))) # not quite as accurate on this one...
     @test s ≈ [0.20022491452411176, 2.424417285164735]
   end 
 end

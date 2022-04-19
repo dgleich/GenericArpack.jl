@@ -114,8 +114,8 @@ end
     @test stats.nrstrt == 0 
     @test stats.tgetv0 == 0 
     @test stats.nopx > 0 
-    @test stats.taitr > 0 
-    @test stats.tmvopx > 0 
+    @test stats.taitr >= mintime 
+    @test stats.tmvopx >= mintime 
     @test V'*V ≈ Matrix(1.0I,np,np)
     @test norm(V'*resid) ≈ 0 atol=eps(1.0)
 
@@ -131,8 +131,8 @@ end
     @test stats.nrstrt == 0 
     @test stats.tgetv0 == 0 
     @test stats.nopx > 0 
-    @test stats.taitr > 0 
-    @test stats.tmvopx > 0 
+    @test stats.taitr >= mintime  
+    @test stats.tmvopx >= mintime 
     @test V'*V ≈ Matrix(1.0I,k+np,k+np)
     @test norm(V'*resid) ≈ 0 atol=eps(1.0)
   end 
@@ -172,7 +172,7 @@ end
       n, k, np, mode, resid, rnorm, V, H, ldv, ldh, bmat, stats
     )
     @test stats.nrstrt > 0 
-    @test stats.tgetv0 > 0 
+    @test stats.tgetv0 >= mintime  
     # because it's the identity, resid should still be zero...
     @test norm(resid) ≈ 0 atol=n*eps(1.0)
   end 
@@ -203,10 +203,10 @@ end
       n, k, np, mode, resid, rnorm, V, H, ldv, ldh, stats, bmat
     )
     @test stats.nrstrt > 0 
-    @test stats.tgetv0 > 0 
+    @test stats.tgetv0 >= mintime 
     @test stats.nopx > 0 
-    @test stats.taitr > 0 
-    @test stats.tmvopx > 0 
+    @test stats.taitr >= mintime 
+    @test stats.tmvopx >= mintime 
     @test V'*V ≈ Matrix(1.0I,np,np)
     @test norm(V'*resid) ≈ 0 atol=2*eps(1.0)
   end
@@ -241,9 +241,9 @@ end
     @test stats.tgetv0 == 0 
     @test stats.nopx > 0 
     @test stats.nbx > 0
-    @test stats.taitr > 0 
-    @test stats.tmvopx > 0 
-    @test stats.tmvbx > 0 
+    @test stats.taitr >= mintime 
+    @test stats.tmvopx >= mintime 
+    @test stats.tmvbx >= mintime 
     @test V'*V ≈ Matrix(1.0I,np,np)
     @test norm(V'*resid) ≈ 0 atol=eps(1.0)
   end 
@@ -283,9 +283,9 @@ end
     @test stats.tgetv0 == 0 
     @test stats.nopx > 0 
     @test stats.nbx > 0
-    @test stats.taitr > 0 
-    @test stats.tmvopx > 0 
-    @test stats.tmvbx > 0 
+    @test stats.taitr >= mintime 
+    @test stats.tmvopx >= mintime 
+    @test stats.tmvbx >= mintime 
     @test V'*B*V ≈ Matrix(1.0I,np,np)
     @test norm(V'*B*resid) ≈ 0 atol=eps(1.0)
   end 
@@ -355,8 +355,8 @@ end
     @test stats.nrstrt == 0 
     @test stats.tgetv0 == 0 
     @test stats.nopx > 0 
-    @test stats.taitr > 0 
-    @test stats.tmvopx > 0 
+    @test stats.taitr >= mintime 
+    @test stats.tmvopx >= mintime 
     @test V'*V ≈ Matrix(1.0I,np,np)
     @test norm(V'*resid) ≈ 0 atol=eps(1.0)
 
