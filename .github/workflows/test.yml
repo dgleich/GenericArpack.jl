@@ -1,5 +1,8 @@
 name: Run default tests
 
+env:
+  JULIA_ACTIONS_RUNTEST_ARGS: CI,arpackjll
+
 on:
   - push
   - pull_request
@@ -25,9 +28,6 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
-        with:
-          env: 
-            JULIA_ACTIONS_RUNTEST_ARGS: CI,arpackjll
       # # just inline the run calls...
       # - name: run testes
       #   run: |
