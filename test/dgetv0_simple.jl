@@ -242,7 +242,7 @@
     @test stats.nbx == niterB # initial 
     @test stats.nopx == 1 # initial 
     @test stats.tgetv0 >= mintime 
-    @test stats.tmvbx > 0 
-    @test stats.tmvopx > 0 
+    @test stats.tmvbx >= mintime
+    @test stats.tmvopx >= mintime 
   end
 end
