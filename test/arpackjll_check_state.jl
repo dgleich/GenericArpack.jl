@@ -424,7 +424,7 @@ end
       n, k, np, mode, resid, rnorm, V, H, ldv, ldh, bmat, stats, state
     )
     @test stats.nrstrt > 0 
-    @test stats.tgetv0 > 0 
+    @test stats.tgetv0 >= mintime 
     # because it's the identity, resid should still be zero...
     @test norm(resid) ≈ 0 atol=n*eps(1.0)
   end 

@@ -68,6 +68,14 @@
       # make Arpack work...
       info_initv = 0 
 
+      if true
+        # add some debugging code
+        # that can help track down failures...
+        test_diffs("V on iter $(iter) ", V, arV)
+        test_diffs("workl on iter $(iter) ", workl, arworkl)
+        test_diffs("workd on iter $(iter) ", workd, arworkd)
+      end 
+
       @test ido[] == arido[]
       @test workl == arworkl 
       @test resid == arresid
