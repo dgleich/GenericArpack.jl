@@ -2,7 +2,7 @@ GenericArpack.jl
 ===============
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://dgleich.github.io/GenericArpack.jl/dev)
-[![Build Status](https://github.com/dgleich/GenericArpack.jl/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/GenericArpack/GenericArpack.jl/actions/workflows/test.yml?query=branch%3Amaster)
+[![Build Status](https://github.com/dgleich/GenericArpack.jl/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/GenericArpack/GenericArpack.jl/actions/workflows/test.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/dgleich/GenericArpack.jl/branch/main/graph/badge.svg?token=6RCYCW95FX)](https://codecov.io/gh/dgleich/GenericArpack.jl)
 
 This is a pure-Julia translation of the Arpack library. As such, it works
