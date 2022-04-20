@@ -105,6 +105,14 @@ function arpack_set_debug_low()
   unsafe_store!.(arpack_debug, 1, 3:24) # turn on most debugging
 end
 
+function arpack_set_debug_off()
+  # [Documentation and structure of debug block here.](https://github.com/opencollab/arpack-ng/blob/master/SRC/debug.h)
+  arpack_debug = cglobal((:debug_, Arpack_jll.libarpack), Int64)
+  unsafe_store!(arpack_debug, 6, 1) # logfile set logfil to 6, the default stdout
+  unsafe_store!(arpack_debug, -6, 2) # ndigit - use 14 digits of precision (ndigit)
+  unsafe_store!.(arpack_debug, 0, 3:24) # turn off most debugging
+end
+
 function arpack_aupd_output()
   # [Documentation and structure of debug block here.](https://github.com/opencollab/arpack-ng/blob/master/SRC/debug.h)
   arpack_debug = cglobal((:debug_, Arpack_jll.libarpack), Int64)

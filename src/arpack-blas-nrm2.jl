@@ -171,7 +171,7 @@ function _dnrm2_unroll_ext_dd(a::AbstractVector{T}) where {T <: Float64}
   ss2 = (zero(T), zero(T))
   ss3 = (zero(T), zero(T))
   ss4 = (zero(T), zero(T))
-  @inbounds while offset+8 <= len
+  @inbounds while offset+7 <= len
     ss1 = add_sum_sq(ss1, a[offset]*scale)
     ss2 = add_sum_sq(ss2, a[offset+1]*scale)
     ss3 = add_sum_sq(ss3, a[offset+2]*scale)
@@ -277,7 +277,7 @@ module Float80
 
       len = length(a) 
       offset = 1
-      @inbounds while offset+8 <= len
+      @inbounds while offset+7 <= len
         ss1 += _Float80(a[offset+0])*_Float80(a[offset+0])
         ss2 += _Float80(a[offset+1])*_Float80(a[offset+1])
         ss3 += _Float80(a[offset+2])*_Float80(a[offset+2])

@@ -41,6 +41,12 @@ if "CI" in ARGS
   import InteractiveUtils: versioninfo
   versioninfo(verbose=true)
   @show LinearAlgebra.BLAS.get_config()
+  @show LinearAlgebra.BLAS.get_num_threads()
+  @show get(()->"", ENV, "OPENBLAS_NUM_THREADS")
+  @show get(()->"", ENV, "GOTO_NUM_THREADS")
+  @show get(()->"", ENV, "OMP_NUM_THREADS")
+  @show get(()->"", ENV, "OPENBLAS_BLOCK_FACTOR")
+  @show Threads.nthreads()
 end 
 
 using Test
@@ -179,6 +185,7 @@ if "arpackjll" in ARGS
     # comparisons with blas/lapack
     include("dlarnv_arpackjll.jl")
     include("blas-qr-compare.jl")
+    include("dnrm2_openblas.jl")
   end
   
 
@@ -286,8 +293,6 @@ function all_permutations(v::Vector{Float64};
 end
 ##
 if "full" in ARGS
-  include("dnrm2_openblas.jl")
-
   @testset "dsortr" begin
     for range in [0:0.0,0:1.0,-1:1.0,-2:1.0,-2:2.0,-2:3.0,-3:3.0,-4:3.0,-4:4.0,-4:5.0]
       X = all_permutations(collect(range))
