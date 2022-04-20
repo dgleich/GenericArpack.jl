@@ -2,6 +2,7 @@ name: Run default tests
 
 env:
   JULIA_ACTIONS_RUNTEST_ARGS: CI,arpackjll
+  OPENBLAS_NUM_THREADS: 1
 
 on:
   - push
