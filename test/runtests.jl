@@ -42,6 +42,11 @@ if "CI" in ARGS
   versioninfo(verbose=true)
   @show LinearAlgebra.BLAS.get_config()
   @show LinearAlgebra.BLAS.get_num_threads()
+  @show get(()->"", ENV, "OPENBLAS_NUM_THREADS")
+  @show get(()->"", ENV, "GOTO_NUM_THREADS")
+  @show get(()->"", ENV, "OMP_NUM_THREADS")
+  @show get(()->"", ENV, "OPENBLAS_BLOCK_FACTOR")
+  @show Threads.nthreads()
 end 
 
 using Test
