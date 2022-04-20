@@ -1,8 +1,8 @@
 name: Run default tests
 
 env:
-  JULIA_ACTIONS_RUNTEST_ARGS: CI,arpackjll
   OPENBLAS_NUM_THREADS: 1
+  JULIA_ACTIONS_RUNTEST_ARGS: CI,arpackjll
 
 on:
   - push
@@ -17,8 +17,8 @@ jobs:
         version: 
           - '1.7'
         os:
-          - ubuntu-latest
-          - macOS-latest
+          #- ubuntu-latest
+          #- macOS-latest
           - windows-latest
         arch:
           - x64 

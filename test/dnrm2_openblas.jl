@@ -50,8 +50,8 @@ if Sys.ARCH==:x86_64 || Sys.ARCH==:x86
 
     @testset "length 1000 vectors" begin
       x = zeros(1000); fill!(x, 0.03162277660168379)
-      n1 = _dnrm2_blas(vals)
-      n2 = GenericArpack.norm2(Float64, vals)
+      n1 = _dnrm2_blas(x)
+      n2 = GenericArpack.norm2(Float64, x)
       @test floatsbetween(n1,n2) == 0 
       if floatsbetween(n1,n2) != 0
         @show n1, n2, floatsbetween(n1,n2)
