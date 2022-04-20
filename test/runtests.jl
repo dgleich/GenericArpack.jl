@@ -47,6 +47,14 @@ end
 using Test
 using GenericArpack
 
+if true
+  using InteractiveUtils 
+  vals = randn(100)
+  @code_llvm GenericArpack._dnrm2_unroll_ext(vals)
+  @code_llvm GenericArpack.norm2(Float64, vals)
+  @code_native GenericArpack.Float80.mynorm(vals)
+end 
+
 # setup the minimum platform dependent timing
 # windows doesn't have enough resolution in the timer to hit many of our tests. 
 mintime = Sys.iswindows() ? 0 : eps(GenericArpack.ArpackTime)
