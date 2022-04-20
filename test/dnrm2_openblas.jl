@@ -48,9 +48,20 @@ if Sys.ARCH==:x86_64 || Sys.ARCH==:x86
       (Ref{LinearAlgebra.BlasInt}, Ptr{Float64}, Ref{LinearAlgebra.BlasInt}),
       length(a), a, stride(a,1))
 
+    @testset "length 1000 vectors" begin
+      x = zeros(1000); fill!(x, 0.03162277660168379)
+      n1 = _dnrm2_blas(vals)
+      n2 = GenericArpack.norm2(Float64, vals)
+      @test floatsbetween(n1,n2) == 0 
+      if floatsbetween(n1,n2) != 0
+        @show n1, n2, floatsbetween(n1,n2)
+      end
+    end      
+
     @testset "Random vectors" begin
-      import Random
-      rng = Random.MersenneTwister(2)
+      import StableRNGs
+      #rng = Random.MersenneTwister(2)
+      rng = StableRNG(2)
       sizes = [1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,32,33,63,100,151,252,1023,2042,8123,32191,121892,1000001]
       ntrials = 10000
       nfloatsoff = 0 

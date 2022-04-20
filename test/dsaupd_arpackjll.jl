@@ -9,6 +9,7 @@
     bmat=:I,
     which=:LM,
     maxiter=300,
+    debug=nothing,
     tol=0.0, # use the default 
   )
     n = size(M,1)
@@ -42,7 +43,7 @@
     state = GenericArpack.ArpackState{Float64}()
     stats = GenericArpack.ArpackStats()
     iter = 0
-    debug = GenericArpack.ArpackDebug()
+    #debug = GenericArpack.ArpackDebug()
     #debug.maitr = 1
     while ido[] != 99
       # make a copy of state for arpack
@@ -68,7 +69,7 @@
       # make Arpack work...
       info_initv = 0 
 
-      if true
+      if false
         # add some debugging code
         # that can help track down failures...
         test_diffs("V on iter $(iter) ", V, arV)
@@ -141,10 +142,12 @@
 
     M = Diagonal(1.0:n)
     
+    arpack_set_debug_high()
     @testset "run 1" begin 
-      seqdata = _check_dsaupd_sequence!(M;bmat, nev, initv=resid, mode)
+      seqdata = _check_dsaupd_sequence!(M;bmat, nev, initv=resid, mode, maxiter=2, debug=set_debug_high!(ArpackDebug()))
       #println("Long diagonal run takes $(seqdata) iterations")
     end 
+    arpack_set_debug_off()
   end 
 
   @testset "dsaupd compare arpackjll generalized call" begin
