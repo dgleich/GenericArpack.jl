@@ -329,7 +329,7 @@ function _dnrm2_unroll_ext(a::AbstractVector{Complex{T}}) where {T <: AbstractFl
 end 
 
 # New norm2 interface, generic version 
-function norm2(TA::Type, v::AbstractVector) 
+function norm2(::Type{TA}, v::AbstractVector) where TA
   n = length(v)
   norm::TA = zero(TA)
   if n == 1

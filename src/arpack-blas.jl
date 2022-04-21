@@ -82,10 +82,14 @@ end
     if !iszero(xi)
       absxi = TA(abs(xi))
       if scale < absxi
-        ssq = one(TA)+ssq*(scale/absxi)^2
+        #ssq = one(TA)+ssq*(scale/absxi)^2
+        val = scale/absxi
+        ssq = one(TA)+ssq*(val)*(val)
         scale = TA(absxi)
       else
-        ssq += (absxi/scale)^2
+        #ssq += (absxi/scale)^2
+        val = (absxi/scale)
+        ssq += val*val
       end
     end
   end

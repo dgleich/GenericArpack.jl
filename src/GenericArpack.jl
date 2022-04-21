@@ -33,6 +33,7 @@ include("interface.jl")
 export eigs, symeigs, hermeigs, svds, complexsvds
 
 include("fixes.jl")
-export @fix_doublefloats, @fix_multifloats
+#export @fix_doublefloats, @fix_multifloats
+# we don't export these now, so it's clear where they come from in downstream code.
 
 end # module

@@ -263,3 +263,10 @@ function mytestmat(m,n,minval=1/m, maxdiagval=2)
   B = sparse(1:n-1, 1:n-1, range(1, maxdiagval, length=n-1), m, n-1)
   return [collect(range(1, minval, length=m)) B]
 end 
+
+## 
+function arpack_dsdrv3(::Type{T}, n::Int) where T 
+  A = Tridiagonal(-ones(T, n-1),2*ones(T,n),-ones(T,n-1)).*(n+1)
+  B = SymTridiagonal(4*ones(T, n),ones(T,n-1)).*(one(T)/(6*(n+1)))
+  return A, B
+end 

@@ -51,6 +51,7 @@ end
 
 using Test
 using GenericArpack
+using SparseArrays
 
 # setup the minimum platform dependent timing
 # windows doesn't have enough resolution in the timer to hit many of our tests. 
@@ -93,6 +94,7 @@ include("macros.jl")
 @testset "simple features" begin
   include("interface_simple.jl")
   include("interface_complex.jl")
+  include("interface_high.jl")
 
   include("idonow_ops_simple.jl")
 

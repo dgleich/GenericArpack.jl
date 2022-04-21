@@ -34,6 +34,7 @@ values:
   6.522275837391058
 ```
 The library is better used with use higher precision types, like Double64, although Float32 work okay. 
+See below for some notes on using higher-precision types. 
 
 Because it was fairly trivial to do in Julia, `GenericArpack.jl` also has a specialized Hermitian eigensolver.
 This has had more limited testing, but should work for many cases. This is useful because it gives a
@@ -105,6 +106,43 @@ Right now,
 |	user-computed shifts	|	 	|	coded	|		|
 |	shift invert, buckling, cayley	|	ComplexF64, Float64	|	coded	|		|
 |	shift invert, buckling, cayley	|	high-precision	|	coded	|		|
+
+Using high-precision types
+--------------------------
+`GenericArpack.jl` is taxing in the extensive use of floating point thresholds. Sometimes these
+are not always perfectly supported by auxilary packages. 
+
+### `Quadmath.jl`
+
+This works directly without modification for `Quadmath.jl`, although note that
+many operations in `Quadmath.jl` allocate whereas those in the libraries below
+do not. For instance, `generic_matvecmul!` on a matrix with `Float128` will allocate in some
+calls. 
+
+### `DoubleFloats.jl`
+
+You can make using `Double64` types about 1.5x faster by giving it two constants. This is what our fix does. 
+```
+using DoubleFloats
+GenericArpack.@fix_doublefloats
+```
+
+To see what is executed, run `@macroexpand GenericArpack.@fix_doublefloats`. This defines:
+- `LinearAlgebra.floatmin2` and
+- `maxit` for the eigenvalue computation
+
+### `MultiFloats.jl`
+
+Make sure to execute
+```
+using MultiFloats
+GenericArpack.@fix_multifloats
+```
+
+To see what is executed, run `@macroexpand GenericArpack.@fix_multifloats`. This defines:
+- `_eps23` for each `MultiFloat` type.
+- `maxit` for the eigenvalue computation
+- `Int(x::MultiFloat)`
 
 History
 -------
