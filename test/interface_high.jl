@@ -8,6 +8,8 @@
 
   @testset "fixes" begin
     val = (LinearAlgebra.floatmin2(Double64))
+    val2 = @allocated(LinearAlgebra.floatmin2(Double64)) # make sure to time allocated too... 
+    @test val == DoubleFloats.Double64(reinterpret(Float64, 0x2350000000000000), 0.0)    
     @test (@allocated(LinearAlgebra.floatmin2(Double64))) == 0
 
     @test GenericArpack._dstqrb_maxit(Double64) == 80
