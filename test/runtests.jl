@@ -64,7 +64,7 @@ if Sys.iswindows()
 elseif Sys.CPU_NAME=="ivybridge"
   highertol = 1
 elseif Sys.CPU_NAME=="icelake-server"
-  highertol = 1
+  highertol = 2
 end
 
 if "CI" in ARGS
