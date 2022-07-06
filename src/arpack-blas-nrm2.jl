@@ -328,7 +328,30 @@ function _dnrm2_unroll_ext(a::AbstractVector{Complex{T}}) where {T <: AbstractFl
   return norm(a)
 end 
 
-# New norm2 interface, generic version 
+##
+##
+@inline function _dlassq(TA::Type, v::AbstractVector{T}) where T
+  scale::TA = zero(TA)
+  ssq::TA = one(TA)
+  for xi in v
+    if !iszero(xi)
+      absxi = TA(abs(xi))
+      if scale < absxi
+        #ssq = one(TA)+ssq*(scale/absxi)^2
+        val = scale/absxi
+        ssq = one(TA)+ssq*(val)*(val)
+        scale = TA(absxi)
+      else
+        #ssq += (absxi/scale)^2
+        val = (absxi/scale)
+        ssq += val*val
+      end
+    end
+  end
+  return scale, ssq
+end
+
+## New norm2 interface, generic version 
 function norm2(::Type{TA}, v::AbstractVector) where TA
   n = length(v)
   norm::TA = zero(TA)

@@ -74,41 +74,6 @@ end
 function _dscal!(a::T, v) where T
   broadcast!(*, v, v, a)
 end
-##
-@inline function _dlassq(TA::Type, v::AbstractVector{T}) where T
-  scale::TA = zero(TA)
-  ssq::TA = one(TA)
-  for xi in v
-    if !iszero(xi)
-      absxi = TA(abs(xi))
-      if scale < absxi
-        #ssq = one(TA)+ssq*(scale/absxi)^2
-        val = scale/absxi
-        ssq = one(TA)+ssq*(val)*(val)
-        scale = TA(absxi)
-      else
-        #ssq += (absxi/scale)^2
-        val = (absxi/scale)
-        ssq += val*val
-      end
-    end
-  end
-  return scale, ssq
-end
-
-
-
-function _dnrm2(v::AbstractVector{T}) where T
-  n = length(v)
-  norm::T = zero(T)
-  if n == 1
-    norm = abs(v[1])
-  else
-    scale, ssq = _dlassq(T, v)
-    norm = scale*sqrt(ssq)
-  end
-  return norm::T
-end
 
 ##
 """ 2x2 eigenvalue problem
