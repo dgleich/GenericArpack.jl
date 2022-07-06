@@ -1,7 +1,7 @@
 name = "GenericArpack"
 uuid = "408c25d7-97fa-4992-8bd9-ce15f1a09fe9"
 authors = ["David Gleich <dgleich@purdue.edu>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
