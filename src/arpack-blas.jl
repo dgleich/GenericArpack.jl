@@ -441,6 +441,8 @@ const _dlaruv_mm=tuple(tuple(494,322,2508,2549),
     tuple(2573,1368,3508,3017),
     tuple(1148,1848,3525,2141),
     tuple(545,2366,3801,1537))
+
+#= commented out for coverage and inlined below
 function _dlaruv!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector{Float64})
   IPW2=4096
   R = 1/IPW2
@@ -485,6 +487,7 @@ function _dlaruv!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector{Float64
   end
   iseed[] = tuple(IT1,IT2,IT3,IT4) # update the seed
 end
+=#
 
 function _dlarnv_idist_2!(iseed::Base.RefValue{NTuple{4,Int}}, n::Int, x::Vector{T}) where {
   T <: Union{AbstractFloat,Complex{<: AbstractFloat}}}

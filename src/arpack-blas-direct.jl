@@ -4,12 +4,12 @@
 # at some point in the codes before the switch
 # to writing the Blas codes internally.
 
+#= commented out for coverage
 _pointer_to_array_offset(a::StridedVector{T}, offset::Int) where T =
   Base.unsafe_convert(Ptr{T}, a) + (offset-1)*sizeof(T)*strides(a)[1]
 _pointer_to_array_offset(a::StridedMatrix{T}, offset1::Int, offset2::Int) where T =
   Base.unsafe_convert(Ptr{T}, a) + (offset1-1)*sizeof(T)*strides(a)[1] + (offset2-1)*sizeof(T)*strides(a)[2]
-
-
+=#
 
 #= raw BLAS and LINPACK calls in dstqrb mapped to native Julia and also LAPACK/BLAS =#
 import LinearAlgebra
