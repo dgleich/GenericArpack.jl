@@ -22,14 +22,14 @@ a number of simplifications.
 The documentation needs to talk about matrices and eigenvectors, of course. 
 
 A standard eigenvalue and eigenvector is a pair: 
-- ``Ax = \lambda x`` where ``x`` is not-zero and \$||x|| = 1\$ by convention
+- ``Ax = \lambda x`` where ``x`` is not-zero and ``||x|| = 1`` by convention
 
 If ``A``is symmetic, then all of the ``\lambda`` are real. Note that 
 the vector ``x`` is only determined up to sign, as well as rotation 
 if there are multliple linearly independent 
 eigenvectors with the same eigenvalue.
 
-Likewise if ``A`` is Hermitian, then all of the ``\\lambda`` are still real
+Likewise if ``A`` is Hermitian, then all of the ``\lambda`` are still real
 whereas the vectors are complex-valued. 
 Also, the vectors ``x`` are only unique up to scaling by complex-value 
 of magnitude 1. (i.e. ``e^{i\theta}`` for an angle ``\theta``). 
@@ -140,7 +140,7 @@ We also extend Arpack's symmetric solvers with the ability to solve Hermitian pr
 
 ```@repl using-pkgs
 n = 100 
-A = Tridiagonal(-ones(n-1)*1im, 2*ones(n)+0im, ones(n-1)*1im)
+A = Tridiagonal(-ones(n-1)*1im, 2*ones(n).+0im, ones(n-1)*1im)
 hermeigs(A, 6)
 ```
 
@@ -163,7 +163,7 @@ svds(A, 3)
 ```
 
 ```@setup realsvd
-using GenericArpack, SparseArrays, StableRNGs 
+using GenericArpack, SparseArrays, StableRNGs, LinearAlgebra 
 A = sprand(StableRNG(1), 200, 100, 5/200)
 ```
 
@@ -197,7 +197,7 @@ All of the complex SVD calls for any Arpack matrix
 type are mapped to a single call with an `ArpackNormalOp`
 
 ```@repl realsvd 
-svds(ArpackNormalOp(A), 3; which=:SM) # smallest 
+svds(ArpackNormalOp(Float64, A), 3; which=:SM) # smallest 
 ```
 
 # Examples of Generalized Eigenvalue Problems
@@ -217,13 +217,11 @@ Not here yet! Send me one if you have one!
 
 ## Shift-Invert Example
 
-Not here yet! Send me one if you have one! 
+Not here yet! Send me one if you have one! (Need to test and debug the Shift Invert mode driver.)
 
 ## Buckling Mode Example
 
-Not here yet! Send me one if you have one! 
-
-## 
+Not here yet! Send me one if you have one! (Need to test and debug the Buckling mode driver.)
 
 # Examples with high-precision (or low-precision) types
 
