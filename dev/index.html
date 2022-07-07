@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · GenericArpack.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.044/juliamono.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>GenericArpack.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li class="toplevel"><a class="tocitem" href="#Eigenvalue,-eigenvectors,-standard,-generalized."><span>Eigenvalue, eigenvectors, standard, generalized.</span></a></li><li class="toplevel"><a class="tocitem" href="#ARPACK-Notes-and-Key-Parameters"><span>ARPACK Notes and Key Parameters</span></a></li><li class="toplevel"><a class="tocitem" href="#Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition"><span>Examples of real symmetric, complex Hermitian, and singular value decomposition</span></a></li><li><a class="tocitem" href="#Find-the-largest-eigenvalues-of-a-real-symmetric-matrix."><span>Find the largest eigenvalues of a real symmetric matrix.</span></a></li><li><a class="tocitem" href="#Finding-the-largest-eigenvalues-with-an-operator"><span>Finding the largest eigenvalues with an operator</span></a></li><li><a class="tocitem" href="#Complex-Hermitian"><span>Complex Hermitian</span></a></li><li><a class="tocitem" href="#SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations"><span>SVD (Singular Value Decomposition) via the Normal Equations</span></a></li><li><a class="tocitem" href="#Complex-SVD-(Singular-Value-Decomposition)"><span>Complex SVD (Singular Value Decomposition)</span></a></li><li><a class="tocitem" href="#Real-and-Complex-SVD-via-an-ArpackNormalOp"><span>Real and Complex SVD via an ArpackNormalOp</span></a></li><li class="toplevel"><a class="tocitem" href="#Examples-of-Generalized-Eigenvalue-Problems"><span>Examples of Generalized Eigenvalue Problems</span></a></li><li><a class="tocitem" href="#Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample)."><span>Generalized Eigenvalue Example (from Arpack <code>dsdrv3</code> sample).</span></a></li><li><a class="tocitem" href="#Complex-Hermitian-Generalized-Eigenvalue-Example"><span>Complex Hermitian Generalized Eigenvalue Example</span></a></li><li><a class="tocitem" href="#Shift-Invert-Example"><span>Shift-Invert Example</span></a></li><li><a class="tocitem" href="#Buckling-Mode-Example"><span>Buckling Mode Example</span></a></li><li><a class="tocitem" href="#"><span></span></a></li><li class="toplevel"><a class="tocitem" href="#Examples-with-high-precision-(or-low-precision)-types"><span>Examples with high-precision (or low-precision) types</span></a></li><li><a class="tocitem" href="#With-just-one-type"><span>With just one type</span></a></li><li><a class="tocitem" href="#With-two-types"><span>With two types</span></a></li><li class="toplevel"><a class="tocitem" href="#Advanced-usage"><span>Advanced usage</span></a></li><li><a class="tocitem" href="#Writing-your-own-ArpackOp"><span>Writing your own <code>ArpackOp</code></span></a></li><li><a class="tocitem" href="#The-Arpack-Drivers"><span>The Arpack Drivers</span></a></li><li><a class="tocitem" href="#Getting-debug-information"><span>Getting debug information</span></a></li></ul></li><li><a class="tocitem" href="library/">Library</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/dgleich/GenericArpack.jl/blob/main/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="GenericArpack.jl-Documentation"><a class="docs-heading-anchor" href="#GenericArpack.jl-Documentation">GenericArpack.jl Documentation</a><a id="GenericArpack.jl-Documentation-1"></a><a class="docs-heading-anchor-permalink" href="#GenericArpack.jl-Documentation" title="Permalink"></a></h1><p>This library is a julia translation of the Arpack library.  I strongly recommend browsing the documentation on the  functions in that library: </p><ul><li><a href="https://github.com/opencollab/arpack-ng/blob/9233f7f86f063ca6ca3793cb54dec590eb146e10/SRC/dsaupd.f">dsaupd</a></li><li><a href="https://github.com/opencollab/arpack-ng/blob/9233f7f86f063ca6ca3793cb54dec590eb146e10/SRC/dseupd.f">dseupd</a></li></ul><p>The major portion of the Julia code is a translation of these functions. </p><p>However, we also provide our own user-friendly interface to these codes. This is inspired by the <code>eigs</code> and <code>svds</code> interface in the Julia wrappers <a href="https://github.com/JuliaLinearAlgebra/Arpack.jl">Arpack.jl</a>, however it has  a number of simplifications.</p><h1 id="Eigenvalue,-eigenvectors,-standard,-generalized."><a class="docs-heading-anchor" href="#Eigenvalue,-eigenvectors,-standard,-generalized.">Eigenvalue, eigenvectors, standard, generalized.</a><a id="Eigenvalue,-eigenvectors,-standard,-generalized.-1"></a><a class="docs-heading-anchor-permalink" href="#Eigenvalue,-eigenvectors,-standard,-generalized." title="Permalink"></a></h1><p>The documentation needs to talk about matrices and eigenvectors, of course. </p><p>A standard eigenvalue and eigenvector is a pair: </p><ul><li><span>$Ax = \lambda x$</span> where <span>$x$</span> is not-zero and <span>$</span>||x|| = 1<span>$</span> by convention</li></ul><p>If <span>$A$</span>is symmetic, then all of the <span>$\lambda$</span> are real. Note that  the vector <span>$x$</span> is only determined up to sign, as well as rotation  if there are multliple linearly independent  eigenvectors with the same eigenvalue.</p><p>Likewise if <span>$A$</span> is Hermitian, then all of the <span>$\\lambda$</span> are still real whereas the vectors are complex-valued.  Also, the vectors <span>$x$</span> are only unique up to scaling by complex-value  of magnitude 1. (i.e. <span>$e^{i\theta}$</span> for an angle <span>$\theta$</span>). </p><p>A generalized eigenvalue and eigenvector is a pair: </p><ul><li><span>$Ax = \lambda Bx$</span> where <span>$x$</span> is not-zero and <span>$||Bx|| = 1$</span> by convention.</li></ul><p>The vectors are just as unique as in the other cases. </p><p>There are many complexities with eigenvalues and subtleties in the defintion. Please see the ARPACK manual for exact detail on what we mean here as this is a translation of ARPACK. </p><h1 id="ARPACK-Notes-and-Key-Parameters"><a class="docs-heading-anchor" href="#ARPACK-Notes-and-Key-Parameters">ARPACK Notes and Key Parameters</a><a id="ARPACK-Notes-and-Key-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#ARPACK-Notes-and-Key-Parameters" title="Permalink"></a></h1><p>The three key parameters of the Arpack methods are:</p><ul><li><code>k</code></li><li><code>which</code></li><li><code>ncv</code> </li></ul><p>The goal of Arpack is to compute a partial <em>eigenspace</em> of a matrix. </p><p>The size of this eigenspace is the number of dimension <code>k</code> requested. </p><p>In order to decide <em>which</em> eigenspace we are targeting, we need to tell it!  Arpack uses the natural variable: <code>which</code> in order to provide this information.</p><ul><li><code>which</code>: which part of the spectrum to compute. There are a few choices: <ul><li><code>:LM</code> <em>(the default)</em> find the largest magnitude eigenspace </li><li><code>:SM</code> find the smallest magnitude eigenspace</li><li><code>:LA</code> find the largest algebraic value eigenspace </li><li><code>:SA</code> find the smallest algebraic value eigenspace     </li><li><code>:BE</code> find both smallest and largest algebraic eigenspace</li></ul></li></ul><p>It turns out that ARPACK uses a strategy based on looking for a larger eigenspace than only <code>k</code> vectors. The parameter <code>ncv</code> (number of compute vectors) determines this size. These parameters must satisfy <span>$k &lt; ncv \le =n$</span> (where <span>$n$</span> is the dimension of the matrix).</p><div class="admonition is-success"><header class="admonition-header">Convergence issues</header><div class="admonition-body"><p>If your eigenproblem isn&#39;t converging, it is often useful to increase <code>ncv</code> instead as well as increasing <code>maxiter</code>. This is because if the eigenspace you are trying to find is poorly separated, it&#39;s easier to find if you can find <em>any</em> separation of a larger eigenspace. </p></div></div><h1 id="Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition"><a class="docs-heading-anchor" href="#Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition">Examples of real symmetric, complex Hermitian, and singular value decomposition</a><a id="Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition" title="Permalink"></a></h1><p>The best way to understand the library is just to see a variety of examples.</p><div class="admonition is-info"><header class="admonition-header">There is more than one way ... </header><div class="admonition-body"><p>There is more than one way to do something in <code>GenericArpack.jl</code>. This is by design and there are various limits to the interfaces. Also, there exist multiple synonymous calls. This is make it easier for someone reading your code to understand what you meant, and often because there is a small hint about what a natural default type would be. For instance:  <code>hermeigs</code> causes us to use <code>ComplexF64</code> as a default type, whereas <code>symeigs</code> will use <code>Float64</code> instead. Of course, if you all <code>symeigs</code> and specify <code>ComplexF64</code>, it&#39;ll work. Likewise, if you call <code>hermeigs</code>  and specify <code>Float64</code>, but on the other hand, your readers will probably be annoyed by that confusion, so use sparingly. </p></div></div><h2 id="Find-the-largest-eigenvalues-of-a-real-symmetric-matrix."><a class="docs-heading-anchor" href="#Find-the-largest-eigenvalues-of-a-real-symmetric-matrix.">Find the largest eigenvalues of a real symmetric matrix.</a><a id="Find-the-largest-eigenvalues-of-a-real-symmetric-matrix.-1"></a><a class="docs-heading-anchor-permalink" href="#Find-the-largest-eigenvalues-of-a-real-symmetric-matrix." title="Permalink"></a></h2><p>Let <code>A</code> be any type in Julia that implements <code>Base.size</code> and <code>LineareAlgebra.mul!(y,A,x)</code>. For instance, <code>A</code> can be a <code>SparseMatrixCSC</code>, a <code>Matrix</code>, a <code>Tridiagonal</code>, a <code>Diagonal</code> Moreover, we assume that <code>A</code> is symmetric (and we won&#39;t check). This can be a common error.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; n = 100</code><code class="nohighlight hljs ansi" style="display:block;">100</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = Tridiagonal(-ones(n-1), 2*ones(n), -ones(n-1))</code><code class="nohighlight hljs ansi" style="display:block;">100×100 Tridiagonal{Float64, Vector{Float64}}:
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · GenericArpack.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.044/juliamono.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>GenericArpack.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li class="toplevel"><a class="tocitem" href="#Eigenvalue,-eigenvectors,-standard,-generalized."><span>Eigenvalue, eigenvectors, standard, generalized.</span></a></li><li class="toplevel"><a class="tocitem" href="#ARPACK-Notes-and-Key-Parameters"><span>ARPACK Notes and Key Parameters</span></a></li><li class="toplevel"><a class="tocitem" href="#Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition"><span>Examples of real symmetric, complex Hermitian, and singular value decomposition</span></a></li><li><a class="tocitem" href="#Find-the-largest-eigenvalues-of-a-real-symmetric-matrix."><span>Find the largest eigenvalues of a real symmetric matrix.</span></a></li><li><a class="tocitem" href="#Finding-the-largest-eigenvalues-with-an-operator"><span>Finding the largest eigenvalues with an operator</span></a></li><li><a class="tocitem" href="#Complex-Hermitian"><span>Complex Hermitian</span></a></li><li><a class="tocitem" href="#SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations"><span>SVD (Singular Value Decomposition) via the Normal Equations</span></a></li><li><a class="tocitem" href="#Complex-SVD-(Singular-Value-Decomposition)"><span>Complex SVD (Singular Value Decomposition)</span></a></li><li><a class="tocitem" href="#Real-and-Complex-SVD-via-an-ArpackNormalOp"><span>Real and Complex SVD via an ArpackNormalOp</span></a></li><li class="toplevel"><a class="tocitem" href="#Examples-of-Generalized-Eigenvalue-Problems"><span>Examples of Generalized Eigenvalue Problems</span></a></li><li><a class="tocitem" href="#Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample)."><span>Generalized Eigenvalue Example (from Arpack <code>dsdrv3</code> sample).</span></a></li><li><a class="tocitem" href="#Complex-Hermitian-Generalized-Eigenvalue-Example"><span>Complex Hermitian Generalized Eigenvalue Example</span></a></li><li><a class="tocitem" href="#Shift-Invert-Example"><span>Shift-Invert Example</span></a></li><li><a class="tocitem" href="#Buckling-Mode-Example"><span>Buckling Mode Example</span></a></li><li class="toplevel"><a class="tocitem" href="#Examples-with-high-precision-(or-low-precision)-types"><span>Examples with high-precision (or low-precision) types</span></a></li><li><a class="tocitem" href="#With-just-one-type"><span>With just one type</span></a></li><li><a class="tocitem" href="#With-two-types"><span>With two types</span></a></li><li class="toplevel"><a class="tocitem" href="#Advanced-usage"><span>Advanced usage</span></a></li><li><a class="tocitem" href="#Writing-your-own-ArpackOp"><span>Writing your own <code>ArpackOp</code></span></a></li><li><a class="tocitem" href="#The-Arpack-Drivers"><span>The Arpack Drivers</span></a></li><li><a class="tocitem" href="#Getting-debug-information"><span>Getting debug information</span></a></li></ul></li><li><a class="tocitem" href="library/">Library</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/dgleich/GenericArpack.jl/blob/main/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="GenericArpack.jl-Documentation"><a class="docs-heading-anchor" href="#GenericArpack.jl-Documentation">GenericArpack.jl Documentation</a><a id="GenericArpack.jl-Documentation-1"></a><a class="docs-heading-anchor-permalink" href="#GenericArpack.jl-Documentation" title="Permalink"></a></h1><p>This library is a julia translation of the Arpack library.  I strongly recommend browsing the documentation on the  functions in that library: </p><ul><li><a href="https://github.com/opencollab/arpack-ng/blob/9233f7f86f063ca6ca3793cb54dec590eb146e10/SRC/dsaupd.f">dsaupd</a></li><li><a href="https://github.com/opencollab/arpack-ng/blob/9233f7f86f063ca6ca3793cb54dec590eb146e10/SRC/dseupd.f">dseupd</a></li></ul><p>The major portion of the Julia code is a translation of these functions. </p><p>However, we also provide our own user-friendly interface to these codes. This is inspired by the <code>eigs</code> and <code>svds</code> interface in the Julia wrappers <a href="https://github.com/JuliaLinearAlgebra/Arpack.jl">Arpack.jl</a>, however it has  a number of simplifications.</p><h1 id="Eigenvalue,-eigenvectors,-standard,-generalized."><a class="docs-heading-anchor" href="#Eigenvalue,-eigenvectors,-standard,-generalized.">Eigenvalue, eigenvectors, standard, generalized.</a><a id="Eigenvalue,-eigenvectors,-standard,-generalized.-1"></a><a class="docs-heading-anchor-permalink" href="#Eigenvalue,-eigenvectors,-standard,-generalized." title="Permalink"></a></h1><p>The documentation needs to talk about matrices and eigenvectors, of course. </p><p>A standard eigenvalue and eigenvector is a pair: </p><ul><li><span>$Ax = \lambda x$</span> where <span>$x$</span> is not-zero and <span>$||x|| = 1$</span> by convention</li></ul><p>If <span>$A$</span>is symmetic, then all of the <span>$\lambda$</span> are real. Note that  the vector <span>$x$</span> is only determined up to sign, as well as rotation  if there are multliple linearly independent  eigenvectors with the same eigenvalue.</p><p>Likewise if <span>$A$</span> is Hermitian, then all of the <span>$\lambda$</span> are still real whereas the vectors are complex-valued.  Also, the vectors <span>$x$</span> are only unique up to scaling by complex-value  of magnitude 1. (i.e. <span>$e^{i\theta}$</span> for an angle <span>$\theta$</span>). </p><p>A generalized eigenvalue and eigenvector is a pair: </p><ul><li><span>$Ax = \lambda Bx$</span> where <span>$x$</span> is not-zero and <span>$||Bx|| = 1$</span> by convention.</li></ul><p>The vectors are just as unique as in the other cases. </p><p>There are many complexities with eigenvalues and subtleties in the defintion. Please see the ARPACK manual for exact detail on what we mean here as this is a translation of ARPACK. </p><h1 id="ARPACK-Notes-and-Key-Parameters"><a class="docs-heading-anchor" href="#ARPACK-Notes-and-Key-Parameters">ARPACK Notes and Key Parameters</a><a id="ARPACK-Notes-and-Key-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#ARPACK-Notes-and-Key-Parameters" title="Permalink"></a></h1><p>The three key parameters of the Arpack methods are:</p><ul><li><code>k</code></li><li><code>which</code></li><li><code>ncv</code> </li></ul><p>The goal of Arpack is to compute a partial <em>eigenspace</em> of a matrix. </p><p>The size of this eigenspace is the number of dimension <code>k</code> requested. </p><p>In order to decide <em>which</em> eigenspace we are targeting, we need to tell it!  Arpack uses the natural variable: <code>which</code> in order to provide this information.</p><ul><li><code>which</code>: which part of the spectrum to compute. There are a few choices: <ul><li><code>:LM</code> <em>(the default)</em> find the largest magnitude eigenspace </li><li><code>:SM</code> find the smallest magnitude eigenspace</li><li><code>:LA</code> find the largest algebraic value eigenspace </li><li><code>:SA</code> find the smallest algebraic value eigenspace     </li><li><code>:BE</code> find both smallest and largest algebraic eigenspace</li></ul></li></ul><p>It turns out that ARPACK uses a strategy based on looking for a larger eigenspace than only <code>k</code> vectors. The parameter <code>ncv</code> (number of compute vectors) determines this size. These parameters must satisfy <span>$k &lt; ncv \le =n$</span> (where <span>$n$</span> is the dimension of the matrix).</p><div class="admonition is-success"><header class="admonition-header">Convergence issues</header><div class="admonition-body"><p>If your eigenproblem isn&#39;t converging, it is often useful to increase <code>ncv</code> instead as well as increasing <code>maxiter</code>. This is because if the eigenspace you are trying to find is poorly separated, it&#39;s easier to find if you can find <em>any</em> separation of a larger eigenspace. </p></div></div><h1 id="Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition"><a class="docs-heading-anchor" href="#Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition">Examples of real symmetric, complex Hermitian, and singular value decomposition</a><a id="Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-of-real-symmetric,-complex-Hermitian,-and-singular-value-decomposition" title="Permalink"></a></h1><p>The best way to understand the library is just to see a variety of examples.</p><div class="admonition is-info"><header class="admonition-header">There is more than one way ... </header><div class="admonition-body"><p>There is more than one way to do something in <code>GenericArpack.jl</code>. This is by design and there are various limits to the interfaces. Also, there exist multiple synonymous calls. This is make it easier for someone reading your code to understand what you meant, and often because there is a small hint about what a natural default type would be. For instance:  <code>hermeigs</code> causes us to use <code>ComplexF64</code> as a default type, whereas <code>symeigs</code> will use <code>Float64</code> instead. Of course, if you all <code>symeigs</code> and specify <code>ComplexF64</code>, it&#39;ll work. Likewise, if you call <code>hermeigs</code>  and specify <code>Float64</code>, but on the other hand, your readers will probably be annoyed by that confusion, so use sparingly. </p></div></div><h2 id="Find-the-largest-eigenvalues-of-a-real-symmetric-matrix."><a class="docs-heading-anchor" href="#Find-the-largest-eigenvalues-of-a-real-symmetric-matrix.">Find the largest eigenvalues of a real symmetric matrix.</a><a id="Find-the-largest-eigenvalues-of-a-real-symmetric-matrix.-1"></a><a class="docs-heading-anchor-permalink" href="#Find-the-largest-eigenvalues-of-a-real-symmetric-matrix." title="Permalink"></a></h2><p>Let <code>A</code> be any type in Julia that implements <code>Base.size</code> and <code>LineareAlgebra.mul!(y,A,x)</code>. For instance, <code>A</code> can be a <code>SparseMatrixCSC</code>, a <code>Matrix</code>, a <code>Tridiagonal</code>, a <code>Diagonal</code> Moreover, we assume that <code>A</code> is symmetric (and we won&#39;t check). This can be a common error.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; n = 100</code><code class="nohighlight hljs ansi" style="display:block;">100</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = Tridiagonal(-ones(n-1), 2*ones(n), -ones(n-1))</code><code class="nohighlight hljs ansi" style="display:block;">100×100 Tridiagonal{Float64, Vector{Float64}}:
   2.0  -1.0    ⋅     ⋅     ⋅     ⋅   …    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
  -1.0   2.0  -1.0    ⋅     ⋅     ⋅        ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
    ⋅   -1.0   2.0  -1.0    ⋅     ⋅        ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
@@ -23,12 +23,12 @@
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.9652704964444903
- 3.9758608794815036
- 3.984539744726552
- 3.991298695938015
- 3.9961311942671656
- 3.999032564583961
+ 3.965270496444499
+ 3.975860879481494
+ 3.9845397447265314
+ 3.991298695938016
+ 3.996131194267181
+ 3.999032564583972
 vectors:
 100×6 Matrix{Float64}:
  -0.0261102   0.0217972  -0.0174631   0.0131121  -0.00874848   0.00437636
@@ -54,12 +54,12 @@ vectors:
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.9652704964444903
- 3.9758608794815036
- 3.984539744726552
- 3.991298695938015
- 3.9961311942671656
- 3.999032564583961
+ 3.965270496444499
+ 3.975860879481494
+ 3.9845397447265314
+ 3.991298695938016
+ 3.996131194267181
+ 3.999032564583972
 vectors:
 100×6 Matrix{Float64}:
  -0.0261102   0.0217972  -0.0174631   0.0131121  -0.00874848   0.00437636
@@ -85,12 +85,12 @@ vectors:
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.965270496444535
- 3.9758608794815165
- 3.9845397447265563
- 3.991298695938034
- 3.9961311942671838
- 3.999032564583959
+ 3.9652704964445307
+ 3.975860879481519
+ 3.9845397447265496
+ 3.991298695938015
+ 3.9961311942671753
+ 3.9990325645839677
 vectors:
 100×6 Matrix{ComplexF64}:
   0.000180037-0.0261096im  …   0.0040213-0.00172675im
@@ -112,44 +112,58 @@ vectors:
  -0.000658918+0.0955584im      0.0160463-0.00689032im
   0.000515318-0.0747331im     -0.0120483+0.00517358im
  -0.000353822+0.0513124im      0.0080387-0.00345184im
-  0.000180037-0.0261096im     -0.0040213+0.00172675im</code></pre><h2 id="Finding-the-largest-eigenvalues-with-an-operator"><a class="docs-heading-anchor" href="#Finding-the-largest-eigenvalues-with-an-operator">Finding the largest eigenvalues with an operator</a><a id="Finding-the-largest-eigenvalues-with-an-operator-1"></a><a class="docs-heading-anchor-permalink" href="#Finding-the-largest-eigenvalues-with-an-operator" title="Permalink"></a></h2><p>All <code>GenericArpack</code> calls are mapped to a single computational interface with an <code>ArpackOp</code> type.</p><div class="admonition is-info"><header class="admonition-header">On limits of eigs call</header><div class="admonition-body"><p>In the previous block, we can&#39;t use <code>eigs</code> and must use <code>symeigs</code>. That&#39;s because right now, we only have the symmetric eigensolvers ported. However, since the op type has no way to tell eigs that it should pick the symmetric or non-symmetric version, we need to tell it. </p><p>So if you see </p><pre><code class="nohighlight hljs">MethodError: no method matching eigs(::ArpackSimpleOp{ ... })</code></pre><p>That means you just need to call <code>symeigs</code> instead!  This will probaby get fixed at some point. </p></div></div><h2 id="Complex-Hermitian"><a class="docs-heading-anchor" href="#Complex-Hermitian">Complex Hermitian</a><a id="Complex-Hermitian-1"></a><a class="docs-heading-anchor-permalink" href="#Complex-Hermitian" title="Permalink"></a></h2><p>We also extend Arpack&#39;s symmetric solvers with the ability to solve Hermitian problems.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; n = 100</code><code class="nohighlight hljs ansi" style="display:block;">100</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = Tridiagonal(-ones(n-1)*1im, 2*ones(n)+0im, ones(n-1)*1im)</code><code class="nohighlight hljs ansi" style="display:block;">ERROR: MethodError: no method matching +(::Vector{Float64}, ::Complex{Int64})
-For element-wise addition, use broadcasting with dot syntax: array .+ scalar
-Closest candidates are:
-  +(::Any, ::Any, !Matched::Any, !Matched::Any...) at /opt/hostedtoolcache/julia/1.7.3/x64/share/julia/base/operators.jl:655
-  +(!Matched::Complex, ::Complex) at /opt/hostedtoolcache/julia/1.7.3/x64/share/julia/base/complex.jl:288
-  +(!Matched::UniformScaling, ::Number) at /opt/hostedtoolcache/julia/1.7.3/x64/share/julia/stdlib/v1.7/LinearAlgebra/src/uniformscaling.jl:145
-  ...</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; hermeigs(A, 6)</code><code class="nohighlight hljs ansi" style="display:block;">GenericArpack.ArpackEigen{Float64, ComplexF64, ArpackSimpleOp{Tridiagonal{Float64, Vector{Float64}}}, ArpackState{Float64}, :I}
+  0.000180037-0.0261096im     -0.0040213+0.00172675im</code></pre><h2 id="Finding-the-largest-eigenvalues-with-an-operator"><a class="docs-heading-anchor" href="#Finding-the-largest-eigenvalues-with-an-operator">Finding the largest eigenvalues with an operator</a><a id="Finding-the-largest-eigenvalues-with-an-operator-1"></a><a class="docs-heading-anchor-permalink" href="#Finding-the-largest-eigenvalues-with-an-operator" title="Permalink"></a></h2><p>All <code>GenericArpack</code> calls are mapped to a single computational interface with an <code>ArpackOp</code> type.</p><div class="admonition is-info"><header class="admonition-header">On limits of eigs call</header><div class="admonition-body"><p>In the previous block, we can&#39;t use <code>eigs</code> and must use <code>symeigs</code>. That&#39;s because right now, we only have the symmetric eigensolvers ported. However, since the op type has no way to tell eigs that it should pick the symmetric or non-symmetric version, we need to tell it. </p><p>So if you see </p><pre><code class="nohighlight hljs">MethodError: no method matching eigs(::ArpackSimpleOp{ ... })</code></pre><p>That means you just need to call <code>symeigs</code> instead!  This will probaby get fixed at some point. </p></div></div><h2 id="Complex-Hermitian"><a class="docs-heading-anchor" href="#Complex-Hermitian">Complex Hermitian</a><a id="Complex-Hermitian-1"></a><a class="docs-heading-anchor-permalink" href="#Complex-Hermitian" title="Permalink"></a></h2><p>We also extend Arpack&#39;s symmetric solvers with the ability to solve Hermitian problems.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; n = 100</code><code class="nohighlight hljs ansi" style="display:block;">100</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = Tridiagonal(-ones(n-1)*1im, 2*ones(n).+0im, ones(n-1)*1im)</code><code class="nohighlight hljs ansi" style="display:block;">100×100 Tridiagonal{ComplexF64, Vector{ComplexF64}}:
+  2.0+0.0im   0.0+1.0im       ⋅      …       ⋅           ⋅          ⋅
+ -0.0-1.0im   2.0+0.0im   0.0+1.0im          ⋅           ⋅          ⋅
+      ⋅      -0.0-1.0im   2.0+0.0im          ⋅           ⋅          ⋅
+      ⋅           ⋅      -0.0-1.0im          ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅      …       ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+     ⋮                               ⋱
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅              ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅      …       ⋅           ⋅          ⋅
+      ⋅           ⋅           ⋅          0.0+1.0im       ⋅          ⋅
+      ⋅           ⋅           ⋅          2.0+0.0im   0.0+1.0im      ⋅
+      ⋅           ⋅           ⋅         -0.0-1.0im   2.0+0.0im  0.0+1.0im
+      ⋅           ⋅           ⋅              ⋅      -0.0-1.0im  2.0+0.0im</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; hermeigs(A, 6)</code><code class="nohighlight hljs ansi" style="display:block;">GenericArpack.ArpackEigen{Float64, ComplexF64, ArpackSimpleOp{Tridiagonal{ComplexF64, Vector{ComplexF64}}}, ArpackState{Float64}, :I}
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.965270496444535
- 3.9758608794815165
- 3.9845397447265563
- 3.991298695938034
- 3.9961311942671838
- 3.999032564583959
+ 3.965270496444537
+ 3.9758608794815493
+ 3.984539744726567
+ 3.991298695938054
+ 3.99613119426719
+ 3.9990325645839793
 vectors:
 100×6 Matrix{ComplexF64}:
-  0.000180037-0.0261096im  …   0.0040213-0.00172675im
- -0.000353822+0.0513124im     -0.0080387+0.00345184im
-  0.000515318-0.0747331im      0.0120483-0.00517358im
- -0.000658918+0.0955584im     -0.0160463+0.00689032im
-  0.000779634-0.113065im       0.0200288-0.00860039im
- -0.000873273+0.126645im   …  -0.0239918+0.0103021im
-  0.000936585-0.135827im       0.0279317-0.0119939im
- -0.000967369+0.140291im      -0.0318445+0.0136741im
-  0.000964557-0.139883im       0.0357266-0.0153411im
- -0.000928246+0.134617im       -0.039574+0.0169932im
-             ⋮             ⋱            ⋮
-  0.000964557-0.139883im      -0.0357266+0.0153411im
- -0.000967369+0.140291im       0.0318445-0.0136741im
-  0.000936585-0.135827im      -0.0279317+0.0119939im
- -0.000873273+0.126645im       0.0239918-0.0103021im
-  0.000779634-0.113065im   …  -0.0200288+0.00860039im
- -0.000658918+0.0955584im      0.0160463-0.00689032im
-  0.000515318-0.0747331im     -0.0120483+0.00517358im
- -0.000353822+0.0513124im      0.0080387-0.00345184im
-  0.000180037-0.0261096im     -0.0040213+0.00172675im</code></pre><h2 id="SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations"><a class="docs-heading-anchor" href="#SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations">SVD (Singular Value Decomposition) via the Normal Equations</a><a id="SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations-1"></a><a class="docs-heading-anchor-permalink" href="#SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations" title="Permalink"></a></h2><p>Gene Golub often railed against the use of the normal equations for SVD computations.  However, he would also use them when appropriate. For computing singular  values via ARPACK, the normal equations offer a few advantages. </p><ul><li>smallest singular values </li><li>they reduce computation as the dimension of the vectors is smaller</li></ul><p>The downside is that they also reduce maximum obtainable accuracy. So please consider using the high-precision types we enable in <code>GenericArpack.jl</code>, if accuracy is desired.</p><p>(I need a better SVD example here, but alas.)</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using GenericArpack, SparseArrays, StableRNGs</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = sprand(StableRNG(1), 200, 100, 5/200)</code><code class="nohighlight hljs ansi" style="display:block;">200×100 SparseMatrixCSC{Float64, Int64} with 472 stored entries:
+  0.0255806+0.00523195im  …    -0.0043763+2.21686e-5im
+  0.0102822-0.0502729im        4.43158e-5+0.00874837im
+ -0.0732191-0.0149754im          0.013112-6.64201e-5im
+ -0.0191484+0.0936225im       -8.84602e-5-0.0174629im
+   0.110774+0.0226565im        -0.0217969+0.000110415im
+  0.0253777-0.124079im    …   0.000132262+0.0261099im
+  -0.133075-0.0272175im         0.0303975-0.000153982im
+ -0.0281121+0.137449im       -0.000175553-0.0346558im
+   0.137049+0.0280304im        -0.0388805+0.000196954im
+  0.0269752-0.13189im         0.000218164+0.0430677im
+           ⋮              ⋱              ⋮
+  0.0280304-0.137049im       -0.000196954-0.0388805im
+  -0.137449-0.0281121im        -0.0346558+0.000175553im
+ -0.0272175+0.133075im        0.000153982+0.0303975im
+   0.124079+0.0253777im         0.0261099-0.000132262im
+  0.0226565-0.110774im    …  -0.000110415-0.0217969im
+ -0.0936225-0.0191484im        -0.0174629+8.84602e-5im
+ -0.0149754+0.0732191im        6.64201e-5+0.013112im
+  0.0502729+0.0102822im        0.00874837-4.43158e-5im
+ 0.00523195-0.0255806im       -2.21686e-5-0.0043763im</code></pre><h2 id="SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations"><a class="docs-heading-anchor" href="#SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations">SVD (Singular Value Decomposition) via the Normal Equations</a><a id="SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations-1"></a><a class="docs-heading-anchor-permalink" href="#SVD-(Singular-Value-Decomposition)-via-the-Normal-Equations" title="Permalink"></a></h2><p>Gene Golub often railed against the use of the normal equations for SVD computations.  However, he would also use them when appropriate. For computing singular  values via ARPACK, the normal equations offer a few advantages. </p><ul><li>smallest singular values </li><li>they reduce computation as the dimension of the vectors is smaller</li></ul><p>The downside is that they also reduce maximum obtainable accuracy. So please consider using the high-precision types we enable in <code>GenericArpack.jl</code>, if accuracy is desired.</p><p>(I need a better SVD example here, but alas.)</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using GenericArpack, SparseArrays, StableRNGs</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = sprand(StableRNG(1), 200, 100, 5/200)</code><code class="nohighlight hljs ansi" style="display:block;">200×100 SparseMatrixCSC{Float64, Int64} with 472 stored entries:
 ⠀⠠⠅⠀⠀⠀⠀⠰⠤⠐⠀⠠⠠⡀⠠⢀⠉⢰⠀⠀
 ⠈⡈⠀⡅⡁⠠⠃⠅⢀⠐⠈⠠⡁⠂⠃⠠⠀⠈⠀⠀
 ⢄⠦⠈⠠⠁⠀⠈⠊⠈⠀⢌⠁⠀⠁⠀⠁⠁⠀⠉⠀
@@ -194,9 +208,9 @@ U factor:
  -0.0415146   -0.0741379   -0.153432
 singular values:
 3-element Vector{Float64}:
- 2.6944729446552693
- 2.4968736254169444
- 2.3785967629735754
+ 2.694472944655266
+ 2.4968736254169426
+ 2.378596762973573
 Vt factor:
 3×100 Matrix{Float64}:
  -0.0178603  -0.0281502  -0.0186638  …  -0.0158545   -0.18666   -0.0380778
@@ -226,18 +240,19 @@ U factor:
  -0.0124722   -0.0741284   0.057463
 singular values:
 3-element Vector{Float64}:
- 0.10806971046978665
- 0.21758284541859946
- 0.2303303405180739
+ 0.10806971046978932
+ 0.21758284541860098
+ 0.2303303405180771
 Vt factor:
 3×100 Matrix{Float64}:
  -0.0194694    0.00119836  0.00181863  …   0.0184082    0.000268922
  -0.0689222   -0.0466259   0.00542729     -0.00773754  -0.00103489
  -0.00309843   0.0261328   0.0399371      -0.00529339  -0.0470376</code></pre><p>Or only the singular values (although this doesn&#39;t really save as much work as it might sound like) and use them to compute the matrix 2-norm. </p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; vals = svds(A, 4; which=:BE, ritzvec=false, ncv=12).S # both smallest and largest</code><code class="nohighlight hljs ansi" style="display:block;">4-element Vector{Float64}:
- 0.10806971046977838
- 0.21758284541859638
- 2.496873625416946
- 2.6944729446552684</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; [vals[end]/vals[1] cond(Matrix(A))]</code><code class="nohighlight hljs ansi" style="display:block;">ERROR: UndefVarError: cond not defined</code></pre><p>So we can estimate the matrix 2-norm with some reasonable  accuracy (in a well-conditioned case). </p><h2 id="Complex-SVD-(Singular-Value-Decomposition)"><a class="docs-heading-anchor" href="#Complex-SVD-(Singular-Value-Decomposition)">Complex SVD (Singular Value Decomposition)</a><a id="Complex-SVD-(Singular-Value-Decomposition)-1"></a><a class="docs-heading-anchor-permalink" href="#Complex-SVD-(Singular-Value-Decomposition)" title="Permalink"></a></h2><p>This operation is not in the pure ARPACK library.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using GenericArpack, SparseArrays, StableRNGs</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = sprand(StableRNG(1), ComplexF64, 200, 100, 5/200)</code><code class="nohighlight hljs ansi" style="display:block;">200×100 SparseMatrixCSC{ComplexF64, Int64} with 472 stored entries:
+ 0.10806971046978275
+ 0.2175828454185987
+ 2.4968736254169444
+ 2.6944729446552675</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; [vals[end]/vals[1] cond(Matrix(A))]</code><code class="nohighlight hljs ansi" style="display:block;">1×2 Matrix{Float64}:
+ 24.9327  24.9327</code></pre><p>So we can estimate the matrix 2-norm with some reasonable  accuracy (in a well-conditioned case). </p><h2 id="Complex-SVD-(Singular-Value-Decomposition)"><a class="docs-heading-anchor" href="#Complex-SVD-(Singular-Value-Decomposition)">Complex SVD (Singular Value Decomposition)</a><a id="Complex-SVD-(Singular-Value-Decomposition)-1"></a><a class="docs-heading-anchor-permalink" href="#Complex-SVD-(Singular-Value-Decomposition)" title="Permalink"></a></h2><p>This operation is not in the pure ARPACK library.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using GenericArpack, SparseArrays, StableRNGs</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = sprand(StableRNG(1), ComplexF64, 200, 100, 5/200)</code><code class="nohighlight hljs ansi" style="display:block;">200×100 SparseMatrixCSC{ComplexF64, Int64} with 472 stored entries:
 ⠀⠠⠅⠀⠀⠀⠀⠰⠤⠐⠀⠠⠠⡀⠠⢀⠉⢰⠀⠀
 ⠈⡈⠀⡅⡁⠠⠃⠅⢀⠐⠈⠠⡁⠂⠃⠠⠀⠈⠀⠀
 ⢄⠦⠈⠠⠁⠀⠈⠊⠈⠀⢌⠁⠀⠁⠀⠁⠁⠀⠉⠀
@@ -282,17 +297,46 @@ U factor:
    -0.0418854+0.0458577im        -0.0314791-0.12014im
 singular values:
 3-element Vector{Float64}:
- 3.578494653659692
- 3.287380399538958
+ 3.5784946536596904
+ 3.2873803995389563
  3.1650809676802596
 Vt factor:
 3×100 Matrix{ComplexF64}:
   0.0085072-0.0152773im     0.0227414-0.0697884im  …   0.0319019-0.0196392im
  -0.0128495-0.0195603im     0.0120002+0.0599222im     0.00884387+0.00317647im
- -0.0153662+0.0154273im  -0.000249934-0.0193798im     -0.0534621-0.0252439im</code></pre><h2 id="Real-and-Complex-SVD-via-an-ArpackNormalOp"><a class="docs-heading-anchor" href="#Real-and-Complex-SVD-via-an-ArpackNormalOp">Real and Complex SVD via an ArpackNormalOp</a><a id="Real-and-Complex-SVD-via-an-ArpackNormalOp-1"></a><a class="docs-heading-anchor-permalink" href="#Real-and-Complex-SVD-via-an-ArpackNormalOp" title="Permalink"></a></h2><p>All of the complex SVD calls for any Arpack matrix type are mapped to a single call with an <code>ArpackNormalOp</code></p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; svds(ArpackNormalOp(A), 3; which=:SM) # smallest</code><code class="nohighlight hljs ansi" style="display:block;">ERROR: MethodError: no method matching ArpackNormalOp(::SparseMatrixCSC{Float64, Int64})
-Closest candidates are:
-  ArpackNormalOp(::MatT, !Matched::Int64, !Matched::Symbol, !Matched::Vector{ET}) where {MatT, ET} at ~/work/GenericArpack.jl/GenericArpack.jl/src/idonow_ops.jl:217
-  ArpackNormalOp(::Any, !Matched::Any) at ~/work/GenericArpack.jl/GenericArpack.jl/src/idonow_ops.jl:222</code></pre><h1 id="Examples-of-Generalized-Eigenvalue-Problems"><a class="docs-heading-anchor" href="#Examples-of-Generalized-Eigenvalue-Problems">Examples of Generalized Eigenvalue Problems</a><a id="Examples-of-Generalized-Eigenvalue-Problems-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-of-Generalized-Eigenvalue-Problems" title="Permalink"></a></h1><h2 id="Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample)."><a class="docs-heading-anchor" href="#Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample).">Generalized Eigenvalue Example (from Arpack <code>dsdrv3</code> sample).</a><a id="Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample).-1"></a><a class="docs-heading-anchor-permalink" href="#Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample)." title="Permalink"></a></h2><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; n = 100</code><code class="nohighlight hljs ansi" style="display:block;">100</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*(n+1)</code><code class="nohighlight hljs ansi" style="display:block;">100×100 Tridiagonal{Float64, Vector{Float64}}:
+ -0.0153662+0.0154273im  -0.000249934-0.0193798im     -0.0534621-0.0252439im</code></pre><h2 id="Real-and-Complex-SVD-via-an-ArpackNormalOp"><a class="docs-heading-anchor" href="#Real-and-Complex-SVD-via-an-ArpackNormalOp">Real and Complex SVD via an ArpackNormalOp</a><a id="Real-and-Complex-SVD-via-an-ArpackNormalOp-1"></a><a class="docs-heading-anchor-permalink" href="#Real-and-Complex-SVD-via-an-ArpackNormalOp" title="Permalink"></a></h2><p>All of the complex SVD calls for any Arpack matrix type are mapped to a single call with an <code>ArpackNormalOp</code></p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; svds(ArpackNormalOp(Float64, A), 3; which=:SM) # smallest</code><code class="nohighlight hljs ansi" style="display:block;">SVD{Float64, Float64, Matrix{Float64}}
+U factor:
+200×3 Matrix{Float64}:
+  0.582817    -0.0134732   0.00607081
+ -0.155068    -0.0256579  -0.00537595
+ -0.00418642  -0.062982    0.0739621
+ -0.0107715   -0.18135    -0.0441208
+  0.0246127    0.0455897  -0.0964834
+ -0.0614142    0.192247    0.369308
+  0.0          0.0         0.0
+  0.0          0.0         0.0
+  0.0242838    0.11556    -0.0388435
+ -0.0164395    0.0235335   0.00997486
+  ⋮
+ -0.0288299   -0.0486256  -0.00814136
+  0.0146921   -0.0276828  -0.0537498
+  0.039303     0.0911307  -0.0604381
+  0.0549959    0.142183   -0.0632323
+ -0.0117026   -0.0344057   0.0675823
+ -0.0227149    0.177344    0.00728057
+  0.00362815   0.0593515  -0.000656137
+  0.0048518    0.108275   -0.000904173
+ -0.0124722   -0.0741284   0.057463
+singular values:
+3-element Vector{Float64}:
+ 0.10806971046978932
+ 0.21758284541860098
+ 0.2303303405180771
+Vt factor:
+3×100 Matrix{Float64}:
+ -0.0194694    0.00119836  0.00181863  …   0.0184082    0.000268922
+ -0.0689222   -0.0466259   0.00542729     -0.00773754  -0.00103489
+ -0.00309843   0.0261328   0.0399371      -0.00529339  -0.0470376</code></pre><h1 id="Examples-of-Generalized-Eigenvalue-Problems"><a class="docs-heading-anchor" href="#Examples-of-Generalized-Eigenvalue-Problems">Examples of Generalized Eigenvalue Problems</a><a id="Examples-of-Generalized-Eigenvalue-Problems-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-of-Generalized-Eigenvalue-Problems" title="Permalink"></a></h1><h2 id="Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample)."><a class="docs-heading-anchor" href="#Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample).">Generalized Eigenvalue Example (from Arpack <code>dsdrv3</code> sample).</a><a id="Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample).-1"></a><a class="docs-heading-anchor-permalink" href="#Generalized-Eigenvalue-Example-(from-Arpack-dsdrv3-sample)." title="Permalink"></a></h2><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; n = 100</code><code class="nohighlight hljs ansi" style="display:block;">100</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*(n+1)</code><code class="nohighlight hljs ansi" style="display:block;">100×100 Tridiagonal{Float64, Vector{Float64}}:
   202.0  -101.0      ⋅       ⋅       ⋅   …      ⋅       ⋅       ⋅       ⋅
  -101.0   202.0  -101.0      ⋅       ⋅          ⋅       ⋅       ⋅       ⋅
      ⋅   -101.0   202.0  -101.0      ⋅          ⋅       ⋅       ⋅       ⋅
@@ -336,10 +380,10 @@ Closest candidates are:
 eigenspace: LM
 values:
 4-element Vector{Float64}:
- 121003.49732902294
- 121616.60247324027
- 122057.4945707947
- 122323.22366457568
+ 121003.4973290232
+ 121616.60247324084
+ 122057.49457079488
+ 122323.22366457582
 vectors:
 100×4 Matrix{Float64}:
  -0.30281   -0.227747  -0.152137   0.0761604
@@ -361,38 +405,38 @@ vectors:
   1.16486   -0.891273   0.602675   0.303905
  -0.889778   0.675331  -0.454058  -0.228186
   0.600939  -0.453512   0.303685   0.152247
- -0.30281    0.227747  -0.152137  -0.0761604</code></pre><h2 id="Complex-Hermitian-Generalized-Eigenvalue-Example"><a class="docs-heading-anchor" href="#Complex-Hermitian-Generalized-Eigenvalue-Example">Complex Hermitian Generalized Eigenvalue Example</a><a id="Complex-Hermitian-Generalized-Eigenvalue-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Complex-Hermitian-Generalized-Eigenvalue-Example" title="Permalink"></a></h2><p>Not here yet! Send me one if you have one! </p><h2 id="Shift-Invert-Example"><a class="docs-heading-anchor" href="#Shift-Invert-Example">Shift-Invert Example</a><a id="Shift-Invert-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Shift-Invert-Example" title="Permalink"></a></h2><p>Not here yet! Send me one if you have one! </p><h2 id="Buckling-Mode-Example"><a class="docs-heading-anchor" href="#Buckling-Mode-Example">Buckling Mode Example</a><a id="Buckling-Mode-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Buckling-Mode-Example" title="Permalink"></a></h2><p>Not here yet! Send me one if you have one! </p><h2 id><a class="docs-heading-anchor" href="#"></a><a id="-1"></a><a class="docs-heading-anchor-permalink" href="#" title="Permalink"></a></h2><h1 id="Examples-with-high-precision-(or-low-precision)-types"><a class="docs-heading-anchor" href="#Examples-with-high-precision-(or-low-precision)-types">Examples with high-precision (or low-precision) types</a><a id="Examples-with-high-precision-(or-low-precision)-types-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-with-high-precision-(or-low-precision)-types" title="Permalink"></a></h1><p>Both <code>svds</code> and <code>symeigs</code>/<code>hermeigs</code> take in a set of types.</p><h2 id="With-just-one-type"><a class="docs-heading-anchor" href="#With-just-one-type">With just one type</a><a id="With-just-one-type-1"></a><a class="docs-heading-anchor-permalink" href="#With-just-one-type" title="Permalink"></a></h2><p>Consider our initial tridiagonal matrix <span>$A$</span>.  By default, we use a float-type based on the element-type of the input matrix <span>$A$</span>. But when the input includes a specific type, we use that: </p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; eigs(Float32, Symmetric(A), 6) # use Float32 for all computations</code><code class="nohighlight hljs ansi" style="display:block;">GenericArpack.ArpackEigen{Float32, Float32, ArpackSimpleOp{Symmetric{Float64, Tridiagonal{Float64, Vector{Float64}}}}, ArpackState{Float32}, :I}
+ -0.30281    0.227747  -0.152137  -0.0761604</code></pre><h2 id="Complex-Hermitian-Generalized-Eigenvalue-Example"><a class="docs-heading-anchor" href="#Complex-Hermitian-Generalized-Eigenvalue-Example">Complex Hermitian Generalized Eigenvalue Example</a><a id="Complex-Hermitian-Generalized-Eigenvalue-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Complex-Hermitian-Generalized-Eigenvalue-Example" title="Permalink"></a></h2><p>Not here yet! Send me one if you have one! </p><h2 id="Shift-Invert-Example"><a class="docs-heading-anchor" href="#Shift-Invert-Example">Shift-Invert Example</a><a id="Shift-Invert-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Shift-Invert-Example" title="Permalink"></a></h2><p>Not here yet! Send me one if you have one! (Need to test and debug the Shift Invert mode driver.)</p><h2 id="Buckling-Mode-Example"><a class="docs-heading-anchor" href="#Buckling-Mode-Example">Buckling Mode Example</a><a id="Buckling-Mode-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Buckling-Mode-Example" title="Permalink"></a></h2><p>Not here yet! Send me one if you have one! (Need to test and debug the Buckling mode driver.)</p><h1 id="Examples-with-high-precision-(or-low-precision)-types"><a class="docs-heading-anchor" href="#Examples-with-high-precision-(or-low-precision)-types">Examples with high-precision (or low-precision) types</a><a id="Examples-with-high-precision-(or-low-precision)-types-1"></a><a class="docs-heading-anchor-permalink" href="#Examples-with-high-precision-(or-low-precision)-types" title="Permalink"></a></h1><p>Both <code>svds</code> and <code>symeigs</code>/<code>hermeigs</code> take in a set of types.</p><h2 id="With-just-one-type"><a class="docs-heading-anchor" href="#With-just-one-type">With just one type</a><a id="With-just-one-type-1"></a><a class="docs-heading-anchor-permalink" href="#With-just-one-type" title="Permalink"></a></h2><p>Consider our initial tridiagonal matrix <span>$A$</span>.  By default, we use a float-type based on the element-type of the input matrix <span>$A$</span>. But when the input includes a specific type, we use that: </p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; eigs(Float32, Symmetric(A), 6) # use Float32 for all computations</code><code class="nohighlight hljs ansi" style="display:block;">GenericArpack.ArpackEigen{Float32, Float32, ArpackSimpleOp{Symmetric{Float64, Tridiagonal{Float64, Vector{Float64}}}}, ArpackState{Float32}, :I}
 eigenspace: LM
 values:
 6-element Vector{Float32}:
- 3.9652638
- 3.975855
- 3.9845366
- 3.9912934
+ 3.965267
+ 3.9758523
+ 3.9845314
+ 3.9912932
  3.9961293
- 3.9990337
+ 3.999034
 vectors:
 100×6 Matrix{Float32}:
- -0.0261102   0.0217993  -0.0174604   0.0131113  -0.00875244   0.00437105
-  0.0513135  -0.0430726   0.0346508  -0.0261086   0.017471    -0.00873789
- -0.0747347   0.0633062  -0.0513053   0.0388788  -0.0261219    0.0130963
-  0.0955601  -0.0820118   0.0671664  -0.0513108   0.0346717   -0.0174421
- -0.113067    0.098738   -0.0819889   0.0632965  -0.0430874    0.0217712
-  0.126647   -0.113081    0.0955433  -0.0747318   0.0513363   -0.0260794
- -0.135828    0.124695   -0.10762     0.0855172  -0.0593866    0.0303624
-  0.140292   -0.133299    0.118033   -0.095559    0.0672069   -0.0346163
- -0.139884    0.138685   -0.12662     0.10477    -0.0747671    0.0388367
-  0.134619   -0.140723    0.13325    -0.113069    0.082038    -0.0430197
+ -0.0261131   0.0217902  -0.0174677   0.0131052  -0.00875255   0.00436763
+  0.0513195  -0.0430543   0.0346653  -0.0260966   0.0174714   -0.0087309
+ -0.0747437   0.0632794  -0.0513268   0.0388612  -0.0261228    0.0130857
+  0.0955726  -0.0819773   0.0671949  -0.0512879   0.0346735   -0.0174279
+ -0.113082    0.0986967  -0.0820238   0.0632689  -0.0430903    0.0217532
+  0.126665   -0.113034    0.0955846  -0.0746998   0.0513406   -0.0260578
+ -0.135849    0.124644   -0.107667    0.0854813  -0.0593925    0.0303372
+  0.140316   -0.133246    0.118086   -0.0955193   0.0672146   -0.0345876
+ -0.139909    0.138632   -0.126678    0.104727   -0.0747769    0.0388047
+  0.134644   -0.140672    0.133312   -0.113024    0.0820499   -0.0429848
   ⋮                                                            ⋮
- -0.13987    -0.138678   -0.12671    -0.104741   -0.0746934   -0.0389015
-  0.140281    0.133294    0.118116    0.0955331   0.0671401    0.0346748
- -0.135819   -0.124692   -0.107695   -0.0854945  -0.0593271   -0.0304143
-  0.12664     0.113079    0.0956095   0.0747122   0.0512845    0.0261243
- -0.113061   -0.0987375  -0.0820456  -0.06328    -0.0430434   -0.0218088
-  0.0955561   0.0820121   0.0672129   0.0512973   0.034636     0.0174724
- -0.0747315  -0.0633071  -0.0513407  -0.0388684  -0.0260947   -0.0131192
-  0.0513114   0.0430735   0.0346747   0.0261015   0.0174527    0.00875327
- -0.0261091  -0.0217998  -0.0174724  -0.0131077  -0.00874317  -0.00437874</code></pre><p>If <code>A</code> has a different float type, then we may use that. </p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; Af32 = Float32.(A) # make a Float32 copy</code><code class="nohighlight hljs ansi" style="display:block;">100×100 Tridiagonal{Float32, Vector{Float32}}:
+ -0.139849   -0.138697   -0.12664    -0.1048     -0.0746858   -0.0389184
+  0.140259    0.133312    0.118051    0.0955869   0.067134     0.0346899
+ -0.135797   -0.124708   -0.107636   -0.0855423  -0.0593223   -0.0304279
+  0.126619    0.113094    0.0955563   0.0747536   0.0512809    0.0261363
+ -0.113043   -0.0987499  -0.0819997  -0.0633146  -0.043041    -0.0218194
+  0.0955404   0.0820219   0.067175    0.0513251   0.0346345    0.0174813
+ -0.0747197  -0.0633143  -0.0513118  -0.0388893  -0.026094    -0.0131261
+  0.0513034   0.0430783   0.0346551   0.0261155   0.0174523    0.00875799
+ -0.0261051  -0.0218023  -0.0174626  -0.0131148  -0.00874309  -0.00438129</code></pre><p>If <code>A</code> has a different float type, then we may use that. </p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; Af32 = Float32.(A) # make a Float32 copy</code><code class="nohighlight hljs ansi" style="display:block;">100×100 Tridiagonal{Float32, Vector{Float32}}:
   2.0  -1.0    ⋅     ⋅     ⋅     ⋅   …    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
  -1.0   2.0  -1.0    ⋅     ⋅     ⋅        ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
    ⋅   -1.0   2.0  -1.0    ⋅     ⋅        ⋅     ⋅     ⋅     ⋅     ⋅     ⋅
@@ -416,12 +460,12 @@ vectors:
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.9652704964444903
- 3.9758608794815036
- 3.984539744726552
- 3.991298695938015
- 3.9961311942671656
- 3.999032564583961
+ 3.965270496444499
+ 3.975860879481494
+ 3.9845397447265314
+ 3.991298695938016
+ 3.996131194267181
+ 3.999032564583972
 vectors:
 100×6 Matrix{Float64}:
  -0.0261102   0.0217972  -0.0174631   0.0131121  -0.00874848   0.00437636
@@ -447,12 +491,12 @@ vectors:
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.9652704964444903
- 3.9758608794815036
- 3.984539744726552
- 3.991298695938015
- 3.9961311942671656
- 3.999032564583961
+ 3.965270496444499
+ 3.975860879481494
+ 3.9845397447265314
+ 3.991298695938016
+ 3.996131194267181
+ 3.999032564583972
 vectors:
 100×6 Matrix{Float64}:
  -0.0261102   0.0217972  -0.0174631   0.0131121  -0.00874848   0.00437636
@@ -478,34 +522,34 @@ vectors:
 eigenspace: LM
 values:
 6-element Vector{Float32}:
- 3.9652638
- 3.975855
- 3.9845366
- 3.9912934
+ 3.965267
+ 3.9758523
+ 3.9845314
+ 3.9912932
  3.9961293
- 3.9990337
+ 3.999034
 vectors:
 100×6 Matrix{Float32}:
- -0.0261102   0.0217993  -0.0174604   0.0131113  -0.00875244   0.00437105
-  0.0513135  -0.0430726   0.0346508  -0.0261086   0.017471    -0.00873789
- -0.0747347   0.0633062  -0.0513053   0.0388788  -0.0261219    0.0130963
-  0.0955601  -0.0820118   0.0671664  -0.0513108   0.0346717   -0.0174421
- -0.113067    0.098738   -0.0819889   0.0632965  -0.0430874    0.0217712
-  0.126647   -0.113081    0.0955433  -0.0747318   0.0513363   -0.0260794
- -0.135828    0.124695   -0.10762     0.0855172  -0.0593866    0.0303624
-  0.140292   -0.133299    0.118033   -0.095559    0.0672069   -0.0346163
- -0.139884    0.138685   -0.12662     0.10477    -0.0747671    0.0388367
-  0.134619   -0.140723    0.13325    -0.113069    0.082038    -0.0430197
+ -0.0261131   0.0217902  -0.0174677   0.0131052  -0.00875255   0.00436763
+  0.0513195  -0.0430543   0.0346653  -0.0260966   0.0174714   -0.0087309
+ -0.0747437   0.0632794  -0.0513268   0.0388612  -0.0261228    0.0130857
+  0.0955726  -0.0819773   0.0671949  -0.0512879   0.0346735   -0.0174279
+ -0.113082    0.0986967  -0.0820238   0.0632689  -0.0430903    0.0217532
+  0.126665   -0.113034    0.0955846  -0.0746998   0.0513406   -0.0260578
+ -0.135849    0.124644   -0.107667    0.0854813  -0.0593925    0.0303372
+  0.140316   -0.133246    0.118086   -0.0955193   0.0672146   -0.0345876
+ -0.139909    0.138632   -0.126678    0.104727   -0.0747769    0.0388047
+  0.134644   -0.140672    0.133312   -0.113024    0.0820499   -0.0429848
   ⋮                                                            ⋮
- -0.13987    -0.138678   -0.12671    -0.104741   -0.0746934   -0.0389015
-  0.140281    0.133294    0.118116    0.0955331   0.0671401    0.0346748
- -0.135819   -0.124692   -0.107695   -0.0854945  -0.0593271   -0.0304143
-  0.12664     0.113079    0.0956095   0.0747122   0.0512845    0.0261243
- -0.113061   -0.0987375  -0.0820456  -0.06328    -0.0430434   -0.0218088
-  0.0955561   0.0820121   0.0672129   0.0512973   0.034636     0.0174724
- -0.0747315  -0.0633071  -0.0513407  -0.0388684  -0.0260947   -0.0131192
-  0.0513114   0.0430735   0.0346747   0.0261015   0.0174527    0.00875327
- -0.0261091  -0.0217998  -0.0174724  -0.0131077  -0.00874317  -0.00437874</code></pre><h2 id="With-two-types"><a class="docs-heading-anchor" href="#With-two-types">With two types</a><a id="With-two-types-1"></a><a class="docs-heading-anchor-permalink" href="#With-two-types" title="Permalink"></a></h2><p>In fact, the <code>symeigs</code> functions all take in <em>two</em> types: the type of the Eigeninformation (which must be be non-complex) and the type of the vector information (which can be complex).</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; op = ArpackSimpleOp(Float16.(A))</code><code class="nohighlight hljs ansi" style="display:block;">ArpackSimpleOp{Tridiagonal{Float16, Vector{Float16}}}(Float16[2.0 -1.0 … 0.0 0.0; -1.0 2.0 … 0.0 0.0; … ; 0.0 0.0 … 2.0 -1.0; 0.0 0.0 … -1.0 2.0])</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; symeigs(ComplexF64, Float32, op, 6)</code><code class="nohighlight hljs ansi" style="display:block;">GenericArpack.ArpackEigen{Float32, ComplexF64, ArpackSimpleOp{Tridiagonal{Float16, Vector{Float16}}}, ArpackState{Float32}, :I}
+ -0.139849   -0.138697   -0.12664    -0.1048     -0.0746858   -0.0389184
+  0.140259    0.133312    0.118051    0.0955869   0.067134     0.0346899
+ -0.135797   -0.124708   -0.107636   -0.0855423  -0.0593223   -0.0304279
+  0.126619    0.113094    0.0955563   0.0747536   0.0512809    0.0261363
+ -0.113043   -0.0987499  -0.0819997  -0.0633146  -0.043041    -0.0218194
+  0.0955404   0.0820219   0.067175    0.0513251   0.0346345    0.0174813
+ -0.0747197  -0.0633143  -0.0513118  -0.0388893  -0.026094    -0.0131261
+  0.0513034   0.0430783   0.0346551   0.0261155   0.0174523    0.00875799
+ -0.0261051  -0.0218023  -0.0174626  -0.0131148  -0.00874309  -0.00438129</code></pre><h2 id="With-two-types"><a class="docs-heading-anchor" href="#With-two-types">With two types</a><a id="With-two-types-1"></a><a class="docs-heading-anchor-permalink" href="#With-two-types" title="Permalink"></a></h2><p>In fact, the <code>symeigs</code> functions all take in <em>two</em> types: the type of the Eigeninformation (which must be be non-complex) and the type of the vector information (which can be complex).</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; op = ArpackSimpleOp(Float16.(A))</code><code class="nohighlight hljs ansi" style="display:block;">ArpackSimpleOp{Tridiagonal{Float16, Vector{Float16}}}(Float16[2.0 -1.0 … 0.0 0.0; -1.0 2.0 … 0.0 0.0; … ; 0.0 0.0 … 2.0 -1.0; 0.0 0.0 … -1.0 2.0])</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; symeigs(ComplexF64, Float32, op, 6)</code><code class="nohighlight hljs ansi" style="display:block;">GenericArpack.ArpackEigen{Float32, ComplexF64, ArpackSimpleOp{Tridiagonal{Float16, Vector{Float16}}}, ArpackState{Float32}, :I}
 eigenspace: LM
 values:
 6-element Vector{Float32}:
@@ -540,9 +584,9 @@ vectors:
 eigenspace: LM
 values:
 3-element Vector{BigFloat}:
- 3.991298695938037159508597021220321966797436385660381715852115264051838787433121
- 3.996131194267188652353734193440331996350294707921790683980865441165101665783157
- 3.999032564583976105529006234362963633374988313375663912614167292763251549371105
+ 3.991298695938037148102165683744127561641261311624052961095792224573134252757419
+ 3.996131194267188687013262780797630749228790415724744236975446831254799101018544
+ 3.999032564583976138718431769018696101859608395174362987740450578103401289027343
 vectors:
 100×3 Matrix{Float64}:
   0.0131121  -0.00874848  -0.00437636
@@ -646,11 +690,11 @@ _saupd: number of &quot;converged&quot; Ritz values 3
 
  _saupd: final Ritz values
  -------------------------
- 3.991298695938041       , 3.9961311942671642      , 3.9990325645839695      ,                            # 1-3
+ 3.9912986959380157      , 3.996131194267168       , 3.9990325645839775      ,                            # 1-3
 
  _saupd: corresponding error bounds
  ----------------------------------
- 7.757113726812292e-17   , 4.814945065525502e-22   , 2.5019471633814614e-24  ,                            # 1-3
+ 7.757113726400112e-17   , 4.814945065067452e-22   , 2.5019471631210663e-24  ,                            # 1-3
      ==========================================
      = Symmetric implicit Arnoldi update code =
      = Version Number:  2.4                   =
@@ -667,24 +711,24 @@ _saupd: number of &quot;converged&quot; Ritz values 3
      Total number of reorthogonalization steps  = 521
      Total number of iterative refinement steps = 0
      Total number of restart steps              = 0
-     Total time in user OP*x operation          = 0.03483724594116211
+     Total time in user OP*x operation          = 0.02025008201599121
      Total time in user B*x operation           = 0.0
-     Total time in Arnoldi update routine       = 0.0738530158996582
-     Total time in saup2 routine                = 0.06268095970153809
-     Total time in basic Arnoldi iteration loop = 0.036324501037597656
-     Total time in reorthogonalization phase    = 0.0007038116455078125
-     Total time in (re)start vector generation  = 1.5974044799804688e-5
-     Total time in trid eigenvalue subproblem   = 0.0006897449493408203
-     Total time in getting the shifts           = 4.220008850097656e-5
-     Total time in applying the shifts          = 0.000728607177734375
+     Total time in Arnoldi update routine       = 0.06295895576477051
+     Total time in saup2 routine                = 0.0502469539642334
+     Total time in basic Arnoldi iteration loop = 0.022032976150512695
+     Total time in reorthogonalization phase    = 0.0008544921875
+     Total time in (re)start vector generation  = 9.059906005859375e-6
+     Total time in trid eigenvalue subproblem   = 0.0007205009460449219
+     Total time in getting the shifts           = 3.600120544433594e-5
+     Total time in applying the shifts          = 0.0006387233734130859
      Total time in convergence testing          = 0.0
 GenericArpack.ArpackEigen{Float64, Float64, ArpackSimpleOp{Symmetric{Float64, Tridiagonal{Float64, Vector{Float64}}}}, ArpackState{Float64}, :I}
 eigenspace: LM
 values:
 3-element Vector{Float64}:
- 3.991298695938041
- 3.9961311942671642
- 3.9990325645839695
+ 3.9912986959380157
+ 3.996131194267168
+ 3.9990325645839775
 vectors:
 100×3 Matrix{Float64}:
   0.0131121  -0.00874848  -0.00437636
@@ -706,4 +750,4 @@ vectors:
   0.0513136   0.0346562   -0.0174631
  -0.038881   -0.0261102    0.0131121
   0.0261102   0.0174631   -0.00874848
- -0.0131121  -0.00874848   0.00437636</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="library/">Library »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.19 on <span class="colophon-date" title="Thursday 7 July 2022 19:46">Thursday 7 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ -0.0131121  -0.00874848   0.00437636</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="library/">Library »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.19 on <span class="colophon-date" title="Thursday 7 July 2022 19:58">Thursday 7 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
