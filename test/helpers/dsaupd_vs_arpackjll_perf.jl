@@ -7,6 +7,8 @@ using Arpack_jll
 import Arpack_jll, LinearAlgebra
 import SHA
 
+LinearAlgebra.BLAS.set_num_threads(1)
+
 function _reset_libarpack_dgetv0_iseed()
   # we need hardcoded offsets because we can't get these from cglobal :( )
   sha = open(SHA.sha256, Arpack_jll.libarpack_path)
