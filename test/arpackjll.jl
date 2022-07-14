@@ -17,6 +17,18 @@ function _reset_libarpack_dgetv0_iseed()
   elseif bytes2hex(sha) == "88d0208af594702e43049e01e813d6ca5e15cc4974a9db782fbf74fe7cb93613"
     dgetv0offset = 0x000000000001cb60
     iseedoffsets = (0x00000000000538c0, 0x0000000000053d20, 0x0000000000053680, 0x0000000000054120)
+  elseif bytes2hex(sha) == "db784b23887f4de4e9ea184e252c8efa356c4a96b5f658298627fb6dd237a3f3"
+    dgetv0offset = 0x000000000001e4f0
+    iseedoffsets = (0x0000000000058fc0, 0x0000000000058fe0, 0x0000000000058fa0, 0x0000000000059000)
+  elseif bytes2hex(sha) == "9dc878a0bdcce61ddbd725908e592ad4d4e104922d6583158599cac6b0b5e029"
+    dgetv0offset = 0x000000000001b4c0
+    iseedoffsets = (0x00000000002538c0, 0x0000000000253d20, 0x0000000000253680, 0x0000000000254120)
+  elseif bytes2hex(sha) == "ac654701c6be6af0fc57c05f5d3c60523c66a5c76e7940726b0316504bf7e9a8"
+    dgetv0offset = 0x000000000001b800
+    iseedoffsets = (0x00000000002538c0, 0x0000000000253d20, 0x0000000000253680, 0x0000000000254120)
+  elseif bytes2hex(sha) == "fdd499ed4c0826f147ca4d57f4b0fad9edebc8aae6a5b038c1a57f8647b515b7"
+    dgetv0offset = 0x000000000001e7b0
+    iseedoffsets = (0x000000000005afc0, 0x000000000005afe0, 0x000000000005afa0, 0x000000000005b000)  
   elseif bytes2hex(sha) == "8b5b5e500dc839928a5ce4f124a84afa8331d99b22775211ec098c5bf4280c6f"
     # this is from windows 
     # Quick study of windows format to get the right offsets here...
@@ -64,12 +76,48 @@ function _reset_libarpack_dgetv0_iseed()
     # so somewehre, we must get: section 1 has offset 0x645000000 and 
     # this is from __ImageBase ? 
     # [3677](sec -1)(fl 0x00)(ty   0)(scl   2) (nx 0) 0x64500000 __ImageBase
+  elseif bytes2hex(sha) == "8c3e31745da5072b279e9c4b6c5873b2a92d0c431e9c98fe7b7e6ae682cbf0ae"
+    # Another windows case...
 
+    
+    iseedoffsets = (0x64554be0, 0x64554780, 0x645542c0, 0x64554060)
+    dgetv0offset = 0x64518da0
   else
-    errmsg = """Unknown libarpack sha $(bytes2hex(sha)) for $(Arpack_jll.libarpack_path)
+    # try and get them automatically...
+    if Sys.isapple() || Sys.islinux()
+      run(pipeline(`nm $(Arpack_jll.libarpack_path)`,`grep dgetv0`))
+      run(pipeline(`nm $(Arpack_jll.libarpack_path)`,`grep iseed`))
+      @show bytes2hex(open(SHA.sha256, Arpack_jll.libarpack_path))
+      iseed_offsets_str = readchomp(pipeline(`nm $(Arpack_jll.libarpack_path)`,`grep iseed`))
+      iseed_offsets = iseed_offsets_str |> 
+                x->split(x,"\n") |>
+                x->map(y->y[1:16],x) |>
+                x->parse.(UInt64, x;base=16)
+      dgetv0_offset = readchomp(pipeline(`nm $(Arpack_jll.libarpack_path)`,`grep dgetv0`)) |> x->parse(UInt64, x[1:16];base=16)
 
-    Please post a new issue on the github page for GenericArpack."""
-    @error(errmsg)
+      errmsg = """Unknown libarpack sha $(bytes2hex(sha)) for $(Arpack_jll.libarpack_path)
+
+      got iseed_offsets= $(iseed_offsets)
+
+      got dgetv0_offset = $(repr(dgetv0_offset))
+
+      Please post a new issue on the github page for GenericArpack."""
+      @error(errmsg)
+    elseif Sys.iswindows()
+      run(pipeline(`objdump -td -p $(Arpack_jll.libarpack_path)`,`grep dgetv0`))
+      run(pipeline(`objdump -td -p $(Arpack_jll.libarpack_path)`,`grep iseed`))
+      run(pipeline(`objdump -td -p $(Arpack_jll.libarpack_path)`,`grep __ImageBase`))
+      errmsg = """Unknown libarpack sha $(bytes2hex(sha)) for $(Arpack_jll.libarpack_path)
+
+      Please post a new issue on the github page for GenericArpack."""
+      @error(errmsg)
+    else
+
+      errmsg = """Unknown libarpack sha $(bytes2hex(sha)) for $(Arpack_jll.libarpack_path)
+
+      Please post a new issue on the github page for GenericArpack."""
+      @error(errmsg)
+    end 
   end
   libar = Base.Libc.dlopen(Arpack_jll.libarpack_path)
   dgetv0_real_offset = Base.Libc.dlsym(libar, "dgetv0_")

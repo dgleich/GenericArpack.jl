@@ -204,9 +204,9 @@ end
   einfo = symeigs(op, 4)
   # these are the results from arpack...
   info = svds(op, 4; ncv=10) 
-  check_svd(arpack_svd_example_av!, info...)
+  check_svd(arpack_svd_example_av!, info...; tol=(2+highertol))
   @test info.S ≈ sort([4.1012320445852E-02, 6.0488061100249E-02, 1.1784357891005E-01, 5.5723400180223E-01], rev=true)
   info = svds(Float32, op, 4; ncv=10)
   @test info.S ≈ sort([4.10123E-02, 6.04880E-02, 1.17844E-01, 5.57234E-01], rev=true)
-  check_svd(arpack_svd_example_av!, info...)
+  check_svd(arpack_svd_example_av!, info...; tol=(2+highertol))
 end
