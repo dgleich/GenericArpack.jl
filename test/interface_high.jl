@@ -20,32 +20,36 @@
     
     @test Int(Float64x2(1.0)) == 1
 
-    @allocated GenericArpack._dstqrb_maxit(Float128) == 0
+    if Sys.ARCH != :aarch64 
+      @allocated GenericArpack._dstqrb_maxit(Float128) == 0
+    end 
   end
 
-  @testset "Quadmath" begin 
-    using LinearAlgebra
-    T = Float128 
+  if Sys.ARCH != :aarch64 
+    @testset "Quadmath" begin 
+      using LinearAlgebra
+      T = Float128 
 
-    @testset  "Tridiag" begin 
-      A = arpack_dsdrv3(T, 100)[1]
-      info = eigs(Symmetric(A), 4)
-      @test eltype(info.values) == T
-      B = SymTridiagonal(A)
-      @test info.values ≈ sort(sort(LinearAlgebra.eigvals(B), rev=true)[1:4])
-    end 
+      @testset  "Tridiag" begin 
+        A = arpack_dsdrv3(T, 100)[1]
+        info = eigs(Symmetric(A), 4)
+        @test eltype(info.values) == T
+        B = SymTridiagonal(A)
+        @test info.values ≈ sort(sort(LinearAlgebra.eigvals(B), rev=true)[1:4])
+      end 
 
-    @testset  "dsdrv3" begin 
-      A, B = arpack_dsdrv3(T, 100)
-      info = eigs(Symmetric(A), Symmetric(B), 4)
-      @test eltype(info.values) == T
-      @test Float64.(info.values) ≈ [121003.49732902342, 121616.60247324049, 122057.49457079473, 122323.22366457577]
-    end 
+      @testset  "dsdrv3" begin 
+        A, B = arpack_dsdrv3(T, 100)
+        info = eigs(Symmetric(A), Symmetric(B), 4)
+        @test eltype(info.values) == T
+        @test Float64.(info.values) ≈ [121003.49732902342, 121616.60247324049, 122057.49457079473, 122323.22366457577]
+      end 
 
-    @testset  "svd" begin 
-      A = mytestmat(100,80,one(T)/80)
-      info = svds(A, 2)
-      @test eltype(info.S) == T
+      @testset  "svd" begin 
+        A = mytestmat(100,80,one(T)/80)
+        info = svds(A, 2)
+        @test eltype(info.S) == T
+      end
     end
   end
 

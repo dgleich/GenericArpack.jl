@@ -88,7 +88,7 @@ end
   @testset "mytestmat(10,8)" begin 
     A = mytestmat(10,8)    
     U, s, V = svds(A, 2; which=:BE)
-    check_svd(A, U, s, V; tol=(25 + 50*(highertol))) # not quite as accurate on this one...
+    check_svd(A, U, s, V; tol=(25 + 50*(highertol+(Sys.ARCH==:aarch64 ? 1 : 0)))) # not quite as accurate on this one...
     @test s ≈ [0.20022491452411176, 2.424417285164735]
   end 
 end
