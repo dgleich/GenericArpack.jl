@@ -41,8 +41,8 @@ end
   @test niter1 > niter2 # needs at least one matvec...
   _compare_probs(prob1, prob2) # run tests on each field
 
-  @test sort(eigvals(B\A), by=abs, rev=true)[1:nev] ≈ sort(prob1.workl[2*ncv+1:2*ncv+nev], by=abs, rev=true)
-  @test sort(eigvals(B\A), by=abs, rev=true)[1:nev] ≈ sort(prob2.workl[2*ncv+1:2*ncv+nev], by=abs, rev=true)
+  @test sort(eigvals(B\Matrix(A)), by=abs, rev=true)[1:nev] ≈ sort(prob1.workl[2*ncv+1:2*ncv+nev], by=abs, rev=true)
+  @test sort(eigvals(B\Matrix(A)), by=abs, rev=true)[1:nev] ≈ sort(prob2.workl[2*ncv+1:2*ncv+nev], by=abs, rev=true)
 end  
 
 @testset "dsaupd with idonow for generalized with symmetric" begin 
@@ -72,8 +72,8 @@ end
   @test niter1 > niter2 # needs at least one matvec...
   _compare_probs(prob1, prob2) # run tests on each field
 
-  @test sort(sort(eigvals(B\A))[1:nev]) ≈ sort(prob1.workl[2*ncv+1:2*ncv+nev], by=abs)
-  @test sort(sort(eigvals(B\A))[1:nev]) ≈ sort(prob2.workl[2*ncv+1:2*ncv+nev], by=abs)
+  @test sort(sort(eigvals(B\Matrix(A)))[1:nev]) ≈ sort(prob1.workl[2*ncv+1:2*ncv+nev], by=abs)
+  @test sort(sort(eigvals(B\Matrix(A)))[1:nev]) ≈ sort(prob2.workl[2*ncv+1:2*ncv+nev], by=abs)
 end  
 
 @testset "dsaupd with idonow for generalized without symmetric" begin 
@@ -103,8 +103,8 @@ end
   @test niter1 > niter2 # needs at least one matvec...
   _compare_probs(prob1, prob2) # run tests on each field
 
-  @test sort(sort(eigvals(B\A))[1:nev]) ≈ sort(prob1.workl[2*ncv+1:2*ncv+nev], by=abs)
-  @test sort(sort(eigvals(B\A))[1:nev]) ≈ sort(prob2.workl[2*ncv+1:2*ncv+nev], by=abs)
+  @test sort(sort(eigvals(B\Matrix(A)))[1:nev]) ≈ sort(prob1.workl[2*ncv+1:2*ncv+nev], by=abs)
+  @test sort(sort(eigvals(B\Matrix(A)))[1:nev]) ≈ sort(prob2.workl[2*ncv+1:2*ncv+nev], by=abs)
 end  
 
 
@@ -138,6 +138,6 @@ end
   @test niter1 > niter2 # needs at least one matvec...
   _compare_probs(prob1, prob2) # run tests on each field
 
-  @test sort(sort(eigvals(B\A))[1:nev]) ≈ sort(prob1.workl[2*ncv+1:2*ncv+nev], by=abs)
-  @test sort(sort(eigvals(B\A))[1:nev]) ≈ sort(prob2.workl[2*ncv+1:2*ncv+nev], by=abs)
+  @test sort(sort(eigvals(B\Matrix(A)))[1:nev]) ≈ sort(prob1.workl[2*ncv+1:2*ncv+nev], by=abs)
+  @test sort(sort(eigvals(B\Matrix(A)))[1:nev]) ≈ sort(prob2.workl[2*ncv+1:2*ncv+nev], by=abs)
 end  

@@ -40,7 +40,9 @@ end
 if "CI" in ARGS
   import InteractiveUtils: versioninfo
   versioninfo(verbose=true)
-  @show LinearAlgebra.BLAS.get_config()
+  if VERSION >= v"1.7"
+    @show LinearAlgebra.BLAS.get_config()
+  end
   @show LinearAlgebra.BLAS.get_num_threads()
   @show get(()->"", ENV, "OPENBLAS_NUM_THREADS")
   @show get(()->"", ENV, "GOTO_NUM_THREADS")

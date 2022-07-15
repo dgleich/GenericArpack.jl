@@ -449,7 +449,7 @@ function dorm2r!(::Val{SIDE},::Val{TRANS},
     ic = 1
   end
 
-  for i in range(start=i1, stop=i2, step=i3)
+  for i in i1:i3:i2 #range(start=i1, stop=i2, step=i3)
     if left 
       # H(i) is applied to C(i:m,1:n)
       mi = m - i + 1

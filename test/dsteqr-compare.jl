@@ -27,12 +27,12 @@ end
 
 @testset "dsteqr force qr" begin
   n = 12
-  compare_dsteqr(SymTridiagonal(collect(range(1.0, 0.1, n)), ones(n-1)))
+  compare_dsteqr(SymTridiagonal(collect(range(1.0, 0.1; length=n)), ones(n-1)))
 end
 
 @testset "dsteqr forced ql" begin
   n = 15
-  compare_dsteqr(SymTridiagonal(collect(range(1.0, 2.0, n)), ones(n-1)))
+  compare_dsteqr(SymTridiagonal(collect(range(1.0, 2.0; length=n)), ones(n-1)))
 end
 
 @testset "dsteqr split" begin
