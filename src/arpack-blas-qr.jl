@@ -377,7 +377,7 @@ function _dger!(alpha, x::AbstractVecOrMat, y::AbstractVecOrMat, A::AbstractMatr
   for j=1:n
     if y[j] != 0 
       temp = alpha*conj(y[j])
-      LinearAlgebra.BLAS.axpy!(temp, x, @view(A[:,j]))
+      LinearAlgebra.axpy!(temp, x, @view(A[:,j]))
       #for i=1:m
         #A[i,j] += x[i]*temp
         #A[i,j] = muladd(x[i],temp,A[i,j])

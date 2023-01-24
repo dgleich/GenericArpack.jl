@@ -392,7 +392,7 @@ function svd_residuals!(r, A, U, s, V)
     else
       mul!(av, A, @view(V[:,i]))
     end 
-    LinearAlgebra.BLAS.axpy!(-s[i], @view(U[:,i]), av)
+    LinearAlgebra.axpy!(-s[i], @view(U[:,i]), av)
     r[i] = norm(av)
   end 
   return r

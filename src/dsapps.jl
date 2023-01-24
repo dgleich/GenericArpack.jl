@@ -850,7 +850,7 @@ function dsapps!(
   _dscal!(Q[kplusp,kev], @view(resid[1:n]))
   if H[kev+1,1] > 0
     # axpy!(a, X, Y), Overwrite Y with X*a + Y,
-    LinearAlgebra.BLAS.axpy!(H[kev+1,1], @view(V[1:n,kev+1]), @view(resid[1:n]))
+    LinearAlgebra.axpy!(H[kev+1,1], @view(V[1:n,kev+1]), @view(resid[1:n]))
   end 
 
   if msglvl > 0 
@@ -867,4 +867,3 @@ function dsapps!(
   @jl_update_time(tapps, t0)
   return nothing
 end 
-
