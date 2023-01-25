@@ -78,7 +78,7 @@ function _reset_libarpack_dgetv0_iseed()
     # [3677](sec -1)(fl 0x00)(ty   0)(scl   2) (nx 0) 0x64500000 __ImageBase
   elseif bytes2hex(sha) == "f9d18fbeb1d5d3b01714fb64f2d593f2bf8a3ec5e936bb13a952bceeefdfcfb0"
     # from a github testcase 
-    iseed_offsets = (0x000000000005afc0, 0x000000000005afe0, 0x000000000005afa0, 0x000000000005b000)
+    iseedoffsets = (0x000000000005afc0, 0x000000000005afe0, 0x000000000005afa0, 0x000000000005b000)
     dgetv0offset = 0x000000000001e730
   elseif bytes2hex(sha) == "8c3e31745da5072b279e9c4b6c5873b2a92d0c431e9c98fe7b7e6ae682cbf0ae"
     # Another windows case...
