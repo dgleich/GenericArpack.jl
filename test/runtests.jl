@@ -8,7 +8,7 @@ full - Check a wider range of options
 
 Example:
 
-In ArparkInJulia environment...
+In GenericArpack environment...
 
     Pkg.test(;test_args=["debug"])
 

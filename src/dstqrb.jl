@@ -842,10 +842,10 @@ function _ql_iteration(d::AbstractVecOrMat{T},
         z[is] = s*tst + c*z[is]
       else
         #println("Split piece")
-        _dlasr_right_side_variable_pivot_backward!(n, 2, 
+        _dlasr_right_side_variable_pivot_backward!(size(z,1), 2, 
           @view(work[is:is]), 
           @view(work[is+n-1:is+n-1]), 
-          @view(z[1:n,is:is+1]))
+          @view(z[:,is:is+1]))
       end 
       # save eigenvalue info
       d[is] = rt1
@@ -902,7 +902,7 @@ function _ql_iteration(d::AbstractVecOrMat{T},
         _apply_plane_rotations_right!(adjoint(@view(z[is:lastm])),
            @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]); rev=true)
       else
-        _apply_plane_rotations_right!(@view(z[1:n,is:lastm]),
+        _apply_plane_rotations_right!(@view(z[:,is:lastm]),
           @view(work[is:lastm-1]), @view(work[(n-1).+(is:lastm-1)]); rev=true)
       end
       d[is] -= p
@@ -975,10 +975,10 @@ function _qr_iteration(d::AbstractVecOrMat{T},
       else
         work[lastm] = c
         work[lastm+n-1] = s
-        _dlasr_right_side_variable_pivot_forward!(n, 2, 
+        _dlasr_right_side_variable_pivot_forward!(size(z,1), 2, 
           @view(work[lastm:lastm]), 
           @view(work[lastm+n-1:lastm+n-1]), 
-          @view(z[1:n,is-1:is]))
+          @view(z[:,is-1:is]))
       end 
       # save eigenvalue info
       d[is-1] = rt1
@@ -1029,7 +1029,7 @@ function _qr_iteration(d::AbstractVecOrMat{T},
           @view(work[lastm:is-1]),
           @view(work[(n-1).+(lastm:is-1)]);rev=false) # forwards in qr
       else
-        _apply_plane_rotations_right!(@view(z[1:n,lastm:is]),
+        _apply_plane_rotations_right!(@view(z[:,lastm:is]),
           @view(work[lastm:is-1]),
           @view(work[(n-1).+(lastm:is-1)]);rev=false) # forwards in qr
       end 

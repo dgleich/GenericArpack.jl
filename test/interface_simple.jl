@@ -8,8 +8,20 @@
   k = 3
   Avals,Avecs = eigen(Matrix(A))
   vals, vecs = eigs(Symmetric(A), k; debug=((ArpackDebug())))
-  @test vals ≈ sort(sort(Avals, by=abs,rev=true)[1:k])
-    
+  @test vals ≈ sort(sort(Avals, by=abs,rev=true)[1:k]) 
+end
+
+@testset "previous failed tests" begin
+  @testset "issue #5 from GenericArpack.jl" begin 
+    using GenericArpack, SparseArrays, LinearAlgebra 
+    A = spzeros(10,10); A[1,1] = 1; A[2,2] = 1; A[5,5] = 1; A[6,6] = 1;
+    lams, Z = eigs(Symmetric(A), 5; ncv=8)
+
+    @test(A*Z ≈ Z*Diagonal(lams))
+    @test(Z'*Z ≈ Diagonal(ones(5)))
+
+    @test(sum(lams) ≈ 4)
+  end 
 end
 
 @testset "interface" begin 
