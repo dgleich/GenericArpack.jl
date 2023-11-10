@@ -23,12 +23,12 @@
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.9652704964444987
- 3.975860879481498
- 3.9845397447265416
- 3.9912986959380135
- 3.996131194267187
- 3.999032564583982
+ 3.9652704964444903
+ 3.9758608794815036
+ 3.984539744726552
+ 3.991298695938015
+ 3.9961311942671656
+ 3.999032564583961
 vectors:
 100×6 Matrix{Float64}:
  -0.0261102   0.0217972  -0.0174631   0.0131121  -0.00874848   0.00437636
@@ -54,12 +54,12 @@ vectors:
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.9652704964444987
- 3.975860879481498
- 3.9845397447265416
- 3.9912986959380135
- 3.996131194267187
- 3.999032564583982
+ 3.9652704964444903
+ 3.9758608794815036
+ 3.984539744726552
+ 3.991298695938015
+ 3.9961311942671656
+ 3.999032564583961
 vectors:
 100×6 Matrix{Float64}:
  -0.0261102   0.0217972  -0.0174631   0.0131121  -0.00874848   0.00437636
@@ -209,8 +209,8 @@ U factor:
 singular values:
 3-element Vector{Float64}:
  2.6944729446552693
- 2.496873625416942
- 2.3785967629735736
+ 2.4968736254169444
+ 2.3785967629735754
 Vt factor:
 3×100 Matrix{Float64}:
  -0.0178603  -0.0281502  -0.0186638  …  -0.0158545   -0.18666   -0.0380778
@@ -240,16 +240,16 @@ U factor:
  -0.0124722   -0.0741284   0.057463
 singular values:
 3-element Vector{Float64}:
- 0.10806971046978743
- 0.21758284541860232
- 0.23033034051807733
+ 0.10806971046978665
+ 0.21758284541859946
+ 0.2303303405180739
 Vt factor:
 3×100 Matrix{Float64}:
  -0.0194694    0.00119836  0.00181863  …   0.0184082    0.000268922
  -0.0689222   -0.0466259   0.00542729     -0.00773754  -0.00103489
  -0.00309843   0.0261328   0.0399371      -0.00529339  -0.0470376</code></pre><p>Or only the singular values (although this doesn&#39;t really save as much work as it might sound like) and use them to compute the matrix 2-norm. </p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; vals = svds(A, 4; which=:BE, ritzvec=false, ncv=12).S # both smallest and largest</code><code class="nohighlight hljs ansi" style="display:block;">4-element Vector{Float64}:
- 0.1080697104697875
- 0.2175828454185988
+ 0.10806971046977838
+ 0.21758284541859638
  2.496873625416946
  2.6944729446552684</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; [vals[end]/vals[1] cond(Matrix(A))]</code><code class="nohighlight hljs ansi" style="display:block;">1×2 Matrix{Float64}:
  24.9327  24.9327</code></pre><p>So we can estimate the matrix 2-norm with some reasonable  accuracy (in a well-conditioned case). </p><h2 id="Complex-SVD-(Singular-Value-Decomposition)"><a class="docs-heading-anchor" href="#Complex-SVD-(Singular-Value-Decomposition)">Complex SVD (Singular Value Decomposition)</a><a id="Complex-SVD-(Singular-Value-Decomposition)-1"></a><a class="docs-heading-anchor-permalink" href="#Complex-SVD-(Singular-Value-Decomposition)" title="Permalink"></a></h2><p>This operation is not in the pure ARPACK library.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using GenericArpack, SparseArrays, StableRNGs</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = sprand(StableRNG(1), ComplexF64, 200, 100, 5/200)</code><code class="nohighlight hljs ansi" style="display:block;">200×100 SparseMatrixCSC{ComplexF64, Int64} with 472 stored entries:
@@ -329,9 +329,9 @@ U factor:
  -0.0124722   -0.0741284   0.057463
 singular values:
 3-element Vector{Float64}:
- 0.10806971046978743
- 0.21758284541860232
- 0.23033034051807733
+ 0.10806971046978665
+ 0.21758284541859946
+ 0.2303303405180739
 Vt factor:
 3×100 Matrix{Float64}:
  -0.0194694    0.00119836  0.00181863  …   0.0184082    0.000268922
@@ -380,10 +380,10 @@ Vt factor:
 eigenspace: LM
 values:
 4-element Vector{Float64}:
- 121003.49732902313
- 121616.60247324103
- 122057.4945707949
- 122323.22366457593
+ 121003.49732902284
+ 121616.60247324086
+ 122057.49457079486
+ 122323.22366457571
 vectors:
 100×4 Matrix{Float64}:
  -0.30281   -0.227747  -0.152137   0.0761604
@@ -460,12 +460,12 @@ vectors:
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.9652704964444987
- 3.975860879481498
- 3.9845397447265416
- 3.9912986959380135
- 3.996131194267187
- 3.999032564583982
+ 3.9652704964444903
+ 3.9758608794815036
+ 3.984539744726552
+ 3.991298695938015
+ 3.9961311942671656
+ 3.999032564583961
 vectors:
 100×6 Matrix{Float64}:
  -0.0261102   0.0217972  -0.0174631   0.0131121  -0.00874848   0.00437636
@@ -491,12 +491,12 @@ vectors:
 eigenspace: LM
 values:
 6-element Vector{Float64}:
- 3.9652704964444987
- 3.975860879481498
- 3.9845397447265416
- 3.9912986959380135
- 3.996131194267187
- 3.999032564583982
+ 3.9652704964444903
+ 3.9758608794815036
+ 3.984539744726552
+ 3.991298695938015
+ 3.9961311942671656
+ 3.999032564583961
 vectors:
 100×6 Matrix{Float64}:
  -0.0261102   0.0217972  -0.0174631   0.0131121  -0.00874848   0.00437636
@@ -584,9 +584,9 @@ vectors:
 eigenspace: LM
 values:
 3-element Vector{BigFloat}:
- 3.99129869593803718747123328036418396793104414488574606680940189107568034869021
- 3.996131194267188654488613785960110972901332270517289868672857246938464280146778
- 3.999032564583976188675338087397981426730920780517258342993022443750871558746734
+ 3.991298695938037159508597021220321966797436385660381715852115264051838787433121
+ 3.996131194267188652353734193440331996350294707921790683980865441165101665783157
+ 3.999032564583976105529006234362963633374988313375663912614167292763251549371105
 vectors:
 100×3 Matrix{Float64}:
   0.0131121  -0.00874848  -0.00437636
@@ -690,11 +690,11 @@ _saupd: number of &quot;converged&quot; Ritz values 3
 
  _saupd: final Ritz values
  -------------------------
- 3.991298695938039       , 3.9961311942671616      , 3.9990325645839584      ,                            # 1-3
+ 3.991298695938041       , 3.9961311942671642      , 3.9990325645839695      ,                            # 1-3
 
  _saupd: corresponding error bounds
  ----------------------------------
- 7.7571137255579e-17     , 4.814945064786801e-22   , 2.501947163035392e-24   ,                            # 1-3
+ 7.757113726812292e-17   , 4.814945065525502e-22   , 2.5019471633814614e-24  ,                            # 1-3
      ==========================================
      = Symmetric implicit Arnoldi update code =
      = Version Number:  2.4                   =
@@ -711,24 +711,24 @@ _saupd: number of &quot;converged&quot; Ritz values 3
      Total number of reorthogonalization steps  = 521
      Total number of iterative refinement steps = 0
      Total number of restart steps              = 0
-     Total time in user OP*x operation          = 0.027701854705810547
+     Total time in user OP*x operation          = 0.013231515884399414
      Total time in user B*x operation           = 0.0
-     Total time in Arnoldi update routine       = 0.06978797912597656
-     Total time in saup2 routine                = 0.05696988105773926
-     Total time in basic Arnoldi iteration loop = 0.029074907302856445
-     Total time in reorthogonalization phase    = 0.0006575584411621094
-     Total time in (re)start vector generation  = 1.0013580322265625e-5
-     Total time in trid eigenvalue subproblem   = 0.0007097721099853516
-     Total time in getting the shifts           = 3.123283386230469e-5
-     Total time in applying the shifts          = 0.0006704330444335938
+     Total time in Arnoldi update routine       = 0.05061793327331543
+     Total time in saup2 routine                = 0.038987159729003906
+     Total time in basic Arnoldi iteration loop = 0.014371633529663086
+     Total time in reorthogonalization phase    = 0.0005669593811035156
+     Total time in (re)start vector generation  = 7.152557373046875e-6
+     Total time in trid eigenvalue subproblem   = 0.0005733966827392578
+     Total time in getting the shifts           = 2.3603439331054688e-5
+     Total time in applying the shifts          = 0.0004820823669433594
      Total time in convergence testing          = 0.0
 GenericArpack.ArpackEigen{Float64, Float64, ArpackSimpleOp{Symmetric{Float64, Tridiagonal{Float64, Vector{Float64}}}}, ArpackState{Float64}, :I}
 eigenspace: LM
 values:
 3-element Vector{Float64}:
- 3.991298695938039
- 3.9961311942671616
- 3.9990325645839584
+ 3.991298695938041
+ 3.9961311942671642
+ 3.9990325645839695
 vectors:
 100×3 Matrix{Float64}:
   0.0131121  -0.00874848  -0.00437636
@@ -750,4 +750,4 @@ vectors:
   0.0513136   0.0346562   -0.0174631
  -0.038881   -0.0261102    0.0131121
   0.0261102   0.0174631   -0.00874848
- -0.0131121  -0.00874848   0.00437636</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="library/">Library »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 24 January 2023 23:18">Tuesday 24 January 2023</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ -0.0131121  -0.00874848   0.00437636</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="library/">Library »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 10 November 2023 21:20">Friday 10 November 2023</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
