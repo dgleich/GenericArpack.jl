@@ -1067,7 +1067,7 @@ function simple_dseupd!(
   else
     ierr = -10
   end
-  if mode == 1 && bmat == :G
+  if mode == 1 && BMAT == :G
     ierr = -11
   end
   if nev == 1 && which == :BE
@@ -1399,7 +1399,7 @@ function simple_dseupd!(
         reshape(@view(workl[iq:iq+ldq*nconv-1]), ldq, nconv))
     else
       copyto!(@view(workl[ihb .+ ncv0]), @view(workl[bounds .+ ncv0]))
-      _dscal!(bnrom2/rnorm, @view(workl[ihb .+ ncv0]))
+      _dscal!(bnorm2/rnorm, @view(workl[ihb .+ ncv0]))
       dsortr(:LA, true, nconv, @view(d[1 .+ nconv0]), @view(workl[ihb .+ nconv0]))
     end 
   end 

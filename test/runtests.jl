@@ -180,6 +180,10 @@ include("dstqrb.jl")
 include("dsteqr-simple.jl")
 end
 
+@testset "dseupd" begin
+  include("dseupd_simple.jl")
+end
+
 ##
 # To run, use
 # using Pkg; Pkg.test("GenericArpack"; test_args=["arpackjll"])
