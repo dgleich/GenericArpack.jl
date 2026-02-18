@@ -114,3 +114,41 @@ end
 end
 
 ## TODO, look into why 7 is so inaccurate in the above case.
+
+@testset "simple_dsteqr! default work kwarg" begin
+  # exercises the fix: work=Vector{T}(undef,max(1,2*length(d)-2))
+  # previously referenced undefined variable A
+  n = 10
+  A = SymTridiagonal(2*ones(n), -ones(n-1))
+  d = copy(A.dv)
+  e = copy(A.ev)
+  Z = Matrix{Float64}(I, n, n)
+  GenericArpack.simple_dsteqr!(d, e, Z) # uses default work kwarg
+  @test A * Z ≈ Z * Diagonal(d)
+end
+
+@testset "non-Float64 element types" begin
+  # exercises the fix: T = eltype(d) in _process_block
+  # previously hardcoded T = Float64, which meant Float32 data near
+  # underflow range would not be scaled, causing wrong eigenvalues.
+  for T in [Float32, BigFloat]
+    n = 10
+    A = SymTridiagonal(T(2)*ones(T, n), -ones(T, n-1))
+    lams, z = conceptual_dstqrb!(copy(A))
+    @test eltype(lams.dv) == T
+    @test eltype(z) == T
+    @test all(lams.ev .== 0) # off-diagonals should be zeroed out
+  end
+  # Float32 near-underflow: with T=Float64 hardcoded, the scaling threshold
+  # (ssfmin≈1.2e-122) never triggers for Float32 values near 1e-30, so
+  # intermediate products underflow to zero and QR iterations don't run.
+  # With T=eltype(d)=Float32, ssfmin≈3e-5 correctly triggers scaling.
+  n = 3
+  scale = Float32(1e-30)
+  d = Float32[2,1,3] .* scale
+  e = Float32[1,1] .* scale
+  A = SymTridiagonal(copy(d), copy(e))
+  lams, z = conceptual_dstqrb!(copy(A))
+  ref = eigvals(SymTridiagonal(Float64.(d), Float64.(e)))
+  @test sort(lams.dv) ≈ Float32.(sort(ref))
+end

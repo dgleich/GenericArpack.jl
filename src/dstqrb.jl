@@ -625,7 +625,7 @@ function simple_dsteqr!(
   d::AbstractVector{T},
   e::AbstractVector{T},
   Z::AbstractMatrix{T};
-  work=Vector{T}(undef,max(1,2*size(A,1)-2))
+  work=Vector{T}(undef,max(1,2*length(d)-2))
 ) where T
   n = length(d) 
   @jl_arpack_check_length(d,n)
@@ -759,7 +759,7 @@ function _find_next_block!(l::Integer, d, e)
 end
 
 function _process_block(d, e, z, work, maxit)
-  T = Float64
+  T = eltype(d)
   eps = Base.eps(T)/2 # dlamch("E") is eps/2
   eps2 = eps^2
   safmin = floatmin(T) # dlamch("S")
