@@ -1,5 +1,11 @@
-using LinearAlgebra: Symmetric, Hermitian, HermOrSym, factorize, SVD
+using LinearAlgebra: Symmetric, Hermitian, HermOrSym, SymTridiagonal, factorize, SVD
 import Base: show
+
+# factorize(Symmetric(SymTridiagonal(...))) converts to dense BunchKaufman (O(n^3)),
+# fails on Julia 1.6 (MethodError), and errors for non-Float64 on Julia 1.12 (copytrito!).
+# Unwrapping the Symmetric lets factorize see the SymTridiagonal and use LDLt (O(n)).
+_unwrap_symmetric_factorize(B) = factorize(B)
+_unwrap_symmetric_factorize(B::Symmetric{T, <:SymTridiagonal}) where T = factorize(parent(B))
 
 """
     eigs(Symmetric(A), k; kwargs...)  # maps to symeigs 
@@ -135,26 +141,26 @@ eigs(TV::Type, TF::Type, A::HermOrSym, k::Integer; kwargs...) = symeigs(TV, TF, 
 _gen_eigs_vtype(A, B) = promote_type(_float_type(eltype(A)), _float_type(eltype(B)))
 #_gen_eigs_ftype(A, B) = promote_type(_real_type(eltype(A)), _real_type(eltype(B)))
 eigs(A::HermOrSym, B::HermOrSym, k::Integer; kwargs...) = symeigs(
-  _gen_eigs_vtype(A,B), ArpackSymmetricGeneralizedOp(A,factorize(B),B), k; kwargs...)
-  
+  _gen_eigs_vtype(A,B), ArpackSymmetricGeneralizedOp(A,_unwrap_symmetric_factorize(B),B), k; kwargs...)
+
 eigs(T::Type, A::Symmetric, B::Symmetric, k::Integer; kwargs...) = symeigs(
-    T, ArpackSymmetricGeneralizedOp(A,factorize(B),B), k; kwargs...)
+    T, ArpackSymmetricGeneralizedOp(A,_unwrap_symmetric_factorize(B),B), k; kwargs...)
 
 symeigs(A::AbstractMatrix{T},k::Integer; kwargs...) where {T <: Complex} = symeigs(ComplexF64, ArpackSimpleOp(A),k; kwargs...)
 symeigs(A::AbstractMatrix{T},k::Integer; kwargs...) where {T <: Real} = symeigs(Float64, ArpackSimpleOp(A),k; kwargs...)
 
 symeigs(TV::Type, A::AbstractMatrix,k::Integer; kwargs...) = symeigs(TV, ArpackSimpleOp(A),k; kwargs...)
 symeigs(A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = symeigs(
-    ArpackSymmetricGeneralizedOp(A,factorize(B),B),k; kwargs...)
+    ArpackSymmetricGeneralizedOp(A,_unwrap_symmetric_factorize(B),B),k; kwargs...)
 symeigs(TV::Type, A::AbstractMatrix, B::AbstractMatrix,k::Integer; kwargs...) = symeigs(
-    TV, ArpackSymmetricGeneralizedOp(A,factorize(B),B),k; kwargs...)
+    TV, ArpackSymmetricGeneralizedOp(A,_unwrap_symmetric_factorize(B),B),k; kwargs...)
 
 hermeigs(A::AbstractMatrix,k::Integer; kwargs...) = hermeigs(ArpackSimpleOp(A),k; kwargs...)
 hermeigs(TV::Type, A::AbstractMatrix,k::Integer; kwargs...) = hermeigs(TV, ArpackSimpleOp(A),k; kwargs...)
 hermeigs(A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = hermeigs(
-    ArpackSymmetricGeneralizedOp(A,factorize(B),B),k; kwargs...)
+    ArpackSymmetricGeneralizedOp(A,_unwrap_symmetric_factorize(B),B),k; kwargs...)
 hermeigs(TV::Type, A::AbstractMatrix,B::AbstractMatrix,k::Integer; kwargs...) = hermeigs(
-    TV, ArpackSymmetricGeneralizedOp(A,factorize(B),B),k; kwargs...)
+    TV, ArpackSymmetricGeneralizedOp(A,_unwrap_symmetric_factorize(B),B),k; kwargs...)
 
 symeigs(op::ArpackOp, k::Integer; kwargs...) = symeigs(Float64, op, k; kwargs...)
 hermeigs(op::ArpackOp, k::Integer; kwargs...) = symeigs(ComplexF64, op, k; kwargs...)
@@ -272,9 +278,9 @@ function symeigs(::Type{TV}, ::Type{TF}, op::ArpackOp, nev::Integer;
   vectors = Matrix{TV}(undef, n, nvectors)
   values = Vector{TL}(undef, nconv)
   select = Vector{Int}(undef, ncv)
-  ierr = simple_dseupd!(ritzvec, select, values, vectors, shift(TF, op), 
-    bmat, n, which, nev, tol, resid, ncv, V, iparam, ipntr, 
-    workd, workl; debug, stats)
+  ierr = simple_dseupd!(ritzvec, select, values, vectors, shift(TF, op),
+    bmat, n, which, nev, tol, resid, ncv, V, iparam, ipntr,
+    workd, workl; debug, stats, state)
 
   if ierr != 0 
     throw(ArpackException("symmetric eupd gave error code ierr=$ierr"))

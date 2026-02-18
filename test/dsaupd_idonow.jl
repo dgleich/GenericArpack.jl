@@ -114,10 +114,14 @@ end
   nev = 4
   A = Tridiagonal(-ones(n-1),2*ones(n),-ones(n-1)).*((n+1))
   B = SymTridiagonal(4*ones(n),ones(n-1)).*(1/(6*(n+1)))
-  # TODO, this would ideally work with factorize
-  # factorize(Symmetric(B)) 
-  # but that hits issue https://github.com/JuliaLang/julia/issues/44973
-  op = ArpackSymmetricGeneralizedOp(Symmetric(A), lu!(copy(B)), Symmetric(B)) # TODO, note 
+  # The original line below was
+  # op = ArpackSymmetricGeneralizedOp(Symmetric(A), lu!(copy(B)), Symmetric(B)) # TODO, note
+  # which worked at some point, but had some issues and lu! stopped working.
+  # There was also an issue with mixed types https://github.com/JuliaLang/julia/issues/44973
+  # factorize(B) gives efficient O(n) LDLt on all versions.
+  # now seems to work, we don't need the "Symmetric" as in the original goal
+  # factorize(Symmetric(B))  (which also works now, but does BunchKaufman O(n^3))
+  op = ArpackSymmetricGeneralizedOp(Symmetric(A), factorize(B), Symmetric(B))
   prob1 = _allocate_symproblem(Float32, Float32, op, 10)
   prob2 = _allocate_symproblem(Float32, Float32, op, 10)
 

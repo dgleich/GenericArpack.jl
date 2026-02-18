@@ -82,10 +82,9 @@
   @testset "MultiFloats" begin 
     using LinearAlgebra
 
-    # don't test Float64x8 here as 
-    # we get different results from SymEigs...
-    # but it isn't clear who is right.
-    Ts = [Float64x2, Float64x4, Float64x6]
+    # MultiFloats v3.x only generates arithmetic methods up to 4 limbs,
+    # so Float64x6/Float64x8 are not supported.
+    Ts = [Float64x2, Float64x4]
     for T in Ts
       @testset "MultiFloat $T" begin 
         @testset  "Tridiag" begin 
